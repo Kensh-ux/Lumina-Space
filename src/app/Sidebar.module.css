@@ -1,0 +1,146 @@
+.sidebar {
+  position: fixed;
+  bottom: 24px;
+  left: 24px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.panel {
+  width: 248px;
+  padding: 16px 18px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-card);
+  transition:
+    background-color var(--transition-theme),
+    color var(--transition-theme),
+    border-color var(--transition-theme);
+}
+
+.panel[hidden] {
+  display: none;
+}
+
+.panelKicker {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.panelTitle {
+  margin-top: 4px;
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+
+.panelBody {
+  margin-top: 8px;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+}
+
+.panelNote {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+
+.rail {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 56px;
+  padding: 6px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme);
+}
+
+.railButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 100%;
+  padding: 7px 0;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  background-color: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-theme),
+    color var(--transition-theme),
+    border-color var(--transition-theme);
+}
+
+.railButton:hover {
+  color: var(--color-text);
+}
+
+.railButton[aria-expanded='true'] {
+  border-color: var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
+  color: var(--color-text);
+}
+
+.railButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+.label {
+  font-size: 0.6875rem;
+  line-height: 1.1;
+  letter-spacing: 0.02em;
+}
+
+@media (max-width: 719px) {
+  .sidebar {
+    right: 0;
+    bottom: 0;
+    left: 0;
+    gap: 0;
+  }
+
+  .panel {
+    width: 100%;
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .rail {
+    flex-direction: row;
+    width: 100%;
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .railButton {
+    padding: 9px 0;
+  }
+
+  .label {
+    display: none;
+  }
+}

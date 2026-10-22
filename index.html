@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lumina-Space · 情绪工作台</title>
+    <script>
+      // 首帧前先套用已保存的主题，避免刷新时闪一下默认色。
+      try {
+        var raw = localStorage.getItem('lumina:data');
+        var parsed = raw ? JSON.parse(raw) : null;
+        var mood = parsed && parsed.mood ? parsed.mood.current : 'neutral';
+        if (mood !== 'positive' && mood !== 'neutral' && mood !== 'negative') {
+          mood = 'neutral';
+        }
+        document.documentElement.dataset.theme = mood;
+      } catch (error) {
+        document.documentElement.dataset.theme = 'neutral';
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

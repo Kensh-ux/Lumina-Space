@@ -1,0 +1,235 @@
+.stage {
+  position: relative;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  min-height: 420px;
+  padding: 40px 32px;
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 24px;
+  background-color: var(--color-surface);
+  isolation: isolate;
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme);
+}
+
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.layer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.layerPositive {
+  background: radial-gradient(120% 110% at 78% 8%, #ffe2b0 0%, #ffd38f 30%, #fff4e3 62%, #fff7ed 100%);
+}
+
+.layerNeutral {
+  background: radial-gradient(120% 110% at 72% 6%, #e4ebf4 0%, #f1f3f7 48%, #fbfcfd 100%);
+}
+
+.layerNegative {
+  background: radial-gradient(120% 120% at 74% 6%, #33425c 0%, #202a3a 55%, #171e2a 100%);
+}
+
+.stage[data-mood='positive'] .layerPositive,
+.stage[data-mood='neutral'] .layerNeutral,
+.stage[data-mood='negative'] .layerNegative {
+  opacity: 1;
+}
+
+.sun {
+  position: absolute;
+  top: 10%;
+  right: 12%;
+  width: 132px;
+  height: 132px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 36% 34%, #fff6d8 0%, #ffd777 46%, #f5a623 100%);
+  box-shadow: 0 0 90px rgba(245, 166, 35, 0.45);
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.stage[data-mood='positive'] .sun {
+  opacity: 1;
+}
+
+.cloudLayer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.stage[data-mood='neutral'] .cloudLayer {
+  opacity: 1;
+}
+
+.cloud {
+  position: absolute;
+  border-radius: 999px;
+  background-color: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 16px 36px rgba(120, 140, 170, 0.18);
+}
+
+.cloudA {
+  top: 16%;
+  left: 10%;
+  width: 188px;
+  height: 54px;
+}
+
+.cloudB {
+  top: 27%;
+  right: 16%;
+  width: 128px;
+  height: 40px;
+  background-color: rgba(255, 255, 255, 0.72);
+}
+
+.rainLayer {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.stage[data-mood='negative'] .rainLayer {
+  opacity: 1;
+}
+
+.rainDrop {
+  position: absolute;
+  width: 1px;
+  height: 84px;
+  background: linear-gradient(to bottom, rgba(150, 180, 220, 0), rgba(150, 180, 220, 0.55));
+  transform: rotate(14deg);
+}
+
+.rainDrop:nth-child(1) {
+  top: 2%;
+  left: 6%;
+}
+
+.rainDrop:nth-child(2) {
+  top: 18%;
+  left: 14%;
+}
+
+.rainDrop:nth-child(3) {
+  top: 6%;
+  left: 22%;
+}
+
+.rainDrop:nth-child(4) {
+  top: 26%;
+  left: 31%;
+}
+
+.rainDrop:nth-child(5) {
+  top: 10%;
+  left: 39%;
+}
+
+.rainDrop:nth-child(6) {
+  top: 22%;
+  left: 47%;
+}
+
+.rainDrop:nth-child(7) {
+  top: 4%;
+  left: 56%;
+}
+
+.rainDrop:nth-child(8) {
+  top: 20%;
+  left: 64%;
+}
+
+.rainDrop:nth-child(9) {
+  top: 8%;
+  left: 72%;
+}
+
+.rainDrop:nth-child(10) {
+  top: 24%;
+  left: 81%;
+}
+
+.rainDrop:nth-child(11) {
+  top: 12%;
+  left: 89%;
+}
+
+.rainDrop:nth-child(12) {
+  top: 28%;
+  left: 96%;
+}
+
+.card {
+  position: relative;
+  z-index: 1;
+  width: min(560px, 100%);
+  padding: 32px 34px;
+  border: 1px solid var(--color-border);
+  border-radius: 20px;
+  background-color: color-mix(in srgb, var(--color-surface) 86%, transparent);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme),
+    color var(--transition-theme);
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+.title {
+  margin-top: 10px;
+  font-size: clamp(1.55rem, 3vw, 2rem);
+  letter-spacing: -0.02em;
+}
+
+.text {
+  margin-top: 12px;
+  color: var(--color-muted);
+  font-size: 0.9375rem;
+  line-height: 1.6;
+}
+
+.placeholder {
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px dashed var(--color-border);
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  transition: border-color var(--transition-theme);
+}
+
+@media (max-width: 719px) {
+  .stage {
+    min-height: 360px;
+    padding: 24px 16px;
+  }
+
+  .card {
+    padding: 24px 22px;
+  }
+}
