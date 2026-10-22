@@ -6,15 +6,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Lumina-Space · 情绪工作台</title>
     <script>
-      // 首帧前先套用已保存的主题，避免刷新时闪一下默认色。
+      // 首帧前先套用主题镜像键（由 saveData 同步写入），避免刷新时闪一下默认色。
       try {
-        var raw = localStorage.getItem('lumina:data');
-        var parsed = raw ? JSON.parse(raw) : null;
-        var mood = parsed && parsed.mood ? parsed.mood.current : 'neutral';
-        if (mood !== 'positive' && mood !== 'neutral' && mood !== 'negative') {
-          mood = 'neutral';
+        var theme = localStorage.getItem('lumina:theme');
+        if (theme !== 'positive' && theme !== 'neutral' && theme !== 'negative') {
+          theme = 'neutral';
         }
-        document.documentElement.dataset.theme = mood;
+        document.documentElement.dataset.theme = theme;
       } catch (error) {
         document.documentElement.dataset.theme = 'neutral';
       }

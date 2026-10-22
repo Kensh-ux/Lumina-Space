@@ -115,7 +115,7 @@
   letter-spacing: 0.02em;
 }
 
-@media (max-width: 719px) {
+@media (max-width: 1119px) {
   .sidebar {
     right: 0;
     bottom: 0;

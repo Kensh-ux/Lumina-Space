@@ -57,7 +57,7 @@
   box-shadow: var(--shadow-card);
 }
 
-@media (max-width: 719px) {
+@media (max-width: 1119px) {
   .topbar {
     padding: 20px 20px 8px;
   }

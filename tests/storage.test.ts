@@ -3,6 +3,7 @@ import { clearData, createDefaultData, loadData, saveData } from '../src/lib/sto
 
 const KEY = 'lumina:data';
 const BACKUP_KEY = 'lumina:data:backup';
+const THEME_KEY = 'lumina:theme';
 
 class MemoryStorage implements Storage {
   private items = new Map<string, string>();
@@ -134,18 +135,53 @@ describe('saveData', () => {
     expect(() => saveData(createDefaultData(), new QuotaStorage())).not.toThrow();
     expect(saveData(createDefaultData(), new QuotaStorage())).toBe(false);
   });
+
+  it('同步写入主题镜像键，供首帧脚本读取', () => {
+    const data = createDefaultData();
+    data.mood.current = 'positive';
+
+    expect(saveData(data, storage)).toBe(true);
+    expect(storage.getItem(THEME_KEY)).toBe('positive');
+  });
 });
 
 describe('clearData', () => {
-  it('只删除 lumina:data，不动其他键', () => {
+  it('删除 lumina:data 与主题镜像键，不动其他键', () => {
     storage.setItem(KEY, JSON.stringify(createDefaultData()));
+    storage.setItem(THEME_KEY, 'negative');
     storage.setItem('lumina:other', 'keep-me');
     storage.setItem('unrelated', 'keep-me-too');
 
     clearData(storage);
 
     expect(storage.getItem(KEY)).toBeNull();
+    expect(storage.getItem(THEME_KEY)).toBeNull();
     expect(storage.getItem('lumina:other')).toBe('keep-me');
     expect(storage.getItem('unrelated')).toBe('keep-me-too');
+  });
+});
+
+describe('存储不可用（禁用站点数据）', () => {
+  it('读取 window.localStorage 抛 SecurityError 时降级为无存储', () => {
+    const original = Object.getOwnPropertyDescriptor(window, 'localStorage');
+    Object.defineProperty(window, 'localStorage', {
+      configurable: true,
+      get(): Storage {
+        throw new DOMException('storage disabled', 'SecurityError');
+      },
+    });
+
+    try {
+      expect(() => loadData()).not.toThrow();
+      expect(loadData().mood.current).toBe('neutral');
+      expect(saveData(createDefaultData())).toBe(false);
+      expect(() => clearData()).not.toThrow();
+    } finally {
+      if (original) {
+        Object.defineProperty(window, 'localStorage', original);
+      } else {
+        Reflect.deleteProperty(window, 'localStorage');
+      }
+    }
   });
 });

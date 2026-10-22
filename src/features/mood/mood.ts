@@ -1,4 +1,4 @@
-import type { MoodId } from '../../lib/types';
+import { MOOD_IDS, type MoodId } from '../../lib/types';
 
 export type { MoodId } from '../../lib/types';
 
@@ -18,7 +18,7 @@ export const MOODS: readonly MoodMeta[] = [
 export const DEFAULT_MOOD: MoodId = 'neutral';
 
 export function isMoodId(value: unknown): value is MoodId {
-  return value === 'positive' || value === 'neutral' || value === 'negative';
+  return typeof value === 'string' && (MOOD_IDS as readonly string[]).includes(value);
 }
 
 export function getMoodMeta(id: MoodId): MoodMeta {

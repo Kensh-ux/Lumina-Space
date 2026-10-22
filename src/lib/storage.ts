@@ -1,12 +1,24 @@
+import { MOOD_IDS, STORAGE_KEY, THEME_KEY } from './types';
 import type { AppDataV1, MoodId } from './types';
 
-const KEY = 'lumina:data';
-const BACKUP_KEY = 'lumina:data:backup';
+const BACKUP_KEY = `${STORAGE_KEY}:backup`;
 const SCHEMA_VERSION = 1;
 
-// 只校验存储层的领域值；情绪元数据属于 features/mood，lib 不反向依赖它。
+// 浏览器禁用站点数据时，读取 window.localStorage 本身就会抛 SecurityError。
+// 所有入口先经过这里，拿不到就降级为「无存储」而不是崩在初始化。
+function resolveStorage(): Storage | null {
+  try {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+}
+
 function isValidMoodId(value: unknown): value is MoodId {
-  return value === 'positive' || value === 'neutral' || value === 'negative';
+  return typeof value === 'string' && (MOOD_IDS as readonly string[]).includes(value);
 }
 
 function isValidData(value: unknown): value is AppDataV1 {
@@ -46,10 +58,13 @@ export function createDefaultData(): AppDataV1 {
   };
 }
 
-export function loadData(storage: Storage = localStorage): AppDataV1 {
+export function loadData(storage: Storage | null = resolveStorage()): AppDataV1 {
+  if (!storage) {
+    return createDefaultData();
+  }
   let raw: string | null = null;
   try {
-    raw = storage.getItem(KEY);
+    raw = storage.getItem(STORAGE_KEY);
   } catch {
     return createDefaultData();
   }
@@ -68,18 +83,27 @@ export function loadData(storage: Storage = localStorage): AppDataV1 {
   return createDefaultData();
 }
 
-export function saveData(data: AppDataV1, storage: Storage = localStorage): boolean {
+export function saveData(data: AppDataV1, storage: Storage | null = resolveStorage()): boolean {
+  if (!storage) {
+    return false;
+  }
   try {
-    storage.setItem(KEY, JSON.stringify(data));
+    storage.setItem(STORAGE_KEY, JSON.stringify(data));
+    // 首帧脚本只读这个镜像键，避免刷新时先闪一下默认主题。
+    storage.setItem(THEME_KEY, data.mood.current);
     return true;
   } catch {
     return false;
   }
 }
 
-export function clearData(storage: Storage = localStorage): void {
+export function clearData(storage: Storage | null = resolveStorage()): void {
+  if (!storage) {
+    return;
+  }
   try {
-    storage.removeItem(KEY);
+    storage.removeItem(STORAGE_KEY);
+    storage.removeItem(THEME_KEY);
   } catch {
     // 删除失败时保持沉默，调用方不因存储异常崩溃。
   }
