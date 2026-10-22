@@ -1,86 +1,144 @@
-# Lumina-Space
+<p align="center">
+  <img src="docs/screenshots/home-positive.png" alt="Lumina-Space 积极主题" width="900">
+</p>
 
-面向大学生与零门槛用户的「情绪 + 待办 + 专注」Web 工作台。
-当前这一版是**框架**：选一个情绪 → 整站换主题 + 左下侧边栏 + 主界面场景 → 刷新后保持。
-任务 CRUD 与 3D 小屋是后续版本。
+<h1 align="center">Lumina-Space</h1>
 
-> 线上地址：等待 Cloudflare Pages 连接后补充。
+<p align="center">
+  <strong>把情绪和待办放在同一张书桌上的沉浸式学习工作台。</strong><br>
+  选一个情绪，界面和场景跟着变；先感受，再开始。
+</p>
 
-## 环境
+<p align="center">
+  <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-2ea44f"></a>
+  <img alt="Version" src="https://img.shields.io/badge/version-v0.1-5b7c99">
+  <img alt="Status" src="https://img.shields.io/badge/status-alpha-d97706">
+  <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white">
+  <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white">
+</p>
 
-- Node.js ≥ 20.19
-- npm
+<p align="center">
+  <a href="#为什么是-lumina-space">为什么</a> ·
+  <a href="#现在能做什么v01">功能</a> ·
+  <a href="#截图">截图</a> ·
+  <a href="#快速开始">快速开始</a> ·
+  <a href="#技术栈">技术栈</a> ·
+  <a href="#版本">版本</a> ·
+  <a href="#参考与致谢">致谢</a>
+</p>
 
-## 开发
+---
+
+## 为什么是 Lumina-Space
+
+大多数待办工具只问「做完了吗」。但大学生一天里真正难的那部分，往往发生在打开待办之前：不想开始、不知道自己怎么了、坐下来又静不下来。
+
+Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心情打卡，而是让整个界面先接住你：暖一点、冷一点、亮一点、安静一点。然后再问，今天想做什么。
+
+> 这是一张干净的书桌，不是一张 KPI 看板。
+
+## 现在能做什么（v0.1）
+
+- **情绪主题**：左上角选择积极 / 中性 / 消极，整站切换 CSS 变量主题，刷新后保持。
+- **情绪场景**：主界面 Stage 随情绪变化——暖阳、阴天、雨夜；只做简单 CSS 场景，不加载 3D。
+- **左下侧边栏**：今日 / 专注 / 设置三个入口，展开占位面板；Esc 收起；窄屏变底部抽屉。
+- **本地优先**：数据只存在浏览器 `localStorage`，没有账号、没有后端。
+- **基础质量**：键盘可达、焦点可见、`prefers-reduced-motion` 关闭动效；18 条单元测试。
+
+> v0.1 是**框架版**：任务 CRUD、番茄钟、情绪记录、3D 小屋都还没做。
+
+## 截图
+
+| 积极 | 中性 | 消极 |
+|---|---|---|
+| ![积极](docs/screenshots/home-positive.png) | ![中性](docs/screenshots/home-neutral.png) | ![消极](docs/screenshots/home-negative.png) |
+
+**侧边栏 / 窄屏**
+
+![侧边栏](docs/screenshots/sidebar-open.png)
+
+![窄屏](docs/screenshots/responsive-900.png)
+
+## 快速开始
 
 ```bash
+git clone https://github.com/Kensh-ux/Lumina-Space.git
+cd Lumina-Space
 npm install
 npm run dev
 ```
 
 打开终端提示的地址（默认 `http://localhost:5173`）。
 
-## 常用命令
-
 | 命令 | 说明 |
 |---|---|
 | `npm run dev` | 启动开发服务器 |
-| `npm run build` | 类型检查 + 生产构建 |
-| `npm run preview` | 预览生产构建 |
+| `npm run build` | 类型检查 + 生产构建，输出 `dist/` |
+| `npm run preview` | 本地预览构建产物 |
 | `npm run check` | TypeScript 类型检查 |
 | `npm test` | 跑一次单元测试 |
 | `npm run test:watch` | 监听模式跑测试 |
 
-## 目录
+开发辅助参数（仅 Dev 生效）：`?theme=positive|neutral|negative`、`?panel=today|focus|settings`。
+
+## 技术栈
+
+| 层 | 选择 | 说明 |
+|---|---|---|
+| 构建 | Vite 8 | 轻量、快、无 SSR |
+| UI | React 19 + TypeScript 6 | 函数组件 + Hooks |
+| 样式 | 原生 CSS + CSS 变量 + CSS Modules | 主题用变量切换；不引 Tailwind / UI 库 |
+| 状态 | `useState` / `useReducer` / Context | 暂不引状态库 |
+| 存储 | `localStorage` + 自封装 adapter | 单键 `lumina:data` + `lumina:theme` 镜像 |
+| 测试 | Vitest + jsdom | 纯逻辑优先 |
+| 部署 | 静态 `dist/` | 可接 Cloudflare Pages / 任意静态托管 |
+
+## 项目结构
 
 ```
-public/              favicon、robots.txt
 src/
   app/              页面壳：App、Sidebar、Stage
   features/mood/    情绪常量、选择器、useMood
-  lib/              类型与 localStorage adapter
-  styles/           主题令牌与全局样式
+  lib/              类型、存储 adapter
+  styles/           主题令牌、全局样式
 tests/              与 src 对应的纯逻辑测试
+docs/
+  screenshots/      README 截图
+  tasks/            任务卡
 ```
 
-## 交互
+## 版本
 
-- 左上角三个情绪按钮：积极 / 中性 / 消极，点击切换整站主题。
-- 左下角侧边栏：今日 / 专注 / 设置，点击展开占位面板，Esc 收起；窗口宽度 < 1120px 时折叠成底部图标栏 + 抽屉。
-- 主题与选择保存在浏览器 localStorage（键 `lumina:data`），刷新后保持。
-- 遵循系统 `prefers-reduced-motion`，开启后不做过渡动画。
-
-## 开发辅助参数
-
-仅在 `npm run dev` 下生效，生产构建不生效：
-
-- `?theme=positive|neutral|negative`：只改主题，不写存储。
-- `?panel=today|focus|settings`：打开对应侧边栏面板。
+| 版本 | 日期 | 内容 | 状态 |
+|---|---|---|---|
+| **v0.1** | 2026-10-22 | 框架、情绪主题、左下侧边栏、Stage 场景、本地持久化、18 tests | 已发布 |
+| v0.2 | 计划 | 任务 CRUD、网站上线 | 计划中 |
+| v0.3 | 计划 | 番茄钟、情绪记录、主题扩展、动效、3D 预研 | 计划中 |
 
 ## 部署
 
-纯静态站点：构建产物在 `dist/`，数据只存在用户浏览器的 localStorage，没有后端。
+纯静态站点，构建产物在 `dist/`，没有后端。
 
-```bash
-npm install
-npm run build     # tsc -b && vite build，输出 dist/
-npm run preview   # 本地预览构建产物（默认 http://localhost:4173）
-```
+### Cloudflare Pages
 
-### Cloudflare Pages（GitHub 集成）
+1. Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git。
+2. 选 `Kensh-ux/Lumina-Space`，分支 `main`。
+3. Build command：`npm run build`；Build output directory：`dist`；Node 22。
+4. Save and Deploy。
 
-1. 仓库推到 GitHub（`Kensh-ux/Lumina-Space`，分支 `main`）。
-2. Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git，选择该仓库与 `main` 分支。
-3. 构建配置：
-   - Framework preset：`Vite`
-   - Build command：`npm run build`
-   - Build output directory：`dist`
-   - Node version：`22`（如需要，设置环境变量 `NODE_VERSION=22`）
-4. Save and Deploy，得到 `https://<project>.pages.dev`。
-5. 之后每次 `git push` 到 `main`，Cloudflare Pages 会自动重新构建并发布，不需要手动上传 `dist/`。
+> **国内访问提示**：`*.workers.dev` / `*.pages.dev` 在中国大陆可能无法访问。正式使用建议在 Cloudflare 绑定**自己的域名**，或改用国内静态托管（Gitee Pages / 腾讯云 / 阿里云 OSS）。当前仓库不写死线上地址。
 
-不需要 `wrangler`、后端或数据库；`dist/` 已在 `.gitignore` 中，不提交。
+## 参考与致谢
 
-## 规则
+这个项目的设计从几个开源项目里学到了很多；**v0.1 没有直接复制它们的源代码**，只借鉴了数据模型、状态机、主题和动效思路。完整审计见 [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md)。
 
-工程约定见 `AGENTS.md`。
+- [Super Productivity](https://github.com/super-productivity/super-productivity)（MIT）：任务模型、计时状态机、存储分层。
+- [eDEX-UI](https://github.com/GitSquared/edex-ui)（GPL-3.0）：主题 JSON、启动动效、音频/模态框思路；未复制其代码。
+- [HyperFrames](https://github.com/heygen-com/hyperframes)（Apache-2.0）：HTML/CSS/可 seek 动画 → 视频的代码绘图流程。
+- [Lemo-Opuscar](https://github.com/lemomo-ai/lemo-opuscar)（MIT / CC BY 4.0）：全代码短片风格与动效技法。
+
+> 如果未来复制/修改了上述项目的代码，会在 `THIRD_PARTY_NOTICES.md` 里登记来源、commit、许可证和改动，并在本段致谢。
+
+## License
+
+MIT © 四弦六狸。见 [`LICENSE`](LICENSE)。
