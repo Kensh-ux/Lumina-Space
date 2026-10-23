@@ -1,4 +1,4 @@
-import { MOOD_IDS, STORAGE_KEY, THEME_KEY } from './types';
+import { isTask, MOOD_IDS, STORAGE_KEY, THEME_KEY } from './types';
 import type { AppDataV1, MoodId } from './types';
 
 const BACKUP_KEY = `${STORAGE_KEY}:backup`;
@@ -29,7 +29,7 @@ function isValidData(value: unknown): value is AppDataV1 {
   if (data.schemaVersion !== SCHEMA_VERSION) {
     return false;
   }
-  if (!Array.isArray(data.tasks)) {
+  if (!Array.isArray(data.tasks) || !data.tasks.every((task) => isTask(task))) {
     return false;
   }
   if (typeof data.mood !== 'object' || data.mood === null) {

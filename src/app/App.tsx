@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import MoodDial from '../features/mood/MoodDial';
-import { useMood } from '../features/mood/useMood';
 import Sidebar, { type PanelId } from './Sidebar';
 import Stage from './Stage';
+import { useAppData } from './useAppData';
 import styles from './App.module.css';
 
 // 仅开发/截图使用：?panel=today 打开对应侧边栏面板，生产构建不生效。
@@ -23,14 +23,20 @@ function readDialOpen(): boolean {
 }
 
 function App() {
-  const { mood, setMood, storageError } = useMood();
+  const { mood, tasks, setMood, addTask, toggleTask, deleteTask, storageError } = useAppData();
   const [initialPanel] = useState<PanelId | null>(readInitialPanel);
   const [dialOpen] = useState(readDialOpen);
 
   return (
     <div className={styles.app} data-mood={mood}>
       <main className={styles.main}>
-        <Stage mood={mood} />
+        <Stage
+          mood={mood}
+          tasks={tasks}
+          onAddTask={addTask}
+          onToggleTask={toggleTask}
+          onDeleteTask={deleteTask}
+        />
       </main>
 
       <header className={styles.topbar}>
@@ -44,7 +50,7 @@ function App() {
 
       {storageError ? (
         <p className={styles.status} role="status">
-          本地存储不可用，本次选择不会被记住。
+          本地存储不可用，本次改动不会被记住。
         </p>
       ) : null}
     </div>

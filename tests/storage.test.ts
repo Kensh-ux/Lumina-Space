@@ -112,6 +112,57 @@ describe('loadData', () => {
     expect(loadData(storage).tasks).toEqual([]);
   });
 
+  it('合法任务数组被读取', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [
+        {
+          id: 'task-1',
+          title: '复习高数',
+          done: false,
+          createdAt: '2026-10-23T00:00:00.000Z',
+          completedAt: null,
+        },
+      ],
+      mood: { current: 'positive', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    const data = loadData(storage);
+
+    expect(data.tasks).toHaveLength(1);
+    expect(data.tasks[0].title).toBe('复习高数');
+    expect(data.mood.current).toBe('positive');
+  });
+
+  it('任务字段非法时返回默认值并备份', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [{ id: 'task-1', title: 'x', done: false, createdAt: '2026-10-23T00:00:00.000Z' }],
+      mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    expect(loadData(storage).tasks).toEqual([]);
+    expect(storage.getItem(BACKUP_KEY)).toBe(raw);
+  });
+
+  it('旧数据 tasks 为空数组时正常读取', () => {
+    storage.setItem(
+      KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        tasks: [],
+        mood: { current: 'negative', updatedAt: '2026-10-21T00:00:00.000Z' },
+      }),
+    );
+
+    const data = loadData(storage);
+
+    expect(data.tasks).toEqual([]);
+    expect(data.mood.current).toBe('negative');
+  });
+
   it('mood.current 非法时返回默认值', () => {
     storage.setItem(
       KEY,

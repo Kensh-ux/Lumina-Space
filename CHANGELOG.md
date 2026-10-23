@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.3.0 — 进行中
+
+### 新增
+
+- 待办任务 CRUD：添加 / 完成 / 删除，空状态、完成态与 `aria-live` 计数。
+- 统一数据入口 `useAppData`：情绪与任务共用一份 localStorage 数据，避免两套 hook 互相覆盖。
+- 任务纯函数：`createTask` / `addTask` / `toggleTask` / `deleteTask` / `sortTasks` / `isTask`。
+
+### 质量
+
+- 40 条单元测试（新增 task 16 条、storage 任务校验 3 条）。
+
 ## v0.2.0 — 2026-10-23
 
 ### 新增

@@ -214,15 +214,6 @@
   line-height: 1.6;
 }
 
-.placeholder {
-  margin-top: 22px;
-  padding-top: 16px;
-  border-top: 1px dashed var(--color-border);
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-  transition: border-color var(--transition-theme);
-}
-
 @media (max-width: 1119px) {
   .stage {
     padding: 88px 20px 128px;

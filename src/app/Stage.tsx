@@ -1,14 +1,26 @@
-import type { MoodId } from '../lib/types';
+import type { MoodId, Task } from '../lib/types';
 import { getMoodMeta } from '../features/mood/mood';
+import TaskComposer from '../features/tasks/TaskComposer';
+import TaskList from '../features/tasks/TaskList';
 import styles from './Stage.module.css';
 
 interface StageProps {
   mood: MoodId;
+  tasks: readonly Task[];
+  onAddTask: (title: string) => void;
+  onToggleTask: (id: string) => void;
+  onDeleteTask: (id: string) => void;
 }
 
 const RAIN_DROPS = 12;
 
-export default function Stage({ mood }: StageProps) {
+export default function Stage({
+  mood,
+  tasks,
+  onAddTask,
+  onToggleTask,
+  onDeleteTask,
+}: StageProps) {
   const meta = getMoodMeta(mood);
 
   return (
@@ -32,8 +44,9 @@ export default function Stage({ mood }: StageProps) {
       <article className={styles.card}>
         <p className={styles.eyebrow}>当前情绪 · {meta.label}</p>
         <h2 className={styles.title}>今天想做什么？</h2>
-        <p className={styles.text}>{meta.description}。先感受一下现在的界面，再决定下一步。</p>
-        <p className={styles.placeholder}>任务模块将在下一张任务卡接入。</p>
+        <p className={styles.text}>{meta.description}。先写下一件小事，再开始。</p>
+        <TaskComposer onAdd={onAddTask} />
+        <TaskList tasks={tasks} onToggle={onToggleTask} onDelete={onDeleteTask} />
       </article>
     </section>
   );

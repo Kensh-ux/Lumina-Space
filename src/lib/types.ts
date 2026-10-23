@@ -13,6 +13,21 @@ export interface Task {
   completedAt: string | null;
 }
 
+export function isTask(value: unknown): value is Task {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const task = value as Record<string, unknown>;
+  return (
+    typeof task.id === 'string' &&
+    task.id.length > 0 &&
+    typeof task.title === 'string' &&
+    typeof task.done === 'boolean' &&
+    typeof task.createdAt === 'string' &&
+    (task.completedAt === null || typeof task.completedAt === 'string')
+  );
+}
+
 export interface AppDataV1 {
   schemaVersion: 1;
   tasks: Task[];

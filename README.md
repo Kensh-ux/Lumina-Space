@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-2ea44f"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-v0.2-5b7c99">
+  <img alt="Version" src="https://img.shields.io/badge/version-v0.3-5b7c99">
   <img alt="Status" src="https://img.shields.io/badge/status-alpha-d97706">
   <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white">
@@ -44,11 +44,12 @@ Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心�
 
 - **情绪圆盘**：左上角圆形情绪盘，鼠标移入 / 点击 / Enter 展开积极 / 中性 / 消极三个选项；选中后整站切换主题，刷新后保持。
 - **全屏主界面**：场景铺满整个视口，内容卡居中；暖阳、阴天、雨夜三种氛围。
+- **待办任务**：在中央卡片添加 / 完成 / 删除任务；未完成优先排序，空列表有空状态；刷新后任务与完成状态保持。
 - **左下侧边栏**：今日 / 专注 / 设置三个入口，展开占位面板；Esc 收起；窄屏变底部抽屉。
 - **本地优先**：数据只存在浏览器 `localStorage`，没有账号、没有后端。
-- **基础质量**：键盘可达、焦点可见、`prefers-reduced-motion` 关闭动效；21 条单元测试。
+- **基础质量**：键盘可达、焦点可见、`prefers-reduced-motion` 关闭动效；40 条单元测试。
 
-> 当前 v0.3 开发中：任务 CRUD、侧边栏抽屉、番茄钟。v1.0 会把常用功能做齐，v2.0 再做 3D 小屋。
+> 当前 v0.3 开发中：任务 CRUD 已完成；侧边栏抽屉、番茄钟是下一步。v1.0 会把常用功能做齐，v2.0 再做 3D 小屋。
 
 ## 截图
 
@@ -79,7 +80,7 @@ npm run dev
 |---|---|---|
 | v0.1.0 | 2026-10-22 | 框架、三种情绪主题、左下侧边栏、Stage 场景、本地持久化 |
 | v0.2.0 | 2026-10-23 | 全屏主界面、情绪圆盘、触屏/键盘交互 |
-| v0.3.0 | 开发中 | 任务 CRUD、侧边栏抽屉、番茄钟 |
+| v0.3.0 | 开发中 | 任务 CRUD；侧边栏抽屉、番茄钟开发中 |
 | v0.4.0 | 计划 | UI 打磨 |
 | v1.0.0 | 计划 | 常用功能完整、可发布的主界面 |
 | v2.0.0 | 计划 | 3D 小屋 |
