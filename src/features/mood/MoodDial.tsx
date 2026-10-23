@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type {
-  CSSProperties,
   FocusEvent as ReactFocusEvent,
   KeyboardEvent as ReactKeyboardEvent,
+  PointerEvent as ReactPointerEvent,
 } from 'react';
-import { getMoodMeta, MOODS, type MoodId } from './mood';
+import MoodDialMenu from './MoodDialMenu';
+import { getMoodMeta, type MoodId } from './mood';
 import styles from './MoodDial.module.css';
 
 interface MoodDialProps {
@@ -13,44 +14,54 @@ interface MoodDialProps {
   defaultOpen?: boolean;
 }
 
-const DIAL_ANGLES = [0, 45, 90] as const;
-const DIAL_RADIUS = 78;
-
-function itemPosition(index: number): CSSProperties {
-  const radians = (DIAL_ANGLES[index] * Math.PI) / 180;
-  return {
-    left: `${Math.cos(radians) * DIAL_RADIUS}px`,
-    top: `${Math.sin(radians) * DIAL_RADIUS}px`,
-  };
-}
-
 export default function MoodDial({ current, onChange, defaultOpen = false }: MoodDialProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [pendingFocus, setPendingFocus] = useState<number | null>(null);
+  const openedByHoverRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const meta = getMoodMeta(current);
 
   const closeMenu = useCallback((restoreFocus = false) => {
+    openedByHoverRef.current = false;
     setOpen(false);
     if (restoreFocus) {
       triggerRef.current?.focus();
     }
   }, []);
 
+  // 菜单打开时，Esc 在整页范围内都可关闭（焦点可能不在圆盘里）。
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeMenu(true);
+      }
+    };
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, closeMenu]);
+
+  // 点击菜单外部关闭；若焦点还在菜单里，把焦点还给圆盘。
   useEffect(() => {
     if (!open) {
       return;
     }
     const handlePointerDown = (event: PointerEvent) => {
-      if (!containerRef.current?.contains(event.target as Node)) {
-        setOpen(false);
+      if (containerRef.current?.contains(event.target as Node)) {
+        return;
       }
+      const active = document.activeElement;
+      const focusInMenu = active instanceof HTMLElement && containerRef.current?.contains(active);
+      closeMenu(focusInMenu);
     };
     document.addEventListener('pointerdown', handlePointerDown);
     return () => document.removeEventListener('pointerdown', handlePointerDown);
-  }, [open]);
+  }, [open, closeMenu]);
 
   useEffect(() => {
     if (pendingFocus === null) {
@@ -60,21 +71,7 @@ export default function MoodDial({ current, onChange, defaultOpen = false }: Moo
     setPendingFocus(null);
   }, [pendingFocus]);
 
-  const moveFocus = (step: number) => {
-    const items = itemRefs.current.filter((item): item is HTMLButtonElement => item !== null);
-    if (items.length === 0) {
-      return;
-    }
-    const activeIndex = items.findIndex((item) => item === document.activeElement);
-    const nextIndex = (activeIndex + step + items.length) % items.length;
-    items[nextIndex].focus();
-  };
-
   const handleTriggerKeyDown = (event: ReactKeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === 'Escape') {
-      closeMenu(false);
-      return;
-    }
     if (
       event.key === 'Enter' ||
       event.key === ' ' ||
@@ -82,37 +79,9 @@ export default function MoodDial({ current, onChange, defaultOpen = false }: Moo
       event.key === 'ArrowRight'
     ) {
       event.preventDefault();
+      openedByHoverRef.current = false;
       setOpen(true);
       setPendingFocus(0);
-    }
-  };
-
-  const handleMenuKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
-    switch (event.key) {
-      case 'Escape':
-        event.preventDefault();
-        closeMenu(true);
-        break;
-      case 'ArrowDown':
-      case 'ArrowRight':
-        event.preventDefault();
-        moveFocus(1);
-        break;
-      case 'ArrowUp':
-      case 'ArrowLeft':
-        event.preventDefault();
-        moveFocus(-1);
-        break;
-      case 'Home':
-        event.preventDefault();
-        itemRefs.current[0]?.focus();
-        break;
-      case 'End':
-        event.preventDefault();
-        itemRefs.current[MOODS.length - 1]?.focus();
-        break;
-      default:
-        break;
     }
   };
 
@@ -121,21 +90,42 @@ export default function MoodDial({ current, onChange, defaultOpen = false }: Moo
     if (next instanceof Node && event.currentTarget.contains(next)) {
       return;
     }
+    closeMenu(false);
+  };
+
+  const handlePointerEnter = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse' || open) {
+      return;
+    }
+    openedByHoverRef.current = true;
+    setOpen(true);
+  };
+
+  const handlePointerLeave = (event: ReactPointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse' || !openedByHoverRef.current) {
+      return;
+    }
+    openedByHoverRef.current = false;
     setOpen(false);
   };
 
-  const handleMouseLeave = () => {
-    const active = document.activeElement;
-    if (active instanceof HTMLElement && containerRef.current?.contains(active)) {
-      triggerRef.current?.focus();
+  const handleTriggerClick = () => {
+    if (!open) {
+      openedByHoverRef.current = false;
+      setOpen(true);
+      return;
     }
-    setOpen(false);
+    if (openedByHoverRef.current) {
+      // hover 打开后的第一次点击：保持展开，转为 click-open。
+      openedByHoverRef.current = false;
+      return;
+    }
+    closeMenu(false);
   };
 
   const handleSelect = (mood: MoodId) => {
     onChange(mood);
-    setOpen(false);
-    triggerRef.current?.focus();
+    closeMenu(true);
   };
 
   return (
@@ -143,8 +133,8 @@ export default function MoodDial({ current, onChange, defaultOpen = false }: Moo
       ref={containerRef}
       className={styles.dial}
       data-open={open}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={handleMouseLeave}
+      onPointerEnter={handlePointerEnter}
+      onPointerLeave={handlePointerLeave}
       onBlur={handleBlur}
     >
       <button
@@ -155,7 +145,7 @@ export default function MoodDial({ current, onChange, defaultOpen = false }: Moo
         aria-expanded={open}
         aria-controls={open ? 'mood-dial-menu' : undefined}
         aria-label={`当前情绪：${meta.label}，打开情绪选择`}
-        onClick={() => setOpen((previous) => !previous)}
+        onClick={handleTriggerClick}
         onKeyDown={handleTriggerKeyDown}
       >
         <span className={styles.triggerEmoji} aria-hidden="true">
@@ -167,33 +157,7 @@ export default function MoodDial({ current, onChange, defaultOpen = false }: Moo
       </button>
 
       {open ? (
-        <div
-          id="mood-dial-menu"
-          role="menu"
-          aria-label="选择当前情绪"
-          className={styles.menu}
-          onKeyDown={handleMenuKeyDown}
-        >
-          {MOODS.map((mood, index) => (
-            <button
-              key={mood.id}
-              ref={(element) => {
-                itemRefs.current[index] = element;
-              }}
-              type="button"
-              role="menuitemradio"
-              aria-checked={mood.id === current}
-              className={styles.item}
-              style={itemPosition(index)}
-              onClick={() => handleSelect(mood.id)}
-            >
-              <span className={styles.itemEmoji} aria-hidden="true">
-                {mood.emoji}
-              </span>
-              <span className={styles.itemLabel}>{mood.label}</span>
-            </button>
-          ))}
-        </div>
+        <MoodDialMenu current={current} itemRefs={itemRefs} onSelect={handleSelect} />
       ) : null}
     </div>
   );

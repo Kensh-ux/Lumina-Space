@@ -22,7 +22,7 @@ Guidance for AI agents working on **Lumina-Space** — a mood-aware todo and foc
 ```
 src/
   app/              App, Sidebar, Stage
-  features/mood/    MoodPicker, mood.ts, useMood
+  features/mood/    MoodDial, mood.ts, useMood
   features/tasks/   task CRUD (v0.2)
   lib/              shared types, storage adapter
   styles/           tokens.css, global.css
