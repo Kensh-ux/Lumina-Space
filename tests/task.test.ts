@@ -148,4 +148,12 @@ describe('isTask', () => {
     expect(isTask({ ...makeTask(), done: 'yes' })).toBe(false);
     expect(isTask({ ...makeTask(), completedAt: undefined })).toBe(false);
   });
+
+  it('拒绝空白标题', () => {
+    expect(isTask({ ...makeTask(), title: '   ' })).toBe(false);
+  });
+
+  it('拒绝非法 createdAt', () => {
+    expect(isTask({ ...makeTask(), createdAt: 'not-a-date' })).toBe(false);
+  });
 });

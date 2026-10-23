@@ -39,8 +39,11 @@ export function useAppData(): UseAppDataResult {
   }, [mood]);
 
   useEffect(() => {
+    if (preview) {
+      return;
+    }
     setStorageError(!saveData(data));
-  }, [data]);
+  }, [data, preview]);
 
   const setMood = useCallback((next: MoodId) => {
     setPreview(null);

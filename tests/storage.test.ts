@@ -163,6 +163,61 @@ describe('loadData', () => {
     expect(data.mood.current).toBe('negative');
   });
 
+  it('schemaVersion=1 但缺 tasks 的旧数据迁移为空数组并保留情绪', () => {
+    storage.setItem(
+      KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        mood: { current: 'negative', updatedAt: '2026-10-21T00:00:00.000Z' },
+      }),
+    );
+
+    const data = loadData(storage);
+
+    expect(data.tasks).toEqual([]);
+    expect(data.mood.current).toBe('negative');
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+  });
+
+  it('任务 id 重复时返回默认值并备份', () => {
+    const task = {
+      id: 'dup-id',
+      title: '第一件',
+      done: false,
+      createdAt: '2026-10-23T00:00:00.000Z',
+      completedAt: null,
+    };
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [task, { ...task, title: '第二件' }],
+      mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    expect(loadData(storage).tasks).toEqual([]);
+    expect(storage.getItem(BACKUP_KEY)).toBe(raw);
+  });
+
+  it('任务 createdAt 非法日期时返回默认值并备份', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [
+        {
+          id: 'task-1',
+          title: '复习高数',
+          done: false,
+          createdAt: 'not-a-date',
+          completedAt: null,
+        },
+      ],
+      mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    expect(loadData(storage).tasks).toEqual([]);
+    expect(storage.getItem(BACKUP_KEY)).toBe(raw);
+  });
+
   it('mood.current 非法时返回默认值', () => {
     storage.setItem(
       KEY,

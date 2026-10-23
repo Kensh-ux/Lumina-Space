@@ -1,5 +1,5 @@
 import { isTask, MOOD_IDS, STORAGE_KEY, THEME_KEY } from './types';
-import type { AppDataV1, MoodId } from './types';
+import type { AppDataV1, MoodId, Task } from './types';
 
 const BACKUP_KEY = `${STORAGE_KEY}:backup`;
 const SCHEMA_VERSION = 1;
@@ -29,7 +29,14 @@ function isValidData(value: unknown): value is AppDataV1 {
   if (data.schemaVersion !== SCHEMA_VERSION) {
     return false;
   }
-  if (!Array.isArray(data.tasks) || !data.tasks.every((task) => isTask(task))) {
+  if (!Array.isArray(data.tasks)) {
+    return false;
+  }
+  if (!data.tasks.every((task) => isTask(task))) {
+    return false;
+  }
+  const tasks = data.tasks as Task[];
+  if (new Set(tasks.map((task) => task.id)).size !== tasks.length) {
     return false;
   }
   if (typeof data.mood !== 'object' || data.mood === null) {
@@ -37,6 +44,32 @@ function isValidData(value: unknown): value is AppDataV1 {
   }
   const mood = data.mood as Record<string, unknown>;
   return isValidMoodId(mood.current) && typeof mood.updatedAt === 'string';
+}
+
+// v0.1/v0.2 写下的数据还没有 tasks 字段：迁移为空数组并保留情绪，不走 backup/默认值。
+function migrateMissingTasks(value: unknown): AppDataV1 | null {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+  const data = value as Record<string, unknown>;
+  if (data.schemaVersion !== SCHEMA_VERSION || data.tasks !== undefined) {
+    return null;
+  }
+  if (typeof data.mood !== 'object' || data.mood === null) {
+    return null;
+  }
+  const mood = data.mood as Record<string, unknown>;
+  if (!isValidMoodId(mood.current) || typeof mood.updatedAt !== 'string') {
+    return null;
+  }
+  return {
+    schemaVersion: 1,
+    tasks: [],
+    mood: {
+      current: mood.current,
+      updatedAt: mood.updatedAt,
+    },
+  };
 }
 
 function backupRaw(storage: Storage, raw: string): void {
@@ -75,6 +108,10 @@ export function loadData(storage: Storage | null = resolveStorage()): AppDataV1 
     const parsed: unknown = JSON.parse(raw);
     if (isValidData(parsed)) {
       return parsed;
+    }
+    const migrated = migrateMissingTasks(parsed);
+    if (migrated) {
+      return migrated;
     }
   } catch {
     // 解析失败走备份 + 默认值。

@@ -22,8 +22,10 @@ export function isTask(value: unknown): value is Task {
     typeof task.id === 'string' &&
     task.id.length > 0 &&
     typeof task.title === 'string' &&
+    task.title.trim().length > 0 &&
     typeof task.done === 'boolean' &&
     typeof task.createdAt === 'string' &&
+    !Number.isNaN(Date.parse(task.createdAt)) &&
     (task.completedAt === null || typeof task.completedAt === 'string')
   );
 }
