@@ -10,6 +10,7 @@
 </p>
 
 <p align="center">
+  <a href="https://lumina-space.cc.cd"><img alt="Live" src="https://img.shields.io/badge/live-lumina--space.cc.cd-2ea44f"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-2ea44f"></a>
   <img alt="Version" src="https://img.shields.io/badge/version-v0.1-5b7c99">
   <img alt="Status" src="https://img.shields.io/badge/status-alpha-d97706">
@@ -24,7 +25,8 @@
   <a href="#快速开始">快速开始</a> ·
   <a href="#技术栈">技术栈</a> ·
   <a href="#版本">版本</a> ·
-  <a href="#参考与致谢">致谢</a>
+  <a href="#参考与致谢">致谢</a> ·
+  <a href="https://lumina-space.cc.cd"><strong>打开网页版 →</strong></a>
 </p>
 
 ---
@@ -111,22 +113,28 @@ docs/
 
 | 版本 | 日期 | 内容 | 状态 |
 |---|---|---|---|
-| **v0.1** | 2026-10-22 | 框架、情绪主题、左下侧边栏、Stage 场景、本地持久化、18 tests | 已发布 |
-| v0.2 | 计划 | 任务 CRUD、网站上线 | 计划中 |
+| **v0.1** | 2026-10-22 | 框架、情绪主题、左下侧边栏、Stage 场景、本地持久化、18 tests | 已上线 |
+| v0.2 | 进行中 | 全屏主界面、情绪圆盘、任务 CRUD | 进行中 |
 | v0.3 | 计划 | 番茄钟、情绪记录、主题扩展、动效、3D 预研 | 计划中 |
 
-## 部署
+## 线上地址
+
+**https://lumina-space.cc.cd**
 
 纯静态站点，构建产物在 `dist/`，没有后端。
 
-### Cloudflare Pages
+### Cloudflare
 
-1. Cloudflare Dashboard → Workers & Pages → Create → Pages → Connect to Git。
-2. 选 `Kensh-ux/Lumina-Space`，分支 `main`。
-3. Build command：`npm run build`；Build output directory：`dist`；Node 22。
-4. Save and Deploy。
+当前线上是 Cloudflare Worker（GitHub 集成）+ 自定义域名 `lumina-space.cc.cd`：
 
-> **国内访问提示**：`*.workers.dev` / `*.pages.dev` 在中国大陆可能无法访问。正式使用建议在 Cloudflare 绑定**自己的域名**，或改用国内静态托管（Gitee Pages / 腾讯云 / 阿里云 OSS）。当前仓库不写死线上地址。
+- Build command：`npm run build`
+- Build output directory：`dist`
+- Node：22
+- 自定义域名：`lumina-space.cc.cd`
+
+以后 `git push` 到 `main` 自动更新，不需要 wrangler。
+
+> `*.workers.dev` / `*.pages.dev` 在中国大陆不可达；本项目已经绑定 `cc.cd` 自定义域名。
 
 ## 参考与致谢
 
