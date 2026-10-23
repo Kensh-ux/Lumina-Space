@@ -1,25 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MoodId, Task } from '../lib/types';
-import { countTasks } from '../features/tasks/task';
-import TaskComposer from '../features/tasks/TaskComposer';
-import TaskList from '../features/tasks/TaskList';
+import { closeOverlay, getActiveOverlay, openOverlay, subscribeOverlay } from '../lib/overlay';
 import SettingsPanel from '../features/settings/SettingsPanel';
+import {
+  FocusPanel,
+  PANELS,
+  SidebarHeader,
+  SidebarRail,
+  TodayPanel,
+  type PanelId,
+} from './SidebarPanels';
 import styles from './Sidebar.module.css';
 
-export type PanelId = 'today' | 'focus' | 'settings';
-
-interface PanelMeta {
-  id: PanelId;
-  label: string;
-  icon: string;
-  title: string;
-}
-
-const PANELS: readonly PanelMeta[] = [
-  { id: 'today', label: '今日', icon: '📋', title: '今日' },
-  { id: 'focus', label: '专注', icon: '⏳', title: '专注' },
-  { id: 'settings', label: '设置', icon: '⚙️', title: '设置' },
-];
+export type { PanelId } from './SidebarPanels';
 
 interface SidebarProps {
   initialPanel?: PanelId | null;
@@ -45,6 +38,8 @@ export default function Sidebar({
   storageError,
 }: SidebarProps) {
   const [openPanel, setOpenPanel] = useState<PanelId | null>(initialPanel ?? null);
+  const openPanelRef = useRef<PanelId | null>(openPanel);
+  openPanelRef.current = openPanel;
   const sidebarRef = useRef<HTMLElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const railRefs = useRef<Record<PanelId, HTMLButtonElement | null>>({
@@ -53,11 +48,20 @@ export default function Sidebar({
     settings: null,
   });
   const previousPanelRef = useRef<PanelId | null>(initialPanel ?? null);
+  const suppressRestoreFocusRef = useRef(false);
   const didMountRef = useRef(false);
 
-  const closePanel = useCallback(() => setOpenPanel(null), []);
+  const setPanelSafe = useCallback((next: PanelId | null) => {
+    setOpenPanel(next);
+    if (next) {
+      openOverlay('sidebar');
+    } else {
+      closeOverlay('sidebar');
+    }
+  }, []);
+  const closePanel = useCallback(() => setPanelSafe(null), [setPanelSafe]);
 
-  // 打开时焦点进抽屉，关闭时回到对应 rail 按钮；首帧的 ?panel 预览不抢焦点。
+  // 打开时焦点进抽屉，关闭时回到对应 rail 按钮；首帧 ?panel 预览与被动关闭不抢焦点。
   useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
@@ -67,24 +71,49 @@ export default function Sidebar({
     if (openPanel) {
       closeButtonRef.current?.focus();
     } else if (previousPanelRef.current) {
-      const previous = previousPanelRef.current;
-      // 等外部 click 的默认焦点行为结束后再回焦，避免被 body 抢走。
-      const frame = requestAnimationFrame(() => {
-        railRefs.current[previous]?.focus();
-      });
-      previousPanelRef.current = openPanel;
-      return () => cancelAnimationFrame(frame);
+      if (suppressRestoreFocusRef.current) {
+        suppressRestoreFocusRef.current = false;
+      } else {
+        const previous = previousPanelRef.current;
+        const frame = requestAnimationFrame(() => {
+          railRefs.current[previous]?.focus();
+        });
+        previousPanelRef.current = openPanel;
+        return () => cancelAnimationFrame(frame);
+      }
     }
     previousPanelRef.current = openPanel;
   }, [openPanel]);
 
-  // Esc 关闭；若 MoodDial 已处理（defaultPrevented）则让给它。
+  // 另一个浮层打开时自动收起，不抢焦点（null 表示只是自己关闭）。
+  useEffect(() => {
+    return subscribeOverlay((activeId) => {
+      if (activeId !== null && activeId !== 'sidebar' && openPanelRef.current) {
+        suppressRestoreFocusRef.current = true;
+        setOpenPanel(null);
+      }
+    });
+  }, []);
+
+  // ?panel= 预览也登记到 overlay；卸载时释放。
+  useEffect(() => {
+    if (initialPanel) {
+      openOverlay('sidebar');
+    }
+    return () => {
+      if (getActiveOverlay() === 'sidebar') {
+        closeOverlay('sidebar');
+      }
+    };
+  }, [initialPanel]);
+
+  // 只有当前活跃浮层响应 Esc。
   useEffect(() => {
     if (!openPanel) {
       return;
     }
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || event.defaultPrevented) {
+      if (event.key !== 'Escape' || getActiveOverlay() !== 'sidebar') {
         return;
       }
       event.preventDefault();
@@ -94,7 +123,6 @@ export default function Sidebar({
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [openPanel, closePanel]);
 
-  // 点击抽屉外部关闭。
   useEffect(() => {
     if (!openPanel) {
       return;
@@ -110,7 +138,6 @@ export default function Sidebar({
   }, [openPanel, closePanel]);
 
   const activeMeta = PANELS.find((panel) => panel.id === openPanel) ?? null;
-  const counts = countTasks(tasks);
 
   return (
     <aside ref={sidebarRef} className={styles.sidebar} aria-label="快捷功能">
@@ -120,47 +147,23 @@ export default function Sidebar({
           className={styles.drawer}
           aria-labelledby={`sidebar-title-${activeMeta.id}`}
         >
-          <header className={styles.drawerHeader}>
-            <h2 id={`sidebar-title-${activeMeta.id}`} className={styles.drawerTitle}>
-              {activeMeta.title}
-            </h2>
-            <button
-              ref={closeButtonRef}
-              type="button"
-              className={styles.closeButton}
-              aria-label="关闭侧边栏"
-              onClick={closePanel}
-            >
-              ×
-            </button>
-          </header>
+          <SidebarHeader
+            title={activeMeta.title}
+            titleId={`sidebar-title-${activeMeta.id}`}
+            closeButtonRef={closeButtonRef}
+            onClose={closePanel}
+          />
 
           <div className={styles.drawerBody}>
             {activeMeta.id === 'today' ? (
-              <>
-                <p className={styles.counts}>
-                  未完成 {counts.open} · 完成 {counts.done}
-                </p>
-                <TaskList
-                  tasks={tasks}
-                  onToggle={onToggleTask}
-                  onDelete={onDeleteTask}
-                  compact
-                  showSummary={false}
-                />
-                <TaskComposer onAdd={onAddTask} />
-              </>
+              <TodayPanel
+                tasks={tasks}
+                onAddTask={onAddTask}
+                onToggleTask={onToggleTask}
+                onDeleteTask={onDeleteTask}
+              />
             ) : null}
-
-            {activeMeta.id === 'focus' ? (
-              <div className={styles.placeholder}>
-                <p className={styles.placeholderText}>番茄钟会在下一张任务卡接入。</p>
-                <button type="button" className={styles.placeholderButton} disabled>
-                  开始专注
-                </button>
-              </div>
-            ) : null}
-
+            {activeMeta.id === 'focus' ? <FocusPanel /> : null}
             {activeMeta.id === 'settings' ? (
               <SettingsPanel
                 mood={mood}
@@ -173,32 +176,11 @@ export default function Sidebar({
         </section>
       ) : null}
 
-      <nav className={styles.rail} aria-label="功能入口">
-        {PANELS.map((panel) => {
-          const expanded = openPanel === panel.id;
-          return (
-            <button
-              key={panel.id}
-              ref={(element) => {
-                railRefs.current[panel.id] = element;
-              }}
-              type="button"
-              className={styles.railButton}
-              aria-expanded={expanded}
-              aria-controls={expanded ? `sidebar-panel-${panel.id}` : undefined}
-              aria-label={panel.label}
-              onClick={() => setOpenPanel((current) => (current === panel.id ? null : panel.id))}
-            >
-              <span className={styles.icon} aria-hidden="true">
-                {panel.icon}
-              </span>
-              <span className={styles.label} aria-hidden="true">
-                {panel.label}
-              </span>
-            </button>
-          );
-        })}
-      </nav>
+      <SidebarRail
+        openPanel={openPanel}
+        railRefs={railRefs}
+        onSelect={(panel) => setPanelSafe(openPanel === panel ? null : panel)}
+      />
     </aside>
   );
 }

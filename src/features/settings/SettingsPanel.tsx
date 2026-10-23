@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { MOODS, type MoodId } from '../mood/mood';
 import styles from './SettingsPanel.module.css';
 
@@ -17,11 +17,14 @@ export default function SettingsPanel({
 }: SettingsPanelProps) {
   const [confirming, setConfirming] = useState(false);
   const [cleared, setCleared] = useState(false);
+  const clearButtonRef = useRef<HTMLButtonElement>(null);
 
   const handleClear = () => {
     onClearData();
     setConfirming(false);
     setCleared(true);
+    // 确认按钮本身会卸载，等重渲染后把焦点还给「清空所有数据」。
+    requestAnimationFrame(() => clearButtonRef.current?.focus());
   };
 
   return (
@@ -64,7 +67,12 @@ export default function SettingsPanel({
             </div>
           </div>
         ) : (
-          <button type="button" className={styles.dangerButton} onClick={() => setConfirming(true)}>
+          <button
+            ref={clearButtonRef}
+            type="button"
+            className={styles.dangerButton}
+            onClick={() => setConfirming(true)}
+          >
             清空所有数据
           </button>
         )}
@@ -76,9 +84,7 @@ export default function SettingsPanel({
       </section>
 
       {storageError ? (
-        <p className={styles.storageError} role="status">
-          浏览器存储不可用，本次改动不会被记住。
-        </p>
+        <p className={styles.storageError}>浏览器存储不可用，本次改动不会被记住。</p>
       ) : null}
 
       <p className={styles.version}>Lumina-Space v0.3.0</p>

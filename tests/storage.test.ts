@@ -252,8 +252,9 @@ describe('saveData', () => {
 });
 
 describe('clearData', () => {
-  it('删除 lumina:data 与主题镜像键，不动其他键', () => {
+  it('删除 lumina:data、主题镜像键与备份键，不动其他键', () => {
     storage.setItem(KEY, JSON.stringify(createDefaultData()));
+    storage.setItem(BACKUP_KEY, '{broken');
     storage.setItem(THEME_KEY, 'negative');
     storage.setItem('lumina:other', 'keep-me');
     storage.setItem('unrelated', 'keep-me-too');
@@ -262,6 +263,7 @@ describe('clearData', () => {
 
     expect(storage.getItem(KEY)).toBeNull();
     expect(storage.getItem(THEME_KEY)).toBeNull();
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
     expect(storage.getItem('lumina:other')).toBe('keep-me');
     expect(storage.getItem('unrelated')).toBe('keep-me-too');
   });

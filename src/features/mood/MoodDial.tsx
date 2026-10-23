@@ -4,6 +4,7 @@ import type {
   KeyboardEvent as ReactKeyboardEvent,
   PointerEvent as ReactPointerEvent,
 } from 'react';
+import { closeOverlay, getActiveOverlay, openOverlay, subscribeOverlay } from '../../lib/overlay';
 import MoodDialMenu from './MoodDialMenu';
 import { getMoodMeta, type MoodId } from './mood';
 import styles from './MoodDial.module.css';
@@ -17,30 +18,61 @@ interface MoodDialProps {
 export default function MoodDial({ current, onChange, defaultOpen = false }: MoodDialProps) {
   const [open, setOpen] = useState(defaultOpen);
   const [pendingFocus, setPendingFocus] = useState<number | null>(null);
+  const openRef = useRef(open);
   const openedByHoverRef = useRef(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const meta = getMoodMeta(current);
+  openRef.current = open;
 
-  const closeMenu = useCallback((restoreFocus = false) => {
-    openedByHoverRef.current = false;
-    setOpen(false);
-    if (restoreFocus) {
-      triggerRef.current?.focus();
+  const setOpenSafe = useCallback((next: boolean) => {
+    setOpen(next);
+    if (next) {
+      openOverlay('mood-dial');
+    } else {
+      closeOverlay('mood-dial');
     }
   }, []);
 
-  // 菜单打开时，Esc 在整页范围内都可关闭（焦点可能不在圆盘里）。
+  const closeMenu = useCallback(
+    (restoreFocus = false) => {
+      openedByHoverRef.current = false;
+      setOpenSafe(false);
+      if (restoreFocus) {
+        triggerRef.current?.focus();
+      }
+    },
+    [setOpenSafe],
+  );
+
+  // 另一个浮层打开时自动收起（不抢焦点；null 表示只是自己关闭）。
+  useEffect(() => {
+    return subscribeOverlay((activeId) => {
+      if (activeId !== null && activeId !== 'mood-dial' && openRef.current) {
+        setOpen(false);
+        openedByHoverRef.current = false;
+      }
+    });
+  }, []);
+
+  // ?dial=open 的预览也登记到 overlay；卸载时释放。
+  useEffect(() => {
+    if (defaultOpen) openOverlay('mood-dial');
+    return () => {
+      if (getActiveOverlay() === 'mood-dial') closeOverlay('mood-dial');
+    };
+  }, [defaultOpen]);
+
+  // 只有当前活跃浮层响应 Esc。
   useEffect(() => {
     if (!open) {
       return;
     }
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        event.preventDefault();
-        closeMenu(true);
-      }
+      if (event.key !== 'Escape' || getActiveOverlay() !== 'mood-dial') return;
+      event.preventDefault();
+      closeMenu(true);
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
@@ -80,7 +112,7 @@ export default function MoodDial({ current, onChange, defaultOpen = false }: Moo
     ) {
       event.preventDefault();
       openedByHoverRef.current = false;
-      setOpen(true);
+      setOpenSafe(true);
       setPendingFocus(0);
     }
   };
@@ -98,7 +130,7 @@ export default function MoodDial({ current, onChange, defaultOpen = false }: Moo
       return;
     }
     openedByHoverRef.current = true;
-    setOpen(true);
+    setOpenSafe(true);
   };
 
   const handlePointerLeave = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -106,13 +138,13 @@ export default function MoodDial({ current, onChange, defaultOpen = false }: Moo
       return;
     }
     openedByHoverRef.current = false;
-    setOpen(false);
+    setOpenSafe(false);
   };
 
   const handleTriggerClick = () => {
     if (!open) {
       openedByHoverRef.current = false;
-      setOpen(true);
+      setOpenSafe(true);
       return;
     }
     if (openedByHoverRef.current) {

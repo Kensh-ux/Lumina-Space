@@ -6,11 +6,12 @@
 
 - 待办任务 CRUD：添加 / 完成 / 删除，空状态、完成态与 `aria-live` 计数。
 - 统一数据入口 `useAppData`：情绪与任务共用一份 localStorage 数据，避免两套 hook 互相覆盖。
-- 任务纯函数：`createTask` / `addTask` / `toggleTask` / `deleteTask` / `sortTasks` / `isTask`。
+- 任务纯函数：`createTask` / `addTask` / `toggleTask` / `deleteTask` / `sortTasks` / `isTask` / `countTasks`。
+- 侧边栏抽屉：今日任务（快速添加）、专注占位、设置（主题、清空数据二次确认）；桌面 320px 抽屉与窄屏底部 sheet。
 
 ### 质量
 
-- 45 条单元测试（新增 task 18 条、storage 任务校验 6 条）。
+- 47 条单元测试（task 20、storage 17、mood 7、dialGeometry 3）。
 - 首轮审查 BLOCK（旧数据缺 tasks 会重置 mood）已修复；复审 PASS WITH COMMENTS。
 
 ## v0.2.0 — 2026-10-23

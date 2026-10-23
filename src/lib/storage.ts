@@ -141,6 +141,7 @@ export function clearData(storage: Storage | null = resolveStorage()): void {
   try {
     storage.removeItem(STORAGE_KEY);
     storage.removeItem(THEME_KEY);
+    storage.removeItem(BACKUP_KEY);
   } catch {
     // 删除失败时保持沉默，调用方不因存储异常崩溃。
   }

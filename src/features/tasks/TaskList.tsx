@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import type { Task } from '../../lib/types';
 import { countTasks, sortTasks } from './task';
 import styles from './tasks.module.css';
@@ -19,6 +20,7 @@ export default function TaskList({
 }: TaskListProps) {
   const sorted = sortTasks(tasks);
   const { total, done } = countTasks(tasks);
+  const idPrefix = useId();
 
   return (
     <div className={compact ? `${styles.listBlock} ${styles.listBlockCompact}` : styles.listBlock}>
@@ -32,7 +34,7 @@ export default function TaskList({
       ) : (
         <ul className={styles.list}>
           {sorted.map((task) => {
-            const checkboxId = `task-${task.id}`;
+            const checkboxId = `${idPrefix}-task-${task.id}`;
             return (
               <li key={task.id} className={styles.item} data-done={task.done}>
                 <label className={styles.checkArea} htmlFor={checkboxId}>
