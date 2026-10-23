@@ -72,6 +72,14 @@
   font-size: 0.8125rem;
 }
 
+.listBlockCompact .summary {
+  margin-top: 0;
+}
+
+.listBlockCompact .list {
+  max-height: none;
+}
+
 .list {
   display: flex;
   flex-direction: column;

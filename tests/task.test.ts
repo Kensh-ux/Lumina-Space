@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   addTask,
+  countTasks,
   createTask,
   deleteTask,
   isTask,
@@ -155,5 +156,21 @@ describe('isTask', () => {
 
   it('拒绝非法 createdAt', () => {
     expect(isTask({ ...makeTask(), createdAt: 'not-a-date' })).toBe(false);
+  });
+});
+
+describe('countTasks', () => {
+  it('统计总数、完成与未完成', () => {
+    const counts = countTasks([
+      makeTask({ id: 'a' }),
+      makeTask({ id: 'b', done: true }),
+      makeTask({ id: 'c', done: true }),
+    ]);
+
+    expect(counts).toEqual({ total: 3, done: 2, open: 1 });
+  });
+
+  it('空数组返回全 0', () => {
+    expect(countTasks([])).toEqual({ total: 0, done: 0, open: 0 });
   });
 });

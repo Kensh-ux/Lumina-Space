@@ -64,3 +64,19 @@ export function sortTasks(tasks: readonly Task[]): Task[] {
     return b.createdAt.localeCompare(a.createdAt);
   });
 }
+
+export interface TaskCounts {
+  total: number;
+  done: number;
+  open: number;
+}
+
+export function countTasks(tasks: readonly Task[]): TaskCounts {
+  let done = 0;
+  for (const task of tasks) {
+    if (task.done) {
+      done += 1;
+    }
+  }
+  return { total: tasks.length, done, open: tasks.length - done };
+}

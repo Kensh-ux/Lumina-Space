@@ -23,7 +23,8 @@ function readDialOpen(): boolean {
 }
 
 function App() {
-  const { mood, tasks, setMood, addTask, toggleTask, deleteTask, storageError } = useAppData();
+  const { mood, tasks, setMood, addTask, toggleTask, deleteTask, clearAppData, storageError } =
+    useAppData();
   const [initialPanel] = useState<PanelId | null>(readInitialPanel);
   const [dialOpen] = useState(readDialOpen);
 
@@ -46,7 +47,17 @@ function App() {
 
       <MoodDial current={mood} onChange={setMood} defaultOpen={dialOpen} />
 
-      <Sidebar initialPanel={initialPanel} />
+      <Sidebar
+        initialPanel={initialPanel}
+        mood={mood}
+        tasks={tasks}
+        setMood={setMood}
+        onAddTask={addTask}
+        onToggleTask={toggleTask}
+        onDeleteTask={deleteTask}
+        onClearData={clearAppData}
+        storageError={storageError}
+      />
 
       {storageError ? (
         <p className={styles.status} role="status">

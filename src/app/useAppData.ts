@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { AppDataV1, MoodId, Task } from '../lib/types';
-import { loadData, saveData } from '../lib/storage';
+import { clearData, createDefaultData, loadData, saveData } from '../lib/storage';
 import {
   addTask as addTaskToTasks,
   deleteTask as deleteTaskFromTasks,
@@ -15,6 +15,7 @@ export interface UseAppDataResult {
   addTask: (title: string) => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
+  clearAppData: () => void;
   storageError: boolean;
 }
 
@@ -68,6 +69,13 @@ export function useAppData(): UseAppDataResult {
     setData((prev) => ({ ...prev, tasks: deleteTaskFromTasks(prev.tasks, id) }));
   }, []);
 
+  // 真正清掉 lumina:data / lumina:theme，再以默认数据重新起一份（不会把旧数据写回）。
+  const clearAppData = useCallback(() => {
+    clearData();
+    setPreview(null);
+    setData(createDefaultData());
+  }, []);
+
   return {
     mood,
     tasks: data.tasks,
@@ -75,6 +83,7 @@ export function useAppData(): UseAppDataResult {
     addTask,
     toggleTask,
     deleteTask,
+    clearAppData,
     storageError,
   };
 }

@@ -1,23 +1,32 @@
 import type { Task } from '../../lib/types';
-import { sortTasks } from './task';
+import { countTasks, sortTasks } from './task';
 import styles from './tasks.module.css';
 
 interface TaskListProps {
   tasks: readonly Task[];
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
+  compact?: boolean;
+  showSummary?: boolean;
 }
 
-export default function TaskList({ tasks, onToggle, onDelete }: TaskListProps) {
+export default function TaskList({
+  tasks,
+  onToggle,
+  onDelete,
+  compact = false,
+  showSummary = true,
+}: TaskListProps) {
   const sorted = sortTasks(tasks);
-  const total = sorted.length;
-  const done = sorted.filter((task) => task.done).length;
+  const { total, done } = countTasks(tasks);
 
   return (
-    <div className={styles.listBlock}>
-      <p className={styles.summary} aria-live="polite">
-        {total} 件待办 · {done} 件完成
-      </p>
+    <div className={compact ? `${styles.listBlock} ${styles.listBlockCompact}` : styles.listBlock}>
+      {showSummary ? (
+        <p className={styles.summary} aria-live="polite">
+          {total} 件待办 · {done} 件完成
+        </p>
+      ) : null}
       {total === 0 ? (
         <p className={styles.empty}>今天还没有待办。先写一件最小的。</p>
       ) : (
