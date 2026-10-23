@@ -12,7 +12,7 @@
 <p align="center">
   <a href="https://lumina-space.cc.cd"><img alt="Live" src="https://img.shields.io/badge/live-lumina--space.cc.cd-2ea44f"></a>
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-2ea44f"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-v0.1-5b7c99">
+  <img alt="Version" src="https://img.shields.io/badge/version-v0.2-5b7c99">
   <img alt="Status" src="https://img.shields.io/badge/status-alpha-d97706">
   <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white">
@@ -20,7 +20,7 @@
 
 <p align="center">
   <a href="#为什么是-lumina-space">为什么</a> ·
-  <a href="#现在能做什么v01">功能</a> ·
+  <a href="#现在能做什么v02">功能</a> ·
   <a href="#截图">截图</a> ·
   <a href="#快速开始">快速开始</a> ·
   <a href="#技术栈">技术栈</a> ·
@@ -39,15 +39,16 @@ Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心�
 
 > 这是一张干净的书桌，不是一张 KPI 看板。
 
-## 现在能做什么（v0.1）
+## 现在能做什么（v0.2）
 
-- **情绪主题**：左上角选择积极 / 中性 / 消极，整站切换 CSS 变量主题，刷新后保持。
+- **情绪圆盘**：左上角圆形情绪盘，鼠标移入 / 点击 / Enter 展开积极 / 中性 / 消极三个选项；选中后整站切换 CSS 变量主题，刷新后保持。
+- **全屏主界面**：Stage 铺满整个视口，不再是一张带留白的圆角卡片；中央内容卡片保持居中。
 - **情绪场景**：主界面 Stage 随情绪变化——暖阳、阴天、雨夜；只做简单 CSS 场景，不加载 3D。
 - **左下侧边栏**：今日 / 专注 / 设置三个入口，展开占位面板；Esc 收起；窄屏变底部抽屉。
 - **本地优先**：数据只存在浏览器 `localStorage`，没有账号、没有后端。
 - **基础质量**：键盘可达、焦点可见、`prefers-reduced-motion` 关闭动效；18 条单元测试。
 
-> v0.1 是**框架版**：任务 CRUD、番茄钟、情绪记录、3D 小屋都还没做。
+> v0.2 进行中：任务 CRUD 是下一步；番茄钟、情绪记录、3D 小屋还没做。
 
 ## 截图
 
@@ -55,9 +56,9 @@ Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心�
 |---|---|---|
 | ![积极](docs/screenshots/home-positive.png) | ![中性](docs/screenshots/home-neutral.png) | ![消极](docs/screenshots/home-negative.png) |
 
-**侧边栏 / 窄屏**
+**情绪圆盘 / 窄屏**
 
-![侧边栏](docs/screenshots/sidebar-open.png)
+![情绪圆盘](docs/screenshots/dial-open.png)
 
 ![窄屏](docs/screenshots/responsive-900.png)
 
@@ -81,7 +82,7 @@ npm run dev
 | `npm test` | 跑一次单元测试 |
 | `npm run test:watch` | 监听模式跑测试 |
 
-开发辅助参数（仅 Dev 生效）：`?theme=positive|neutral|negative`、`?panel=today|focus|settings`。
+开发辅助参数（仅 Dev 生效）：`?theme=positive|neutral|negative`、`?dial=open`、`?panel=today|focus|settings`。
 
 ## 技术栈
 
@@ -100,7 +101,7 @@ npm run dev
 ```
 src/
   app/              页面壳：App、Sidebar、Stage
-  features/mood/    情绪常量、选择器、useMood
+  features/mood/    情绪常量、圆盘、useMood
   lib/              类型、存储 adapter
   styles/           主题令牌、全局样式
 tests/              与 src 对应的纯逻辑测试
@@ -114,7 +115,7 @@ docs/
 | 版本 | 日期 | 内容 | 状态 |
 |---|---|---|---|
 | **v0.1** | 2026-10-22 | 框架、情绪主题、左下侧边栏、Stage 场景、本地持久化、18 tests | 已上线 |
-| v0.2 | 进行中 | 全屏主界面、情绪圆盘、任务 CRUD | 进行中 |
+| v0.2 | 进行中 | 全屏主界面、情绪圆盘；任务 CRUD 下一步 | 进行中 |
 | v0.3 | 计划 | 番茄钟、情绪记录、主题扩展、动效、3D 预研 | 计划中 |
 
 ## 线上地址

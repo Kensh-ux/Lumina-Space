@@ -1,0 +1,140 @@
+.dial {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 40;
+  width: 64px;
+  height: 64px;
+}
+
+/* 展开时把 hover 判定区域扩到菜单范围，指针从圆盘移到选项不会中途离开。 */
+.dial[data-open='true'] {
+  width: 176px;
+  height: 176px;
+}
+
+.trigger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 64px;
+  height: 64px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme),
+    color var(--transition-theme),
+    scale 160ms ease;
+}
+
+.trigger:hover {
+  scale: 1.04;
+}
+
+.trigger[aria-expanded='true'] {
+  border-color: var(--color-accent);
+}
+
+.trigger:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.triggerEmoji {
+  font-size: 1.375rem;
+  line-height: 1;
+}
+
+.triggerLabel {
+  color: var(--color-muted);
+  font-size: 0.625rem;
+  line-height: 1;
+  letter-spacing: 0.04em;
+}
+
+.menu {
+  position: absolute;
+  top: 32px;
+  left: 32px;
+  width: 0;
+  height: 0;
+}
+
+.item {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1px;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  box-shadow: var(--shadow-card);
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+  animation: dialItemIn 180ms ease-out both;
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme),
+    color var(--transition-theme);
+}
+
+.item:hover {
+  border-color: var(--color-accent);
+}
+
+.item[aria-checked='true'] {
+  border-color: var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface));
+}
+
+.item:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+.itemEmoji {
+  font-size: 1.125rem;
+  line-height: 1;
+}
+
+.itemLabel {
+  color: var(--color-muted);
+  font-size: 0.625rem;
+  line-height: 1.1;
+}
+
+@keyframes dialItemIn {
+  from {
+    opacity: 0;
+    scale: 0.7;
+  }
+
+  to {
+    opacity: 1;
+    scale: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trigger {
+    transition: none;
+  }
+
+  .item {
+    animation: none;
+  }
+}
