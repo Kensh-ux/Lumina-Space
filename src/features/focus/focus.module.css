@@ -1,0 +1,155 @@
+.timer {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.time {
+  margin-top: 2px;
+  font-size: clamp(2.5rem, 9vw, 3.1rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-align: center;
+}
+
+.status {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  text-align: center;
+}
+
+.controls {
+  display: flex;
+  gap: 8px;
+}
+
+.primary,
+.secondary {
+  min-width: 96px;
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme),
+    color var(--transition-theme);
+}
+
+.primary {
+  border: 1px solid var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface));
+  color: var(--color-text);
+}
+
+.primary:hover {
+  background-color: color-mix(in srgb, var(--color-accent) 26%, var(--color-surface));
+}
+
+.secondary {
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-muted);
+}
+
+.secondary:hover {
+  color: var(--color-text);
+  background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
+}
+
+.primary:focus-visible,
+.secondary:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.duration {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.durationLabel {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.minutesInput {
+  width: 88px;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  font-size: 0.9375rem;
+  text-align: center;
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme),
+    color var(--transition-theme);
+}
+
+.minutesInput:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.minutesInput:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.durationUnit {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.presetsLabel {
+  margin-right: 2px;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+
+.presetButton {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--color-muted) 8%, transparent);
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme),
+    color var(--transition-theme);
+}
+
+.presetButton[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
+  color: var(--color-text);
+}
+
+.presetButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.presetButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}

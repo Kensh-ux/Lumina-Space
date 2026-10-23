@@ -78,17 +78,6 @@ export function TodayPanel({
   );
 }
 
-export function FocusPanel() {
-  return (
-    <div className={styles.placeholder}>
-      <p className={styles.placeholderText}>番茄钟会在下一张任务卡接入。</p>
-      <button type="button" className={styles.placeholderButton} disabled>
-        开始专注
-      </button>
-    </div>
-  );
-}
-
 interface SidebarRailProps {
   openPanel: PanelId | null;
   railRefs: RefObject<Record<PanelId, HTMLButtonElement | null>>;

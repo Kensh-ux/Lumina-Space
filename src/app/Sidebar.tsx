@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MoodId, Task } from '../lib/types';
 import { closeOverlay, getActiveOverlay, openOverlay, subscribeOverlay } from '../lib/overlay';
 import SettingsPanel from '../features/settings/SettingsPanel';
+import FocusTimer from '../features/focus/FocusTimer';
 import {
-  FocusPanel,
   PANELS,
   SidebarHeader,
   SidebarRail,
@@ -163,7 +163,7 @@ export default function Sidebar({
                 onDeleteTask={onDeleteTask}
               />
             ) : null}
-            {activeMeta.id === 'focus' ? <FocusPanel /> : null}
+            {activeMeta.id === 'focus' ? <FocusTimer /> : null}
             {activeMeta.id === 'settings' ? (
               <SettingsPanel
                 mood={mood}

@@ -84,31 +84,6 @@
   font-size: 0.8125rem;
 }
 
-.placeholder {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding: 6px 0 4px;
-}
-
-.placeholderText {
-  color: var(--color-muted);
-  font-size: 0.875rem;
-  line-height: 1.55;
-}
-
-.placeholderButton {
-  align-self: flex-start;
-  min-height: 44px;
-  padding: 0 16px;
-  border: 1px solid var(--color-border);
-  border-radius: 12px;
-  background-color: color-mix(in srgb, var(--color-accent) 8%, var(--color-surface));
-  color: var(--color-muted);
-  font-size: 0.9375rem;
-  cursor: not-allowed;
-}
-
 .rail {
   display: flex;
   flex-direction: column;
