@@ -4,9 +4,9 @@ Guidance for AI agents working on **Lumina-Space** — a mood-aware todo and foc
 
 ## Current state
 
-- **v0.1 (2026-10-22)**: app shell, mood themes, bottom-left sidebar, CSS-only Stage, localStorage persistence, Vitest.
-- **Not built yet**: task CRUD, pomodoro, mood log, 3D cottage, PWA, backend.
-- Current task: task CRUD (v0.2). Do not start 3D without a task card.
+- **v0.1 (2026-10-22)**: app shell, mood themes, bottom-left sidebar, CSS-only Stage, localStorage, Vitest.
+- **v0.2 (2026-10-23)**: full-bleed Stage, radial mood dial, touch/keyboard interactions.
+- **Current v0.3**: task CRUD (main), sidebar drawer, pomodoro. **v1.0**: common features + publishable UI. **v2.0**: 3D cottage. Do not start 3D before v2.0.
 
 ## Stack
 
@@ -23,12 +23,11 @@ Guidance for AI agents working on **Lumina-Space** — a mood-aware todo and foc
 src/
   app/              App, Sidebar, Stage
   features/mood/    MoodDial, mood.ts, useMood
-  features/tasks/   task CRUD (v0.2)
+  features/tasks/   task CRUD (v0.3)
   lib/              shared types, storage adapter
   styles/           tokens.css, global.css
 tests/              mirror of src
 docs/
-  tasks/            task cards
   screenshots/      README images
 ```
 
@@ -80,7 +79,7 @@ Reference repos live outside this repository; read only the files named in the t
 | HyperFrames | Apache-2.0 | Code-driven scene/motion pipeline reference; keep LICENSE/NOTICE if code is copied |
 | Lemo-Opuscar | MIT + CC BY 4.0 | Code-film style/motion reference; content needs attribution |
 
-If code is copied or adapted: record it in `THIRD_PARTY_NOTICES.md` (source, commit, license, changes) and add a README acknowledgement. If unsure, ask first.
+If code is copied or adapted: record source, commit, license, and changes in the private project workspace; add a `THIRD_PARTY_NOTICES.md` only when code is actually copied. If unsure, ask first.
 
 ## Red lines
 
@@ -97,6 +96,6 @@ If code is copied or adapted: record it in `THIRD_PARTY_NOTICES.md` (source, com
 
 ## Where to look
 
-- Task cards: `docs/tasks/`
+- Task cards: private workspace (`05_任务卡`); not shipped in this repo
 - Design decisions: README + task cards (the detailed decision log lives in the private workspace)
 - Reference decomposition notes: private workspace (`01_输入项目/00_项目拆解`), not shipped in this repo.
