@@ -11,7 +11,7 @@
 
 ### 质量
 
-- 57 条单元测试（task 20、storage 17、mood 7、dialGeometry 3、timer 10）。
+- 58 条单元测试（task 20、storage 17、mood 7、dialGeometry 3、timer 11）。
 - 首轮审查 BLOCK（旧数据缺 tasks 会重置 mood）已修复；复审 PASS WITH COMMENTS。
 
 ## v0.2.0 — 2026-10-23

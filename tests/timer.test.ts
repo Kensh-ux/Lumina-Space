@@ -50,6 +50,15 @@ describe('focus timer', () => {
     expect(paused.endAt).toBeNull();
   });
 
+  it('pause 恰好到 0 时直接 done', () => {
+    const running = start(createTimer(1), NOW);
+    const done = pause(running, NOW + 60_000);
+
+    expect(done.status).toBe('done');
+    expect(done.remainingSec).toBe(0);
+    expect(done.endAt).toBeNull();
+  });
+
   it('resume 用剩余时间重算 endAt', () => {
     const running = start(createTimer(1), NOW);
     const paused = pause(running, NOW + 20_000);

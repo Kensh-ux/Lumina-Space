@@ -47,12 +47,15 @@ export function start(state: TimerState, now: number = Date.now()): TimerState {
   };
 }
 
-// 暂停时用 endAt - now 反算剩余，不累加 interval。
+// 暂停时用 endAt - now 反算剩余，不累加 interval；若已到 0，直接按完成处理。
 export function pause(state: TimerState, now: number = Date.now()): TimerState {
   if (state.status !== 'running' || state.endAt === null) {
     return state;
   }
   const remainingSec = Math.max(0, Math.ceil((state.endAt - now) / 1000));
+  if (remainingSec <= 0) {
+    return { ...state, status: 'done', remainingSec: 0, endAt: null };
+  }
   return { ...state, status: 'paused', remainingSec, endAt: null };
 }
 
