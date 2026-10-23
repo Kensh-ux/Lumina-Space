@@ -47,7 +47,7 @@ Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心�
 - **待办任务**：在中央卡片添加 / 完成 / 删除任务；未完成优先排序，空列表有空状态；刷新后任务与完成状态保持。
 - **左下侧边栏**：今日 / 专注 / 设置三个入口，展开占位面板；Esc 收起；窄屏变底部抽屉。
 - **本地优先**：数据只存在浏览器 `localStorage`，没有账号、没有后端。
-- **基础质量**：键盘可达、焦点可见、`prefers-reduced-motion` 关闭动效；40 条单元测试。
+- **基础质量**：键盘可达、焦点可见、`prefers-reduced-motion` 关闭动效；45 条单元测试。
 
 > 当前 v0.3 开发中：任务 CRUD 已完成；侧边栏抽屉、番茄钟是下一步。v1.0 会把常用功能做齐，v2.0 再做 3D 小屋。
 
@@ -57,11 +57,17 @@ Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心�
 |---|---|---|
 | ![积极](docs/screenshots/home-positive.png) | ![中性](docs/screenshots/home-neutral.png) | ![消极](docs/screenshots/home-negative.png) |
 
+**待办（v0.3）**
+
+![两条待办](docs/screenshots/tasks-two.png)
+
+![完成一条](docs/screenshots/tasks-completed.png)
+
 **情绪圆盘 / 窄屏**
 
 ![情绪圆盘](docs/screenshots/dial-open.png)
 
-![窄屏](docs/screenshots/responsive-900.png)
+![窄屏](docs/screenshots/tasks-900.png)
 
 ## 快速开始
 

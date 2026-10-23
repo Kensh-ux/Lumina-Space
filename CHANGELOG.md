@@ -10,7 +10,8 @@
 
 ### 质量
 
-- 40 条单元测试（新增 task 16 条、storage 任务校验 3 条）。
+- 45 条单元测试（新增 task 18 条、storage 任务校验 6 条）。
+- 首轮审查 BLOCK（旧数据缺 tasks 会重置 mood）已修复；复审 PASS WITH COMMENTS。
 
 ## v0.2.0 — 2026-10-23
 
