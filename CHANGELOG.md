@@ -5,7 +5,7 @@
 ### 新增
 
 - 全高左侧栏：展开默认 300px（240–420，可拖拽或键盘调整），收起 56px；宽度写入 `lumina:sidebar-width`，刷新保持。
-- 侧栏模块：今日、专注、情绪（最近 7 天记录）、设置；主 Stage 按 `--sidebar-width` 偏移，情绪圆盘移入 Stage 左上。
+- 侧栏模块：今日、专注、设置（不展示情绪历史）；主 Stage 按 `--sidebar-width` 偏移，情绪圆盘移入 Stage 左上。
 - 移动端底部导航 + sheet；拖拽时关闭过渡，`prefers-reduced-motion` 关闭动画。
 - 任务增强：新建 / 编辑共用大编辑器（标题、描述、截止日期 + 时间、优先级，空标题提示），任务列表改大卡片；优先级 1–3、截止与过期高亮；编辑器打开时 `#root` inert 且 Tab 在 dialog 内循环；过期判断包含截止时间。
 - 任务筛选栏：全部 / 未完成 / 已完成、标题搜索、清除已完成；旧任务缺新字段兼容，坏 priority / dueDate 读取时 normalize（undefined / null），不再整包回退。
