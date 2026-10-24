@@ -33,8 +33,18 @@ function readDialOpen(): boolean {
 }
 
 function App() {
-  const { mood, tasks, setMood, addTask, toggleTask, deleteTask, clearAppData, storageError } =
-    useAppData();
+  const {
+    mood,
+    tasks,
+    setMood,
+    addTask,
+    toggleTask,
+    deleteTask,
+    updateTask,
+    clearCompletedTasks,
+    clearAppData,
+    storageError,
+  } = useAppData();
   const sidebar = useSidebar(readInitialSidebarExpanded());
   const [initialPanel] = useState<SidebarPanelId | null>(readInitialPanel);
   const [dialOpen] = useState(readDialOpen);
@@ -55,6 +65,7 @@ function App() {
         onAddTask={addTask}
         onToggleTask={toggleTask}
         onDeleteTask={deleteTask}
+        onUpdateTask={updateTask}
         onClearData={clearAppData}
         storageError={storageError}
         initialPanel={initialPanel}
@@ -67,6 +78,8 @@ function App() {
           onAddTask={addTask}
           onToggleTask={toggleTask}
           onDeleteTask={deleteTask}
+          onUpdateTask={updateTask}
+          onClearCompletedTasks={clearCompletedTasks}
         />
 
         <header className={styles.topbar}>

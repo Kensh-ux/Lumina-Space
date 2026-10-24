@@ -1,5 +1,6 @@
 import type { MoodId, Task } from '../lib/types';
 import { getMoodMeta } from '../features/mood/mood';
+import type { TaskPatch } from '../features/tasks/task';
 import TaskComposer from '../features/tasks/TaskComposer';
 import TaskList from '../features/tasks/TaskList';
 import styles from './Stage.module.css';
@@ -10,6 +11,8 @@ interface StageProps {
   onAddTask: (title: string) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
+  onUpdateTask: (id: string, patch: TaskPatch) => void;
+  onClearCompletedTasks: () => void;
 }
 
 const RAIN_DROPS = 12;
@@ -20,6 +23,8 @@ export default function Stage({
   onAddTask,
   onToggleTask,
   onDeleteTask,
+  onUpdateTask,
+  onClearCompletedTasks,
 }: StageProps) {
   const meta = getMoodMeta(mood);
 
@@ -46,7 +51,14 @@ export default function Stage({
         <h2 className={styles.title}>今天想做什么？</h2>
         <p className={styles.text}>{meta.description}。先写下一件小事，再开始。</p>
         <TaskComposer onAdd={onAddTask} />
-        <TaskList tasks={tasks} onToggle={onToggleTask} onDelete={onDeleteTask} />
+        <TaskList
+          tasks={tasks}
+          onToggle={onToggleTask}
+          onDelete={onDeleteTask}
+          onUpdate={onUpdateTask}
+          onClearCompleted={onClearCompletedTasks}
+          toolbar
+        />
       </article>
     </section>
   );

@@ -7,10 +7,12 @@
 - 全高左侧栏：展开默认 300px（240–420，可拖拽或键盘调整），收起 56px；宽度写入 `lumina:sidebar-width`，刷新保持。
 - 侧栏模块：今日、专注、情绪（009 占位）、设置；主 Stage 按 `--sidebar-width` 偏移，情绪圆盘移入 Stage 左上。
 - 移动端底部导航 + sheet；拖拽时关闭过渡，`prefers-reduced-motion` 关闭动画。
+- 任务增强：行内编辑标题（Enter 保存 / Esc 取消 / 失焦保存 / 空回退），优先级 1–3、截止日期与过期高亮。
+- 任务筛选栏：全部 / 未完成 / 已完成、标题搜索、清除已完成；旧任务缺新字段兼容，坏 priority / dueDate 备份后回退。
 
 ### 质量
 
-- 62 条单元测试（新增 sidebar clamp 4 条）。
+- 89 条单元测试（task 43、storage 21、mood 7、dialGeometry 3、timer 11、sidebar 4）。
 
 ## v0.3.0 — 2026-10-24
 

@@ -1,5 +1,5 @@
 import type { MoodId, Task } from '../lib/types';
-import { countTasks } from '../features/tasks/task';
+import { countTasks, type TaskPatch } from '../features/tasks/task';
 import TaskComposer from '../features/tasks/TaskComposer';
 import TaskList from '../features/tasks/TaskList';
 import { getMoodMeta } from '../features/mood/mood';
@@ -10,6 +10,7 @@ interface TodayPanelProps {
   onAddTask: (title: string) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
+  onUpdateTask: (id: string, patch: TaskPatch) => void;
 }
 
 export function TodayPanel({
@@ -17,6 +18,7 @@ export function TodayPanel({
   onAddTask,
   onToggleTask,
   onDeleteTask,
+  onUpdateTask,
 }: TodayPanelProps) {
   const counts = countTasks(tasks);
 
@@ -29,6 +31,7 @@ export function TodayPanel({
         tasks={tasks}
         onToggle={onToggleTask}
         onDelete={onDeleteTask}
+        onUpdate={onUpdateTask}
         compact
         showSummary={false}
       />

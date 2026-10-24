@@ -3,8 +3,11 @@ import type { AppDataV1, MoodId, Task } from '../lib/types';
 import { clearData, createDefaultData, loadData, saveData } from '../lib/storage';
 import {
   addTask as addTaskToTasks,
+  clearCompleted as clearCompletedFromTasks,
   deleteTask as deleteTaskFromTasks,
   toggleTask as toggleTaskInTasks,
+  updateTask as updateTaskInTasks,
+  type TaskPatch,
 } from '../features/tasks/task';
 import { isMoodId } from '../features/mood/mood';
 
@@ -15,6 +18,8 @@ export interface UseAppDataResult {
   addTask: (title: string) => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
+  updateTask: (id: string, patch: TaskPatch) => void;
+  clearCompletedTasks: () => void;
   clearAppData: () => void;
   storageError: boolean;
 }
@@ -69,6 +74,14 @@ export function useAppData(): UseAppDataResult {
     setData((prev) => ({ ...prev, tasks: deleteTaskFromTasks(prev.tasks, id) }));
   }, []);
 
+  const updateTask = useCallback((id: string, patch: TaskPatch) => {
+    setData((prev) => ({ ...prev, tasks: updateTaskInTasks(prev.tasks, id, patch) }));
+  }, []);
+
+  const clearCompletedTasks = useCallback(() => {
+    setData((prev) => ({ ...prev, tasks: clearCompletedFromTasks(prev.tasks) }));
+  }, []);
+
   // 真正清掉 lumina:data / lumina:theme，再以默认数据重新起一份（不会把旧数据写回）。
   const clearAppData = useCallback(() => {
     clearData();
@@ -83,6 +96,8 @@ export function useAppData(): UseAppDataResult {
     addTask,
     toggleTask,
     deleteTask,
+    updateTask,
+    clearCompletedTasks,
     clearAppData,
     storageError,
   };

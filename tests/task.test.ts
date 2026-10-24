@@ -1,15 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import {
   addTask,
+  clearCompleted,
   countTasks,
   createTask,
   deleteTask,
+  filterTasks,
+  formatDueDate,
   isTask,
+  isTaskOverdue,
+  searchTasks,
+  setDueDate,
+  setPriority,
   sortTasks,
+  toLocalDateString,
   toggleTask,
+  updateTask,
   TASK_TITLE_MAX_LENGTH,
 } from '../src/features/tasks/task';
-import type { Task } from '../src/lib/types';
+import type { Task, TaskPriority } from '../src/lib/types';
 
 const NOW = new Date('2026-10-23T08:00:00.000Z');
 
@@ -172,5 +181,169 @@ describe('countTasks', () => {
 
   it('空数组返回全 0', () => {
     expect(countTasks([])).toEqual({ total: 0, done: 0, open: 0 });
+  });
+});
+
+describe('updateTask', () => {
+  it('trim 标题、只改目标任务且不修改原数组', () => {
+    const a = makeTask({ id: 'a' });
+    const b = makeTask({ id: 'b' });
+    const tasks = [a, b];
+
+    const next = updateTask(tasks, 'a', { title: '  新标题  ' });
+
+    expect(next[0].title).toBe('新标题');
+    expect(next[1]).toBe(b);
+    expect(a.title).toBe('示例任务');
+    expect(next).not.toBe(tasks);
+  });
+
+  it('空标题回退原值', () => {
+    const task = makeTask({ title: '原标题' });
+    expect(updateTask([task], task.id, { title: '   ' })[0].title).toBe('原标题');
+  });
+
+  it('同时更新优先级与截止日期', () => {
+    const task = makeTask();
+    const next = updateTask([task], task.id, { priority: 3, dueDate: '2026-10-30' });
+
+    expect(next[0].priority).toBe(3);
+    expect(next[0].dueDate).toBe('2026-10-30');
+  });
+
+  it('非法优先级或日期被忽略', () => {
+    const task = makeTask({ priority: 2, dueDate: '2026-10-28' });
+    const next = updateTask([task], task.id, {
+      priority: 4 as unknown as TaskPriority,
+      dueDate: '2026-02-30',
+    });
+
+    expect(next[0].priority).toBe(2);
+    expect(next[0].dueDate).toBe('2026-10-28');
+  });
+
+  it('priority null 清除优先级，dueDate null 清空截止', () => {
+    const task = makeTask({ priority: 3, dueDate: '2026-10-28' });
+    const next = updateTask([task], task.id, { priority: null, dueDate: null });
+
+    expect(next[0].priority).toBeUndefined();
+    expect(next[0].dueDate).toBeNull();
+  });
+});
+
+describe('setPriority', () => {
+  it('设置合法优先级', () => {
+    const task = makeTask();
+    expect(setPriority([task], task.id, 1)[0].priority).toBe(1);
+  });
+
+  it('传 null 清除优先级', () => {
+    const task = makeTask({ priority: 3 });
+    expect(setPriority([task], task.id, null)[0].priority).toBeUndefined();
+  });
+});
+
+describe('setDueDate', () => {
+  it('设置合法日期', () => {
+    const task = makeTask();
+    expect(setDueDate([task], task.id, '2026-10-28')[0].dueDate).toBe('2026-10-28');
+  });
+
+  it('非法日期忽略', () => {
+    const task = makeTask();
+    expect(setDueDate([task], task.id, '10/28')[0].dueDate).toBeUndefined();
+  });
+
+  it('传 null 清空日期', () => {
+    const task = makeTask({ dueDate: '2026-10-28' });
+    expect(setDueDate([task], task.id, null)[0].dueDate).toBeNull();
+  });
+});
+
+describe('filterTasks', () => {
+  const open = makeTask({ id: 'open' });
+  const done = makeTask({ id: 'done', done: true, completedAt: '2026-10-23T00:00:00.000Z' });
+  const tasks = [open, done];
+
+  it('按 open / done / all 过滤', () => {
+    expect(filterTasks(tasks, 'open').map((task) => task.id)).toEqual(['open']);
+    expect(filterTasks(tasks, 'done').map((task) => task.id)).toEqual(['done']);
+    expect(filterTasks(tasks, 'all').map((task) => task.id)).toEqual(['open', 'done']);
+  });
+
+  it('all 返回新数组，不修改原数组', () => {
+    const next = filterTasks(tasks, 'all');
+    expect(next).not.toBe(tasks);
+    expect(tasks).toHaveLength(2);
+  });
+});
+
+describe('searchTasks', () => {
+  const math = makeTask({ id: 'math', title: 'Review Math' });
+  const report = makeTask({ id: 'report', title: '写周报' });
+  const tasks = [math, report];
+
+  it('trim 且大小写不敏感', () => {
+    expect(searchTasks(tasks, '  review ').map((task) => task.id)).toEqual(['math']);
+  });
+
+  it('空查询返回全部（新数组）', () => {
+    const next = searchTasks(tasks, '   ');
+    expect(next.map((task) => task.id)).toEqual(['math', 'report']);
+    expect(next).not.toBe(tasks);
+  });
+
+  it('无匹配返回空数组', () => {
+    expect(searchTasks(tasks, '不存在')).toEqual([]);
+  });
+});
+
+describe('clearCompleted', () => {
+  it('只删除已完成任务', () => {
+    const open = makeTask({ id: 'open' });
+    const done = makeTask({ id: 'done', done: true, completedAt: '2026-10-23T00:00:00.000Z' });
+
+    expect(clearCompleted([open, done]).map((task) => task.id)).toEqual(['open']);
+  });
+});
+
+describe('isTask 新可选字段', () => {
+  it('接受缺 priority / dueDate 的旧任务', () => {
+    expect(isTask(makeTask())).toBe(true);
+  });
+
+  it('接受合法 priority 与 dueDate', () => {
+    expect(isTask({ ...makeTask(), priority: 3, dueDate: '2026-10-28' })).toBe(true);
+    expect(isTask({ ...makeTask(), dueDate: null })).toBe(true);
+  });
+
+  it('拒绝非法 priority', () => {
+    expect(isTask({ ...makeTask(), priority: 4 })).toBe(false);
+    expect(isTask({ ...makeTask(), priority: 'high' })).toBe(false);
+  });
+
+  it('拒绝非法 dueDate', () => {
+    expect(isTask({ ...makeTask(), dueDate: '2026-02-30' })).toBe(false);
+    expect(isTask({ ...makeTask(), dueDate: '10/28' })).toBe(false);
+  });
+});
+
+describe('日期辅助', () => {
+  it('toLocalDateString 输出本地 YYYY-MM-DD', () => {
+    expect(toLocalDateString(new Date(2026, 9, 28))).toBe('2026-10-28');
+  });
+
+  it('formatDueDate 输出 MM/DD', () => {
+    expect(formatDueDate('2026-10-28')).toBe('10/28');
+  });
+
+  it('isTaskOverdue 只对过期且未完成的任务为 true', () => {
+    const today = '2026-10-28';
+
+    expect(isTaskOverdue(makeTask({ dueDate: '2026-10-27' }), today)).toBe(true);
+    expect(isTaskOverdue(makeTask({ dueDate: '2026-10-27', done: true }), today)).toBe(false);
+    expect(isTaskOverdue(makeTask({ dueDate: '2026-10-29' }), today)).toBe(false);
+    expect(isTaskOverdue(makeTask({ dueDate: today }), today)).toBe(false);
+    expect(isTaskOverdue(makeTask(), today)).toBe(false);
   });
 });

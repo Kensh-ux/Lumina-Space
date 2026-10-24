@@ -135,6 +135,96 @@ describe('loadData', () => {
     expect(data.mood.current).toBe('positive');
   });
 
+  it('旧任务缺 priority / dueDate 时正常读取，不备份不重置', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [
+        {
+          id: 'task-legacy',
+          title: '旧任务',
+          done: false,
+          createdAt: '2026-10-23T00:00:00.000Z',
+          completedAt: null,
+        },
+      ],
+      mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    const data = loadData(storage);
+
+    expect(data.tasks).toHaveLength(1);
+    expect(data.tasks[0].priority).toBeUndefined();
+    expect(data.tasks[0].dueDate).toBeUndefined();
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+  });
+
+  it('合法 priority / dueDate 往返保留', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [
+        {
+          id: 'task-enhanced',
+          title: '带优先级与截止',
+          done: false,
+          createdAt: '2026-10-23T00:00:00.000Z',
+          completedAt: null,
+          priority: 3,
+          dueDate: '2026-10-30',
+        },
+      ],
+      mood: { current: 'positive', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    const data = loadData(storage);
+
+    expect(data.tasks[0].priority).toBe(3);
+    expect(data.tasks[0].dueDate).toBe('2026-10-30');
+  });
+
+  it('priority 非法时返回默认值并备份', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [
+        {
+          id: 'task-bad-priority',
+          title: '坏优先级',
+          done: false,
+          createdAt: '2026-10-23T00:00:00.000Z',
+          completedAt: null,
+          priority: 9,
+        },
+      ],
+      mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    expect(loadData(storage).tasks).toEqual([]);
+    expect(storage.getItem(BACKUP_KEY)).toBe(raw);
+  });
+
+  it('dueDate 非法时返回默认值并备份', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [
+        {
+          id: 'task-bad-date',
+          title: '坏日期',
+          done: false,
+          createdAt: '2026-10-23T00:00:00.000Z',
+          completedAt: null,
+          dueDate: '2026-02-30',
+        },
+      ],
+      mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    expect(loadData(storage).tasks).toEqual([]);
+    expect(storage.getItem(BACKUP_KEY)).toBe(raw);
+  });
+
   it('任务字段非法时返回默认值并备份', () => {
     const raw = JSON.stringify({
       schemaVersion: 1,

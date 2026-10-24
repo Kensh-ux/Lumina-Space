@@ -1,4 +1,5 @@
 import type { MoodId, Task } from '../lib/types';
+import type { TaskPatch } from '../features/tasks/task';
 import FocusTimer from '../features/focus/FocusTimer';
 import SettingsPanel from '../features/settings/SettingsPanel';
 import SidebarResizeHandle from './SidebarResizeHandle';
@@ -30,6 +31,7 @@ interface SidebarProps {
   onAddTask: (title: string) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
+  onUpdateTask: (id: string, patch: TaskPatch) => void;
   onClearData: () => void;
   storageError: boolean;
   initialPanel?: SidebarPanelId | null;
@@ -43,6 +45,7 @@ export default function Sidebar({
   onAddTask,
   onToggleTask,
   onDeleteTask,
+  onUpdateTask,
   onClearData,
   storageError,
   initialPanel = null,
@@ -115,6 +118,7 @@ export default function Sidebar({
             onAddTask={onAddTask}
             onToggleTask={onToggleTask}
             onDeleteTask={onDeleteTask}
+            onUpdateTask={onUpdateTask}
           />
         ) : null}
         {activePanel === 'focus' ? <FocusTimer /> : null}
