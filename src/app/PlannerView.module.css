@@ -4,7 +4,7 @@
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 88px 20px 22px 24px;
+  padding: 88px 12px 22px 20px;
   overflow: hidden;
   background:
     radial-gradient(90% 80% at 70% 0%, color-mix(in srgb, var(--color-accent) 9%, transparent), transparent 70%),
@@ -40,7 +40,7 @@
 .days {
   display: grid;
   flex: 1;
-  grid-auto-columns: minmax(124px, 1fr);
+  grid-auto-columns: minmax(180px, 220px);
   grid-auto-flow: column;
   gap: 10px;
   min-height: 0;
@@ -70,12 +70,12 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 6px;
-  padding: 12px 12px 9px;
+  padding: 12px 14px 10px;
   border-bottom: 1px solid var(--color-border);
 }
 
 .dayLabel {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
 }
 
@@ -85,7 +85,7 @@
 
 .dayDate {
   color: var(--color-muted);
-  font-size: 0.6875rem;
+  font-size: 0.75rem;
   white-space: nowrap;
 }
 
@@ -99,7 +99,7 @@
 .taskList {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -109,11 +109,14 @@
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 2px;
-  padding: 6px 3px 6px 5px;
+  padding: 2px 0 8px;
   border: 1px solid var(--color-border);
-  border-radius: 9px;
+  border-radius: 10px;
   background-color: color-mix(in srgb, var(--color-surface) 88%, transparent);
+}
+
+.task[data-done='true'] {
+  opacity: 0.72;
 }
 
 .check {
@@ -121,27 +124,33 @@
   flex: none;
   align-items: center;
   justify-content: center;
-  width: 22px;
-  height: 26px;
+  width: 44px;
+  height: 44px;
   cursor: pointer;
 }
 
 .check input {
-  width: 16px;
-  height: 16px;
+  width: 18px;
+  height: 18px;
   accent-color: var(--color-accent);
   cursor: pointer;
 }
 
-.taskTitle {
+.taskMain {
   flex: 1;
   min-width: 0;
-  padding: 4px 14px 4px 0;
+  padding: 10px 0 0;
+}
+
+.taskTitle {
+  width: 100%;
+  min-width: 0;
+  padding: 0;
   border: 0;
   background-color: transparent;
   color: var(--color-text);
-  font-size: 0.75rem;
-  line-height: 1.35;
+  font-size: 0.9375rem;
+  line-height: 1.4;
   text-align: left;
   overflow-wrap: anywhere;
   cursor: pointer;
@@ -158,6 +167,52 @@
   outline-offset: 2px;
 }
 
+.taskMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 40px 0 0;
+}
+
+.priority {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 7px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  color: var(--color-muted);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+.priorityDot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background-color: var(--color-muted);
+}
+
+.priority[data-priority='2'] .priorityDot {
+  background-color: hsl(220 60% 56%);
+}
+
+.priority[data-priority='3'] .priorityDot {
+  background-color: hsl(8 72% 54%);
+}
+
+.time {
+  padding: 1px 6px;
+  border-radius: 999px;
+  background-color: color-mix(in srgb, var(--color-border) 36%, transparent);
+  color: var(--color-muted);
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
 .task[data-done='true'] .taskTitle {
   color: var(--color-muted);
   text-decoration: line-through;
@@ -165,18 +220,21 @@
 
 .delete {
   position: absolute;
-  top: 2px;
-  right: 2px;
-  width: 20px;
-  height: 20px;
+  right: 0;
+  bottom: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
   padding: 0;
   border: 0;
-  border-radius: 5px;
+  border-radius: 8px;
   background-color: transparent;
   color: var(--color-muted);
-  font-size: 0.8125rem;
+  font-size: 1rem;
   line-height: 1;
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: pointer;
 }
 
@@ -187,11 +245,11 @@
 }
 
 .empty {
-  padding: 12px 4px;
+  padding: 14px 6px;
   border: 1px dashed var(--color-border);
   border-radius: 9px;
   color: var(--color-muted);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   text-align: center;
 }
 
@@ -202,7 +260,7 @@
   border-radius: 9px;
   background-color: transparent;
   color: var(--color-muted);
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   cursor: pointer;
 }
 
@@ -214,10 +272,6 @@
 @media (max-width: 1119px) {
   .planner {
     padding: 80px 16px 76px 18px;
-  }
-
-  .days {
-    grid-auto-columns: minmax(136px, 1fr);
   }
 }
 

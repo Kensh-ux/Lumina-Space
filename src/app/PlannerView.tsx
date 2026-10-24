@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import type { Task } from '../lib/types';
-import type { TaskDraft, TaskPatch } from '../features/tasks/task';
+import { TASK_PRIORITY_META, type TaskDraft, type TaskPatch } from '../features/tasks/task';
 import { getNextDays, tasksForDate } from '../lib/planner';
 import TaskEditor from '../features/tasks/TaskEditor';
 import { useAudio } from '../lib/AudioProvider';
@@ -60,7 +60,7 @@ export default function PlannerView({
       <header className={styles.header}>
         <div>
           <h2 className={styles.title}>未来 7 天</h2>
-          <p className={styles.subtitle}>从今天开始，按截止日期排布</p>
+          <p className={styles.subtitle}>从今天开始，按截止日期排布 · 横向滚动看完整 7 天</p>
         </div>
         <p className={styles.unscheduled}>
           {unscheduled > 0 ? `未排期 ${unscheduled} 件` : '按天安排任务'}
@@ -88,43 +88,59 @@ export default function PlannerView({
                   <p className={styles.empty}>暂无任务</p>
                 ) : (
                   <ul className={styles.taskList}>
-                    {dayTasks.map((task) => (
-                      <li key={task.id} className={styles.task} data-done={task.done}>
-                        <label className={styles.check}>
-                          <input
-                            type="checkbox"
-                            checked={task.done}
-                            aria-label={`完成：${task.title}`}
-                            onChange={() => {
+                    {dayTasks.map((task) => {
+                      const priority = task.priority ?? 2;
+                      const priorityLabel =
+                        TASK_PRIORITY_META.find((item) => item.value === priority)?.label ?? '中';
+                      return (
+                        <li key={task.id} className={styles.task} data-done={task.done}>
+                          <label className={styles.check}>
+                            <input
+                              type="checkbox"
+                              checked={task.done}
+                              aria-label={`完成：${task.title}`}
+                              onChange={() => {
+                                playClick();
+                                onToggleTask(task.id);
+                              }}
+                            />
+                          </label>
+                          <div className={styles.taskMain}>
+                            <button
+                              type="button"
+                              className={styles.taskTitle}
+                              title="编辑任务"
+                              onPointerEnter={playHover}
+                              onClick={(event) => {
+                                openEditor({ mode: 'edit', task }, event.currentTarget);
+                              }}
+                            >
+                              {task.title}
+                            </button>
+                            <div className={styles.taskMeta}>
+                              <span className={styles.priority} data-priority={priority}>
+                                <span className={styles.priorityDot} aria-hidden="true" />
+                                {priorityLabel}
+                              </span>
+                              {task.dueTime ? (
+                                <span className={styles.time}>{task.dueTime}</span>
+                              ) : null}
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className={styles.delete}
+                            aria-label={`删除：${task.title}`}
+                            onClick={() => {
                               playClick();
-                              onToggleTask(task.id);
+                              onDeleteTask(task.id);
                             }}
-                          />
-                        </label>
-                        <button
-                          type="button"
-                          className={styles.taskTitle}
-                          title="编辑任务"
-                          onPointerEnter={playHover}
-                          onClick={(event) => {
-                            openEditor({ mode: 'edit', task }, event.currentTarget);
-                          }}
-                        >
-                          {task.title}
-                        </button>
-                        <button
-                          type="button"
-                          className={styles.delete}
-                          aria-label={`删除：${task.title}`}
-                          onClick={() => {
-                            playClick();
-                            onDeleteTask(task.id);
-                          }}
-                        >
-                          ×
-                        </button>
-                      </li>
-                    ))}
+                          >
+                            ×
+                          </button>
+                        </li>
+                      );
+                    })}
                   </ul>
                 )}
               </div>
