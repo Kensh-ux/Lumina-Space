@@ -13,6 +13,7 @@ interface TodayOrbProps {
   onUpdateTask: (id: string, patch: TaskPatch) => void;
   onCreateTask: (draft: TaskDraft) => void;
   onClearCompletedTasks: () => void;
+  onOpenChange?: (open: boolean) => void;
 }
 
 export default function TodayOrb({
@@ -22,24 +23,35 @@ export default function TodayOrb({
   onUpdateTask,
   onCreateTask,
   onClearCompletedTasks,
+  onOpenChange,
 }: TodayOrbProps) {
   const [open, setOpen] = useState(false);
   const orbRef = useRef<HTMLButtonElement>(null);
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
   const { playHover, playOpen, playClose } = useAudio();
   const counts = countTasks(tasks);
 
-  const closePanel = useCallback(() => {
-    playClose();
-    setOpen(false);
-    requestAnimationFrame(() => orbRef.current?.focus());
-  }, [playClose]);
+  const closePanel = useCallback(
+    (restoreFocus = true) => {
+      playClose();
+      setOpen(false);
+      onOpenChange?.(false);
+      if (restoreFocus) {
+        requestAnimationFrame(() => orbRef.current?.focus());
+      }
+    },
+    [playClose, onOpenChange],
+  );
+
+  const handleClose = useCallback(() => closePanel(), [closePanel]);
 
   const openPanel = useCallback(() => {
     playOpen();
     setOpen(true);
+    onOpenChange?.(true);
     requestAnimationFrame(() => closeRef.current?.focus());
-  }, [playOpen]);
+  }, [playOpen, onOpenChange]);
 
   useEffect(() => {
     if (!open) {
@@ -54,6 +66,28 @@ export default function TodayOrb({
     };
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [open, closePanel]);
+
+  // 捕获阶段处理面板外点击：MoodDial（z 更高）也能先关面板再打开自己；编辑器内点击忽略。
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+    const handlePointerDown = (event: PointerEvent) => {
+      if (document.querySelector('[role="dialog"][aria-modal="true"]')) {
+        return;
+      }
+      const target = event.target;
+      if (!(target instanceof Element)) {
+        return;
+      }
+      if (panelRef.current?.contains(target) || orbRef.current?.contains(target)) {
+        return;
+      }
+      closePanel(false);
+    };
+    document.addEventListener('pointerdown', handlePointerDown, true);
+    return () => document.removeEventListener('pointerdown', handlePointerDown, true);
   }, [open, closePanel]);
 
   return (
@@ -78,16 +112,9 @@ export default function TodayOrb({
 
       {open ? (
         <>
-          <div
-            className={styles.backdrop}
-            aria-hidden="true"
-            onPointerDown={(event) => {
-              if (event.target === event.currentTarget) {
-                closePanel();
-              }
-            }}
-          />
+          <div className={styles.backdrop} aria-hidden="true" />
           <section
+            ref={panelRef}
             id="today-orb-panel"
             className={styles.panel}
             role="dialog"
@@ -103,7 +130,7 @@ export default function TodayOrb({
                 type="button"
                 className={styles.closeButton}
                 aria-label="关闭今日任务"
-                onClick={closePanel}
+                onClick={handleClose}
               >
                 ×
               </button>

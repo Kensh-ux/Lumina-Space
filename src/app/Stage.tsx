@@ -10,15 +10,21 @@ interface StageProps {
   mood: MoodId;
   tasks: readonly Task[];
   focusSessions: readonly FocusSession[];
+  orbOpen?: boolean;
 }
 
-export default function Stage({ mood, tasks, focusSessions }: StageProps) {
+export default function Stage({ mood, tasks, focusSessions, orbOpen = false }: StageProps) {
   const meta = getMoodMeta(mood);
   const counts = countTasks(tasks);
   const focusMinutes = Math.floor(getTodayFocusStats(focusSessions).seconds / 60);
 
   return (
-    <section className={styles.stage} data-mood={mood} aria-label="主界面">
+    <section
+      className={styles.stage}
+      data-mood={mood}
+      data-orb-open={orbOpen}
+      aria-label="主界面"
+    >
       <div className={styles.scene} aria-hidden="true">
         <div className={`${styles.layer} ${styles.layerPositive}`} />
         <div className={`${styles.layer} ${styles.layerNeutral}`} />

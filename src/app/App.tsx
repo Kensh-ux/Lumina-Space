@@ -50,6 +50,7 @@ function App() {
   const sidebar = useSidebar(readInitialSidebarExpanded());
   const [initialPanel] = useState<SidebarPanelId | null>(readInitialPanel);
   const [dialOpen] = useState(readDialOpen);
+  const [orbOpen, setOrbOpen] = useState(false);
   const sidebarWidth = sidebar.expanded ? sidebar.width : SIDEBAR_COLLAPSED_WIDTH;
 
   return (
@@ -57,6 +58,7 @@ function App() {
       className={styles.app}
       data-mood={mood}
       data-dragging={sidebar.dragging}
+      data-orb-open={orbOpen}
       style={{ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties}
     >
       <Sidebar
@@ -77,7 +79,7 @@ function App() {
       />
 
       <main className={styles.main}>
-        <Stage mood={mood} tasks={tasks} focusSessions={focusSessions} />
+        <Stage mood={mood} tasks={tasks} focusSessions={focusSessions} orbOpen={orbOpen} />
 
         <header className={styles.topbar}>
           <p className={styles.wordmark}>Lumina-Space</p>
@@ -93,6 +95,7 @@ function App() {
           onUpdateTask={updateTask}
           onCreateTask={createTask}
           onClearCompletedTasks={clearCompletedTasks}
+          onOpenChange={setOrbOpen}
         />
       </main>
 

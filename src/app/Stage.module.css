@@ -99,6 +99,14 @@
   padding: 40px 24px;
   text-align: center;
   pointer-events: none;
+  transition:
+    transform 320ms ease,
+    opacity 320ms ease;
+}
+
+.stage[data-orb-open='true'] .hero {
+  transform: translateX(-160px);
+  opacity: 0.62;
 }
 
 .ringOuter,
@@ -218,11 +226,20 @@
     padding: 8px 14px;
     font-size: 0.8125rem;
   }
+
+  .stage[data-orb-open='true'] .hero {
+    transform: none;
+    opacity: 0.4;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .aurora,
   .ringOuter {
     animation: none;
+  }
+
+  .hero {
+    transition: none;
   }
 }

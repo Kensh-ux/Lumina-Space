@@ -207,6 +207,7 @@
     top: auto;
     right: 16px;
     bottom: 78px;
+    z-index: 46;
     transform: none;
   }
 
@@ -226,6 +227,7 @@
   .panel {
     position: fixed;
     inset: 0 0 56px;
+    z-index: 45;
     width: 100%;
     border-radius: 0;
     border-right: 0;
