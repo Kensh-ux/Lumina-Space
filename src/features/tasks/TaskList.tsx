@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import type { Task } from '../../lib/types';
+import { useAudio } from '../../lib/AudioProvider';
 import TaskEditor from './TaskEditor';
 import TaskFilters from './TaskFilters';
 import TaskRow from './TaskRow';
@@ -46,13 +47,19 @@ export default function TaskList({
   const createButtonRef = useRef<HTMLButtonElement>(null);
   const counts = countTasks(tasks);
   const visibleTasks = sortTasks(filterTasks(searchTasks(tasks, query), filter));
+  const { playOpen, playClose } = useAudio();
 
-  const openEditor = useCallback((next: EditorState) => {
-    triggerRef.current = document.activeElement as HTMLElement | null;
-    setEditor(next);
-  }, []);
+  const openEditor = useCallback(
+    (next: EditorState) => {
+      triggerRef.current = document.activeElement as HTMLElement | null;
+      playOpen();
+      setEditor(next);
+    },
+    [playOpen],
+  );
 
   const closeEditor = useCallback(() => {
+    playClose();
     setEditor(null);
     requestAnimationFrame(() => {
       const trigger = triggerRef.current;
@@ -62,7 +69,7 @@ export default function TaskList({
         createButtonRef.current?.focus();
       }
     });
-  }, []);
+  }, [playClose]);
 
   const handleSave = (draft: TaskDraft) => {
     if (editor?.mode === 'edit') {

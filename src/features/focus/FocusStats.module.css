@@ -31,3 +31,43 @@
   font-size: 0.8125rem;
   line-height: 1.55;
 }
+
+.sound {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+.soundButton {
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background-color: transparent;
+  color: var(--color-text);
+  font-size: 0.8125rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.soundButton[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface));
+}
+
+.soundButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.soundButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.soundHint {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}

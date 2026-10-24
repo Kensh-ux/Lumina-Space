@@ -8,6 +8,7 @@ import {
   type TimerStatus,
 } from './timer';
 import { useFocusTimer } from './useFocusTimer';
+import { useAudio } from '../../lib/AudioProvider';
 import styles from './focus.module.css';
 
 const STATUS_LABELS: Record<TimerStatus, string> = {
@@ -24,6 +25,7 @@ export default function FocusTimer({
 }) {
   const { state, setMinutes, startTimer, pauseTimer, resumeTimer, resetTimer, restartTimer } =
     useFocusTimer();
+  const { playClick } = useAudio();
   const inputId = useId();
   const currentMinutes = Math.round(state.durationSec / 60);
   const [minutesInput, setMinutesInput] = useState(String(currentMinutes));
@@ -73,27 +75,62 @@ export default function FocusTimer({
 
       <div className={styles.controls}>
         {state.status === 'idle' ? (
-          <button type="button" className={styles.primary} onClick={handleStart}>
+          <button
+            type="button"
+            className={styles.primary}
+            onClick={() => {
+              playClick();
+              handleStart();
+            }}
+          >
             开始
           </button>
         ) : null}
         {state.status === 'running' ? (
-          <button type="button" className={styles.primary} onClick={pauseTimer}>
+          <button
+            type="button"
+            className={styles.primary}
+            onClick={() => {
+              playClick();
+              pauseTimer();
+            }}
+          >
             暂停
           </button>
         ) : null}
         {state.status === 'paused' ? (
-          <button type="button" className={styles.primary} onClick={resumeTimer}>
+          <button
+            type="button"
+            className={styles.primary}
+            onClick={() => {
+              playClick();
+              resumeTimer();
+            }}
+          >
             继续
           </button>
         ) : null}
         {state.status === 'done' ? (
-          <button type="button" className={styles.primary} onClick={restartTimer}>
+          <button
+            type="button"
+            className={styles.primary}
+            onClick={() => {
+              playClick();
+              restartTimer();
+            }}
+          >
             再来一次
           </button>
         ) : null}
         {state.status !== 'idle' ? (
-          <button type="button" className={styles.secondary} onClick={resetTimer}>
+          <button
+            type="button"
+            className={styles.secondary}
+            onClick={() => {
+              playClick();
+              resetTimer();
+            }}
+          >
             重置
           </button>
         ) : null}
@@ -136,6 +173,7 @@ export default function FocusTimer({
             aria-pressed={currentMinutes === minutes}
             disabled={state.status !== 'idle'}
             onClick={() => {
+              playClick();
               setMinutesInput(String(minutes));
               setMinutes(minutes);
             }}

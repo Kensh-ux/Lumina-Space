@@ -1,4 +1,5 @@
 import type { Task } from '../../lib/types';
+import { useAudio } from '../../lib/AudioProvider';
 import { formatDueDate, isTaskOverdue, TASK_PRIORITY_META } from './task';
 import styles from './tasks.module.css';
 
@@ -11,6 +12,7 @@ interface TaskRowProps {
 
 export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowProps) {
   const overdue = isTaskOverdue(task);
+  const { playHover, playClick } = useAudio();
   const priorityLabel = task.priority
     ? TASK_PRIORITY_META.find((item) => item.value === task.priority)?.label
     : null;
@@ -21,6 +23,7 @@ export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowPro
       data-done={task.done}
       data-overdue={overdue}
       data-priority={task.priority ?? ''}
+      onPointerEnter={playHover}
     >
       <label className={styles.checkArea}>
         <input
@@ -28,7 +31,10 @@ export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowPro
           type="checkbox"
           checked={task.done}
           aria-label={`完成：${task.title}`}
-          onChange={() => onToggle(task.id)}
+          onChange={() => {
+            playClick();
+            onToggle(task.id);
+          }}
         />
       </label>
 
@@ -37,7 +43,10 @@ export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowPro
           type="button"
           className={styles.cardTitle}
           title="编辑任务"
-          onClick={onEdit}
+          onClick={() => {
+            playClick();
+            onEdit();
+          }}
         >
           {task.title}
         </button>
@@ -63,7 +72,10 @@ export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowPro
           type="button"
           className={styles.editButton}
           aria-label={`编辑：${task.title}`}
-          onClick={onEdit}
+          onClick={() => {
+            playClick();
+            onEdit();
+          }}
         >
           ✎
         </button>
@@ -71,7 +83,10 @@ export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowPro
           type="button"
           className={styles.deleteButton}
           aria-label={`删除：${task.title}`}
-          onClick={() => onDelete(task.id)}
+          onClick={() => {
+            playClick();
+            onDelete(task.id);
+          }}
         >
           ×
         </button>

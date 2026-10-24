@@ -8,9 +8,10 @@ export interface TimerState {
 }
 
 export const MIN_DURATION_MIN = 1;
-export const MAX_DURATION_MIN = 180;
+export const FOCUS_MAX_MINUTES = 487;
+export const MAX_DURATION_MIN = FOCUS_MAX_MINUTES;
 export const DEFAULT_DURATION_MIN = 25;
-export const RECOMMENDED_MINUTES = [15, 25, 45, 60] as const;
+export const RECOMMENDED_MINUTES = [15, 30, 60, 120] as const;
 
 export function clampMinutes(minutes: number): number {
   const safe = Number.isFinite(minutes) ? Math.round(minutes) : MIN_DURATION_MIN;

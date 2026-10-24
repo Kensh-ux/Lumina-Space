@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import type { ExportResult } from '../../lib/data';
+import { useAudio } from '../../lib/AudioProvider';
 import { MOODS, type MoodId } from '../mood/mood';
 import styles from './SettingsPanel.module.css';
 
@@ -29,6 +30,7 @@ export default function SettingsPanel({
   const [cleared, setCleared] = useState(false);
   const [exportMessage, setExportMessage] = useState('');
   const clearButtonRef = useRef<HTMLButtonElement>(null);
+  const { muted, toggleMuted, playClick, playHover } = useAudio();
 
   const handleExport = () => {
     const { filename, json } = onExportData();
@@ -63,13 +65,35 @@ export default function SettingsPanel({
               type="button"
               className={styles.themeButton}
               aria-pressed={mood === item.id}
-              onClick={() => onChangeMood(item.id)}
+              onPointerEnter={playHover}
+              onClick={() => {
+                playClick();
+                onChangeMood(item.id);
+              }}
             >
               <span aria-hidden="true">{item.emoji}</span>
               <span>{item.label}</span>
             </button>
           ))}
         </div>
+      </section>
+
+      <section className={styles.section}>
+        <h3 className={styles.sectionTitle}>声音</h3>
+        <button
+          type="button"
+          className={styles.soundButton}
+          aria-pressed={!muted}
+          onPointerEnter={playHover}
+          onClick={() => {
+            playClick();
+            toggleMuted();
+          }}
+        >
+          <span aria-hidden="true">{muted ? '🔇' : '🔊'}</span>
+          声音 {muted ? '关闭' : '开启'}
+        </button>
+        <p className={styles.note}>轻提示音与白噪音；首次交互后启用。</p>
       </section>
 
       <section className={styles.section}>

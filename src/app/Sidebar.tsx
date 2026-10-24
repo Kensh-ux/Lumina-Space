@@ -2,6 +2,7 @@ import type { FocusSession, MoodId, Task } from '../lib/types';
 import type { ExportResult } from '../lib/data';
 import type { TaskDraft, TaskPatch } from '../features/tasks/task';
 import SettingsPanel from '../features/settings/SettingsPanel';
+import { useAudio } from '../lib/AudioProvider';
 import SidebarResizeHandle from './SidebarResizeHandle';
 import { FocusPanel, TodayPanel } from './SidebarPanels';
 import { useSidebarPanels, type SidebarPanelId } from './useSidebarPanels';
@@ -58,6 +59,7 @@ export default function Sidebar({
   const { activePanel, sheetOpen, isMobile, sheetCloseRef, navRefs, setSheetOpen, handleSelect } =
     useSidebarPanels(initialPanel, layout);
   const activeLabel = MODULES.find((module) => module.id === activePanel)?.label ?? '今日';
+  const { playHover, playClick, playOpen, playClose } = useAudio();
 
   return (
     <aside
@@ -75,7 +77,15 @@ export default function Sidebar({
           className={styles.toggleButton}
           aria-label={layout.expanded ? '收起侧栏' : '展开侧栏'}
           aria-expanded={layout.expanded}
-          onClick={layout.toggle}
+          onPointerEnter={playHover}
+          onClick={() => {
+            if (layout.expanded) {
+              playClose();
+            } else {
+              playOpen();
+            }
+            layout.toggle();
+          }}
         >
           <span aria-hidden="true">{layout.expanded ? '«' : '☰'}</span>
         </button>
@@ -93,7 +103,15 @@ export default function Sidebar({
             aria-current={activePanel === module.id ? 'page' : undefined}
             aria-label={module.label}
             title={module.label}
-            onClick={() => handleSelect(module.id)}
+            onPointerEnter={playHover}
+            onClick={() => {
+              if (module.id !== activePanel) {
+                playOpen();
+              } else {
+                playClick();
+              }
+              handleSelect(module.id);
+            }}
           >
             <span className={styles.moduleIcon} aria-hidden="true">
               {module.icon}
@@ -111,7 +129,10 @@ export default function Sidebar({
             type="button"
             className={styles.sheetClose}
             aria-label="关闭侧栏面板"
-            onClick={() => setSheetOpen(false)}
+            onClick={() => {
+              playClose();
+              setSheetOpen(false);
+            }}
           >
             ×
           </button>
