@@ -1,54 +1,54 @@
 import { useState } from 'react';
+import type { CSSProperties } from 'react';
 import MoodDial from '../features/mood/MoodDial';
-import Sidebar, { type PanelId } from './Sidebar';
+import Sidebar, { type SidebarPanelId } from './Sidebar';
 import Stage from './Stage';
 import { useAppData } from './useAppData';
+import { SIDEBAR_COLLAPSED_WIDTH, useSidebar } from './useSidebar';
 import styles from './App.module.css';
 
-// 仅开发/截图使用：?panel=today 打开对应侧边栏面板，生产构建不生效。
-function readInitialPanel(): PanelId | null {
+// 仅开发/截图使用：?panel=today|focus|mood|settings 打开对应侧栏模块。
+function readDevParam(name: string): string | null {
   if (!import.meta.env.DEV) {
     return null;
   }
-  const value = new URLSearchParams(window.location.search).get('panel');
-  return value === 'today' || value === 'focus' || value === 'settings' ? value : null;
+  return new URLSearchParams(window.location.search).get(name);
 }
 
-// 仅开发/截图使用：?dial=open 让情绪圆盘默认展开，生产构建不生效。
+function readInitialPanel(): SidebarPanelId | null {
+  const value = readDevParam('panel');
+  return value === 'today' || value === 'focus' || value === 'mood' || value === 'settings'
+    ? value
+    : null;
+}
+
+// 仅开发/截图使用：?sidebar=collapsed 让侧栏默认收起。
+function readInitialSidebarExpanded(): boolean {
+  return readDevParam('sidebar') !== 'collapsed';
+}
+
+// 仅开发/截图使用：?dial=open 让情绪圆盘默认展开。
 function readDialOpen(): boolean {
-  if (!import.meta.env.DEV) {
-    return false;
-  }
-  return new URLSearchParams(window.location.search).get('dial') === 'open';
+  return readDevParam('dial') === 'open';
 }
 
 function App() {
   const { mood, tasks, setMood, addTask, toggleTask, deleteTask, clearAppData, storageError } =
     useAppData();
-  const [initialPanel] = useState<PanelId | null>(readInitialPanel);
+  const sidebar = useSidebar(readInitialSidebarExpanded());
+  const [initialPanel] = useState<SidebarPanelId | null>(readInitialPanel);
   const [dialOpen] = useState(readDialOpen);
+  const sidebarWidth = sidebar.expanded ? sidebar.width : SIDEBAR_COLLAPSED_WIDTH;
 
   return (
-    <div className={styles.app} data-mood={mood}>
-      <main className={styles.main}>
-        <Stage
-          mood={mood}
-          tasks={tasks}
-          onAddTask={addTask}
-          onToggleTask={toggleTask}
-          onDeleteTask={deleteTask}
-        />
-      </main>
-
-      <header className={styles.topbar}>
-        <p className={styles.wordmark}>Lumina-Space</p>
-        <h1 className={styles.headline}>今天感觉怎么样？</h1>
-      </header>
-
-      <MoodDial current={mood} onChange={setMood} defaultOpen={dialOpen} />
-
+    <div
+      className={styles.app}
+      data-mood={mood}
+      data-dragging={sidebar.dragging}
+      style={{ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties}
+    >
       <Sidebar
-        initialPanel={initialPanel}
+        layout={sidebar}
         mood={mood}
         tasks={tasks}
         setMood={setMood}
@@ -57,7 +57,25 @@ function App() {
         onDeleteTask={deleteTask}
         onClearData={clearAppData}
         storageError={storageError}
+        initialPanel={initialPanel}
       />
+
+      <main className={styles.main}>
+        <Stage
+          mood={mood}
+          tasks={tasks}
+          onAddTask={addTask}
+          onToggleTask={toggleTask}
+          onDeleteTask={deleteTask}
+        />
+
+        <header className={styles.topbar}>
+          <p className={styles.wordmark}>Lumina-Space</p>
+          <h1 className={styles.headline}>今天感觉怎么样？</h1>
+        </header>
+
+        <MoodDial current={mood} onChange={setMood} defaultOpen={dialOpen} />
+      </main>
 
       {storageError ? (
         <p className={styles.status} role="status">

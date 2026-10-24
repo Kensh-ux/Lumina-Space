@@ -1,6 +1,8 @@
 .app {
+  --sidebar-width: 300px;
+
   position: relative;
-  min-height: 100dvh;
+  height: 100dvh;
   overflow: hidden;
   background-color: var(--color-bg);
   color: var(--color-text);
@@ -11,12 +13,19 @@
 
 .main {
   position: absolute;
-  inset: 0;
-  z-index: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: var(--sidebar-width);
+  transition: left 240ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app[data-dragging='true'] .main {
+  transition: none;
 }
 
 .topbar {
-  position: fixed;
+  position: absolute;
   top: 26px;
   left: 50%;
   z-index: 10;
@@ -59,13 +68,17 @@
 }
 
 @media (max-width: 1119px) {
+  .main {
+    left: 0;
+  }
+
   .topbar {
     top: 20px;
   }
 
   .status {
     right: 16px;
-    bottom: 88px;
+    bottom: 72px;
     left: 16px;
   }
 }
@@ -78,8 +91,10 @@
   .headline {
     display: none;
   }
+}
 
-  .status {
-    bottom: 84px;
+@media (prefers-reduced-motion: reduce) {
+  .main {
+    transition: none;
   }
 }

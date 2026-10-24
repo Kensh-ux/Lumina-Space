@@ -1,5 +1,17 @@
 # Changelog
 
+## v0.4.0 — 进行中
+
+### 新增
+
+- 全高左侧栏：展开默认 300px（240–420，可拖拽或键盘调整），收起 56px；宽度写入 `lumina:sidebar-width`，刷新保持。
+- 侧栏模块：今日、专注、情绪（009 占位）、设置；主 Stage 按 `--sidebar-width` 偏移，情绪圆盘移入 Stage 左上。
+- 移动端底部导航 + sheet；拖拽时关闭过渡，`prefers-reduced-motion` 关闭动画。
+
+### 质量
+
+- 62 条单元测试（新增 sidebar clamp 4 条）。
+
 ## v0.3.0 — 2026-10-24
 
 ### 新增
