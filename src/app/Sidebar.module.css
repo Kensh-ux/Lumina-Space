@@ -226,6 +226,25 @@
   outline-offset: -2px;
 }
 
+/* hover / 拖拽时显示 2px 强调线，热区本身仍是 8px 透明。 */
+.resizeHandle::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: var(--color-accent);
+  opacity: 0;
+  transition: opacity var(--transition-theme);
+}
+
+.resizeHandle:hover::after,
+.resizeHandle:focus-visible::after,
+.sidebar[data-dragging='true'] .resizeHandle::after {
+  opacity: 1;
+}
+
 @keyframes sheetIn {
   from {
     opacity: 0;

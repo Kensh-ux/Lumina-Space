@@ -87,7 +87,7 @@ export default function SettingsPanel({
         <p className={styles.storageError}>浏览器存储不可用，本次改动不会被记住。</p>
       ) : null}
 
-      <p className={styles.version}>Lumina-Space v0.3.0</p>
+      <p className={styles.version}>Lumina-Space v0.4.0</p>
     </div>
   );
 }

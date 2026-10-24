@@ -1,7 +1,7 @@
 .dial {
   position: absolute;
   top: 24px;
-  left: 24px;
+  left: 12px;
   z-index: 40;
   width: 64px;
   height: 64px;

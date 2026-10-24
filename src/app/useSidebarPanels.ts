@@ -69,16 +69,20 @@ export function useSidebarPanels(
     });
   }, []);
 
-  // sheet 打开时焦点到关闭按钮，关闭时回对应导航项；首帧预览不抢焦点。
+  // 只在 sheet 从关到开时把焦点送进关闭按钮；首帧预览不抢焦点。
   useEffect(() => {
     if (firstSheetEffectRef.current) {
       firstSheetEffectRef.current = false;
-      previousSheetRef.current = sheetOpen;
       return;
     }
     if (isMobile && sheetOpen) {
       sheetCloseRef.current?.focus();
-    } else if (isMobile && previousSheetRef.current) {
+    }
+  }, [isMobile, sheetOpen]);
+
+  // sheet 从开到关时焦点回导航项；sheet 已打开时切换模块不动焦点。
+  useEffect(() => {
+    if (previousSheetRef.current && !sheetOpen && isMobile) {
       navRefs.current[activePanel]?.focus();
     }
     previousSheetRef.current = sheetOpen;
