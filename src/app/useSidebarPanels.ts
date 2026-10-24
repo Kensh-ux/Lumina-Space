@@ -3,7 +3,7 @@ import type { RefObject } from 'react';
 import { closeOverlay, getActiveOverlay, openOverlay, subscribeOverlay } from '../lib/overlay';
 import type { SidebarLayout } from './useSidebar';
 
-export type SidebarPanelId = 'today' | 'focus' | 'settings';
+export type SidebarPanelId = 'today' | 'planner' | 'focus' | 'settings';
 
 interface UseSidebarPanelsResult {
   activePanel: SidebarPanelId;
@@ -18,6 +18,7 @@ interface UseSidebarPanelsResult {
 export function useSidebarPanels(
   initialPanel: SidebarPanelId | null,
   layout: SidebarLayout,
+  onPanelChange?: (panel: SidebarPanelId) => void,
 ): UseSidebarPanelsResult {
   const [activePanel, setActivePanel] = useState<SidebarPanelId>(initialPanel ?? 'today');
   const [sheetOpen, setSheetOpen] = useState(Boolean(initialPanel));
@@ -29,6 +30,7 @@ export function useSidebarPanels(
   const sheetCloseRef = useRef<HTMLButtonElement>(null);
   const navRefs = useRef<Record<SidebarPanelId, HTMLButtonElement | null>>({
     today: null,
+    planner: null,
     focus: null,
     settings: null,
   });
@@ -113,6 +115,9 @@ export function useSidebarPanels(
 
   const handleSelect = useCallback(
     (id: SidebarPanelId) => {
+      if (id !== activePanel) {
+        onPanelChange?.(id);
+      }
       setActivePanel(id);
       if (isMobile) {
         setSheetOpen((previous) => !(previous && activePanel === id));
@@ -122,7 +127,7 @@ export function useSidebarPanels(
         layout.expand();
       }
     },
-    [isMobile, activePanel, expanded, layout],
+    [isMobile, activePanel, expanded, layout, onPanelChange],
   );
 
   return {

@@ -11,22 +11,27 @@ const PRIORITY_OPTIONS: readonly { value: TaskPriority; label: string }[] = [
   { value: 2, label: '中' },
   { value: 3, label: '高' },
 ];
-
 interface TaskEditorProps {
   mode: 'create' | 'edit';
   task?: Task;
+  initialDueDate?: string;
   onSubmit: (draft: TaskDraft) => void;
   onCancel: () => void;
 }
-
-export default function TaskEditor({ mode, task, onSubmit, onCancel }: TaskEditorProps) {
+export default function TaskEditor({
+  mode,
+  task,
+  initialDueDate,
+  onSubmit,
+  onCancel,
+}: TaskEditorProps) {
   const headingId = useId();
   const errorId = `${headingId}-error`;
   const titleRef = useRef<HTMLInputElement>(null);
   const [title, setTitle] = useState(task?.title ?? '');
   const [description, setDescription] = useState(task?.description ?? '');
   const [priority, setPriority] = useState(String(task?.priority ?? 2));
-  const [dueDate, setDueDate] = useState(task?.dueDate ?? '');
+  const [dueDate, setDueDate] = useState(task?.dueDate ?? initialDueDate ?? '');
   const [dueTime, setDueTime] = useState(task?.dueTime ?? '');
   const [error, setError] = useState('');
   const { dialogRef, handleKeyDown: handleTabKeyDown } = useModalFocus();
@@ -34,7 +39,6 @@ export default function TaskEditor({ mode, task, onSubmit, onCancel }: TaskEdito
     titleRef.current?.focus();
     titleRef.current?.select();
   }, []);
-
   // 捕获阶段先处理 Esc，避免侧栏/移动 sheet 的 document 监听同时收起。
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -129,7 +133,6 @@ export default function TaskEditor({ mode, task, onSubmit, onCancel }: TaskEdito
                 onChange={(event) => setDescription(event.target.value)}
               />
             </div>
-
             <div className={styles.dateRow}>
               <div className={styles.field}>
                 <label className={styles.label} htmlFor={`${headingId}-due-date`}>
@@ -162,7 +165,6 @@ export default function TaskEditor({ mode, task, onSubmit, onCancel }: TaskEdito
                 />
               </div>
             </div>
-
             <fieldset className={styles.priorityField}>
               <legend className={styles.label}>优先级</legend>
               <div className={styles.priorityGroup}>
@@ -182,7 +184,6 @@ export default function TaskEditor({ mode, task, onSubmit, onCancel }: TaskEdito
               </div>
             </fieldset>
           </div>
-
           <footer className={styles.footer}>
             <button type="button" className={styles.cancelButton} onClick={onCancel}>
               取消

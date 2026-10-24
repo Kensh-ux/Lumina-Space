@@ -53,3 +53,15 @@ export function FocusPanel({ sessions, onComplete }: FocusPanelProps) {
     </>
   );
 }
+
+export function PlannerPanel() {
+  return (
+    <div className={styles.plannerPanel}>
+      <p className={styles.plannerPanelTitle}>未来 7 天</p>
+      <p className={styles.plannerPanelNote}>
+        主界面从今天起连续 7 天展示任务，按截止日期自动分列。
+      </p>
+      <p className={styles.plannerPanelNote}>点每列「＋ 添加」可直接排到那一天。</p>
+    </div>
+  );
+}

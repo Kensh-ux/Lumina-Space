@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { CSSProperties } from 'react';
 import MoodDial from '../features/mood/MoodDial';
 import Sidebar, { type SidebarPanelId } from './Sidebar';
+import PlannerView from './PlannerView';
 import Stage from './Stage';
 import TodayOrb from './TodayOrb';
 import { useAppData } from './useAppData';
@@ -18,7 +19,9 @@ function readDevParam(name: string): string | null {
 
 function readInitialPanel(): SidebarPanelId | null {
   const value = readDevParam('panel');
-  return value === 'today' || value === 'focus' || value === 'settings' ? value : null;
+  return value === 'today' || value === 'planner' || value === 'focus' || value === 'settings'
+    ? value
+    : null;
 }
 
 // 仅开发/截图使用：?sidebar=collapsed 让侧栏默认收起。
@@ -49,9 +52,17 @@ function App() {
   } = useAppData();
   const sidebar = useSidebar(readInitialSidebarExpanded());
   const [initialPanel] = useState<SidebarPanelId | null>(readInitialPanel);
+  const [activeView, setActiveView] = useState<SidebarPanelId>(initialPanel ?? 'today');
   const [dialOpen] = useState(readDialOpen);
   const [orbOpen, setOrbOpen] = useState(false);
   const sidebarWidth = sidebar.expanded ? sidebar.width : SIDEBAR_COLLAPSED_WIDTH;
+  const plannerActive = activeView === 'planner';
+  const handlePanelChange = (panel: SidebarPanelId) => {
+    setActiveView(panel);
+    if (panel === 'planner') {
+      setOrbOpen(false);
+    }
+  };
 
   return (
     <div
@@ -59,6 +70,7 @@ function App() {
       data-mood={mood}
       data-dragging={sidebar.dragging}
       data-orb-open={orbOpen}
+      data-view={plannerActive ? 'planner' : 'scene'}
       style={{ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties}
     >
       <Sidebar
@@ -75,28 +87,41 @@ function App() {
         onExportData={exportData}
         onClearData={clearAppData}
         storageError={storageError}
+        onPanelChange={handlePanelChange}
         initialPanel={initialPanel}
       />
 
       <main className={styles.main}>
-        <Stage mood={mood} tasks={tasks} focusSessions={focusSessions} orbOpen={orbOpen} />
-
         <header className={styles.topbar}>
           <p className={styles.wordmark}>Lumina-Space</p>
           <h1 className={styles.headline}>今天感觉怎么样？</h1>
         </header>
 
-        <MoodDial current={mood} onChange={setMood} defaultOpen={dialOpen} />
+        {plannerActive ? (
+          <PlannerView
+            tasks={tasks}
+            onToggleTask={toggleTask}
+            onDeleteTask={deleteTask}
+            onUpdateTask={updateTask}
+            onCreateTask={createTask}
+          />
+        ) : (
+          <>
+            <Stage mood={mood} tasks={tasks} focusSessions={focusSessions} orbOpen={orbOpen} />
 
-        <TodayOrb
-          tasks={tasks}
-          onToggleTask={toggleTask}
-          onDeleteTask={deleteTask}
-          onUpdateTask={updateTask}
-          onCreateTask={createTask}
-          onClearCompletedTasks={clearCompletedTasks}
-          onOpenChange={setOrbOpen}
-        />
+            <MoodDial current={mood} onChange={setMood} defaultOpen={dialOpen} />
+
+            <TodayOrb
+              tasks={tasks}
+              onToggleTask={toggleTask}
+              onDeleteTask={deleteTask}
+              onUpdateTask={updateTask}
+              onCreateTask={createTask}
+              onClearCompletedTasks={clearCompletedTasks}
+              onOpenChange={setOrbOpen}
+            />
+          </>
+        )}
       </main>
 
       {storageError ? (

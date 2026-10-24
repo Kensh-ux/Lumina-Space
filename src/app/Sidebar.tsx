@@ -5,7 +5,7 @@ import type { TaskDraft, TaskPatch } from '../features/tasks/task';
 import SettingsPanel from '../features/settings/SettingsPanel';
 import { useAudio } from '../lib/AudioProvider';
 import SidebarResizeHandle from './SidebarResizeHandle';
-import { FocusPanel, TodayPanel } from './SidebarPanels';
+import { FocusPanel, PlannerPanel, TodayPanel } from './SidebarPanels';
 import { useSidebarPanels, type SidebarPanelId } from './useSidebarPanels';
 import { SIDEBAR_MAX_WIDTH, SIDEBAR_MIN_WIDTH, type SidebarLayout } from './useSidebar';
 import styles from './Sidebar.module.css';
@@ -20,6 +20,7 @@ interface ModuleMeta {
 
 const MODULES: readonly ModuleMeta[] = [
   { id: 'today', label: '今日', icon: '📋' },
+  { id: 'planner', label: '规划师', icon: '🗓️' },
   { id: 'focus', label: '专注', icon: '⏳' },
   { id: 'settings', label: '设置', icon: '⚙️' },
 ];
@@ -38,6 +39,7 @@ interface SidebarProps {
   onExportData: () => ExportResult;
   onClearData: () => void;
   storageError: boolean;
+  onPanelChange?: (panel: SidebarPanelId) => void;
   initialPanel?: SidebarPanelId | null;
 }
 
@@ -55,10 +57,11 @@ export default function Sidebar({
   onExportData,
   onClearData,
   storageError,
+  onPanelChange,
   initialPanel = null,
 }: SidebarProps) {
   const { activePanel, sheetOpen, isMobile, sheetCloseRef, navRefs, setSheetOpen, handleSelect } =
-    useSidebarPanels(initialPanel, layout);
+    useSidebarPanels(initialPanel, layout, onPanelChange);
   const activeLabel = MODULES.find((module) => module.id === activePanel)?.label ?? '今日';
   const { playHover, playClick, playOpen, playClose, stopWhiteNoise } = useAudio();
 
@@ -98,7 +101,6 @@ export default function Sidebar({
           <span aria-hidden="true">{layout.expanded ? '«' : '☰'}</span>
         </button>
       </header>
-
       <nav className={styles.moduleNav} aria-label="侧栏模块">
         {MODULES.map((module) => (
           <button
@@ -155,6 +157,7 @@ export default function Sidebar({
             onUpdateTask={onUpdateTask}
           />
         ) : null}
+        {activePanel === 'planner' ? <PlannerPanel /> : null}
         {activePanel === 'focus' ? (
           <FocusPanel sessions={focusSessions} onComplete={onRecordFocusSession} />
         ) : null}

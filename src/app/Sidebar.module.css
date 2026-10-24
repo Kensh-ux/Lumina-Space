@@ -142,6 +142,25 @@
   font-size: 0.8125rem;
 }
 
+.plannerPanel {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 4px 2px;
+}
+
+.plannerPanelTitle {
+  color: var(--color-text);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.plannerPanelNote {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
 .moodPanel {
   display: flex;
   flex-direction: column;
