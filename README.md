@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/screenshots/shell-expanded.png" alt="Lumina-Space v0.4 全高侧栏" width="900">
+  <img src="docs/screenshots/hero-positive.png" alt="Lumina-Space v1.0 主界面" width="900">
 </p>
 
 <h1 align="center">Lumina-Space</h1>
@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-2ea44f"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-v0.4-5b7c99">
+  <img alt="Version" src="https://img.shields.io/badge/version-v1.0-5b7c99">
   <img alt="Status" src="https://img.shields.io/badge/status-alpha-d97706">
   <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white">
@@ -51,33 +51,29 @@ Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心�
 - **本地优先**：数据只存在浏览器 `localStorage`，没有账号、没有后端。
 - **基础质量**：键盘可达、焦点可见、`prefers-reduced-motion` 关闭动效；125 条单元测试。
 
-> v1.0 进行中（2026-10-24，分支 `feat/v1.0`）：声音系统、粒子主界面、今日光球与规划师。v2.0 再做 3D 小屋。
+> v1.0 已完成（2026-10-24）：声音系统、粒子主界面、今日光球与规划师。v2.0 再做 3D 小屋。
 
 ## 截图
 
 | 积极 | 中性 | 消极 |
 |---|---|---|
-| ![积极](docs/screenshots/home-positive.png) | ![中性](docs/screenshots/home-neutral.png) | ![消极](docs/screenshots/home-negative.png) |
+| ![积极](docs/screenshots/hero-positive.png) | ![中性](docs/screenshots/hero-neutral.png) | ![消极](docs/screenshots/hero-negative.png) |
 
-**主界面 / 任务（v0.4）**
+**今日光球**
 
-![任务列表](docs/screenshots/task-list.png)
+![光球任务面板](docs/screenshots/orb-panel.png)
 
-![大任务编辑器](docs/screenshots/editor-new.png)
+**规划师（从今天起 7 天）**
 
-**侧栏 / 专注 / 设置（v0.4）**
+![规划师 1280](docs/screenshots/planner-1280.png)
 
-![全高侧栏](docs/screenshots/shell-expanded.png)
+![规划师 900](docs/screenshots/planner-900.png)
 
-![专注统计](docs/screenshots/focus-stats.png)
+**专注 / 声音**
 
-![设置与导出](docs/screenshots/settings-data.png)
+![番茄钟](docs/screenshots/focus-centered.png)
 
-**窄屏**
-
-![编辑器 900](docs/screenshots/editor-900.png)
-
-![任务列表 900](docs/screenshots/task-list-900.png)
+![声音设置](docs/screenshots/sound-settings.png)
 
 ## 快速开始
 
@@ -98,7 +94,7 @@ npm run dev
 | v0.2.0 | 2026-10-23 | 全屏主界面、情绪圆盘、触屏/键盘交互 |
 | v0.3.0 | 2026-10-24 | 任务 CRUD、侧边栏抽屉、番茄钟 |
 | v0.4.0 | 2026-10-24 | 全高可调左侧栏、大任务编辑器、任务增强、专注统计 |
-| v1.0.0 | 开发中 | 声音系统、粒子主界面、今日光球与规划师 |
+| v1.0.0 | 2026-10-24 | 声音系统、粒子主界面、今日光球、规划师 |
 | v2.0.0 | 计划 | 3D 小屋 |
 
 完整记录见 [CHANGELOG.md](CHANGELOG.md)。
