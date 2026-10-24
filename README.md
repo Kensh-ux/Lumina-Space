@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/screenshots/home-positive.png" alt="Lumina-Space 积极主题" width="900">
+  <img src="docs/screenshots/shell-expanded.png" alt="Lumina-Space v0.4 全高侧栏" width="900">
 </p>
 
 <h1 align="center">Lumina-Space</h1>
@@ -49,7 +49,7 @@ Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心�
 - **本地优先**：数据只存在浏览器 `localStorage`，没有账号、没有后端。
 - **基础质量**：键盘可达、焦点可见、`prefers-reduced-motion` 关闭动效；106 条单元测试。
 
-> v0.4 进行中（2026-10-24）：UI 外壳与可调左侧栏、任务增强、情绪记录与专注统计。v1.0 把常用功能做齐，v2.0 再做 3D 小屋。
+> v0.4 已完成（2026-10-24，分支 `ui/v0.4`，待合并）：全高可调侧栏、任务增强、情绪记录与专注统计。v1.0 把常用功能做齐，v2.0 再做 3D 小屋。
 
 ## 截图
 
@@ -57,23 +57,23 @@ Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心�
 |---|---|---|
 | ![积极](docs/screenshots/home-positive.png) | ![中性](docs/screenshots/home-neutral.png) | ![消极](docs/screenshots/home-negative.png) |
 
-**待办（v0.3）**
+**主界面 / 任务（v0.4）**
 
-![两条待办](docs/screenshots/tasks-two.png)
+![全高侧栏](docs/screenshots/shell-expanded.png)
 
-![完成一条](docs/screenshots/tasks-completed.png)
+![任务增强](docs/screenshots/tasks-priority-due.png)
 
-**侧边栏 / 番茄钟（v0.3）**
+**情绪 / 专注 / 设置（v0.4）**
 
-![今日抽屉](docs/screenshots/sidebar-today.png)
+![情绪记录](docs/screenshots/mood-history.png)
 
-![专注番茄钟](docs/screenshots/focus-idle.png)
+![专注统计](docs/screenshots/focus-stats.png)
 
-**情绪圆盘 / 窄屏**
+![设置与导出](docs/screenshots/settings-data.png)
 
-![情绪圆盘](docs/screenshots/dial-open.png)
+**窄屏**
 
-![窄屏](docs/screenshots/tasks-900.png)
+![窄屏](docs/screenshots/shell-900.png)
 
 ## 快速开始
 
@@ -93,7 +93,7 @@ npm run dev
 | v0.1.0 | 2026-10-22 | 框架、三种情绪主题、左下侧边栏、Stage 场景、本地持久化 |
 | v0.2.0 | 2026-10-23 | 全屏主界面、情绪圆盘、触屏/键盘交互 |
 | v0.3.0 | 2026-10-24 | 任务 CRUD、侧边栏抽屉、番茄钟 |
-| v0.4.0 | 开发中 | 全高可调左侧栏、任务增强、情绪记录与专注统计 |
+| v0.4.0 | 2026-10-24 | 全高可调左侧栏、任务增强、情绪记录与专注统计；分支 `ui/v0.4` |
 | v1.0.0 | 计划 | 常用功能完整、可发布的主界面 |
 | v2.0.0 | 计划 | 3D 小屋 |
 

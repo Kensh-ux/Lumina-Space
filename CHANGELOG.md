@@ -1,11 +1,11 @@
 # Changelog
 
-## v0.4.0 — 进行中
+## v0.4.0 — 2026-10-24
 
 ### 新增
 
 - 全高左侧栏：展开默认 300px（240–420，可拖拽或键盘调整），收起 56px；宽度写入 `lumina:sidebar-width`，刷新保持。
-- 侧栏模块：今日、专注、情绪（009 占位）、设置；主 Stage 按 `--sidebar-width` 偏移，情绪圆盘移入 Stage 左上。
+- 侧栏模块：今日、专注、情绪（最近 7 天记录）、设置；主 Stage 按 `--sidebar-width` 偏移，情绪圆盘移入 Stage 左上。
 - 移动端底部导航 + sheet；拖拽时关闭过渡，`prefers-reduced-motion` 关闭动画。
 - 任务增强：行内编辑标题（Enter 保存 / Esc 取消 / 失焦保存 / 空回退），优先级 1–3、截止日期与过期高亮。
 - 任务筛选栏：全部 / 未完成 / 已完成、标题搜索、清除已完成；旧任务缺新字段兼容，坏 priority / dueDate 读取时 normalize（undefined / null），不再整包回退。
@@ -16,6 +16,7 @@
 ### 质量
 
 - 106 条单元测试（task 43、storage 25、data 13、mood 7、dialGeometry 3、timer 11、sidebar 4）。
+- 007/008/009 均 PASS WITH COMMENTS；修复移动端 sheet 焦点、Esc 编辑联动、坏可选字段整包回退。
 
 ## v0.3.0 — 2026-10-24
 
