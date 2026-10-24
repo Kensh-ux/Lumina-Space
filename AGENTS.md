@@ -7,7 +7,8 @@ Guidance for AI agents working on **Lumina-Space** — a mood-aware todo and foc
 - **v0.1 (2026-10-22)**: app shell, mood themes, bottom-left sidebar, CSS-only Stage, localStorage, Vitest.
 - **v0.2 (2026-10-23)**: full-bleed Stage, radial mood dial, touch/keyboard interactions.
 - **v0.3 (2026-10-24)**: task CRUD, sidebar drawer (today/focus/settings), pomodoro.
-- **Current v0.4**: UI polish. **v1.0**: common features + publishable UI. **v2.0**: 3D cottage. Do not start 3D before v2.0.
+- **v0.4 (2026-10-24)**: resizable full-height sidebar, large task editor (title/description/due date+time/priority), filters/search, focus stats, export; mood history UI removed.
+- **Current v1.0**: common features + publishable UI. **v2.0**: 3D cottage. Do not start 3D before v2.0.
 
 ## Stack
 
@@ -24,7 +25,7 @@ Guidance for AI agents working on **Lumina-Space** — a mood-aware todo and foc
 src/
   app/              App, Sidebar, Stage
   features/mood/    MoodDial, mood.ts, useMood
-  features/tasks/   task CRUD (v0.3)
+  features/tasks/   task CRUD, editor (v0.4)
   lib/              shared types, storage adapter
   styles/           tokens.css, global.css
 tests/              mirror of src
