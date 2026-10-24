@@ -89,9 +89,10 @@ export default function PlannerView({
                 ) : (
                   <ul className={styles.taskList}>
                     {dayTasks.map((task) => {
-                      const priority = task.priority ?? 2;
-                      const priorityLabel =
-                        TASK_PRIORITY_META.find((item) => item.value === priority)?.label ?? '中';
+                      const priority = task.priority;
+                      const priorityLabel = priority
+                        ? TASK_PRIORITY_META.find((item) => item.value === priority)?.label ?? null
+                        : null;
                       return (
                         <li key={task.id} className={styles.task} data-done={task.done}>
                           <label className={styles.check}>
@@ -117,15 +118,19 @@ export default function PlannerView({
                             >
                               {task.title}
                             </button>
-                            <div className={styles.taskMeta}>
-                              <span className={styles.priority} data-priority={priority}>
-                                <span className={styles.priorityDot} aria-hidden="true" />
-                                {priorityLabel}
-                              </span>
-                              {task.dueTime ? (
-                                <span className={styles.time}>{task.dueTime}</span>
-                              ) : null}
-                            </div>
+                            {priorityLabel || task.dueTime ? (
+                              <div className={styles.taskMeta}>
+                                {priorityLabel && priority ? (
+                                  <span className={styles.priority} data-priority={priority}>
+                                    <span className={styles.priorityDot} aria-hidden="true" />
+                                    {priorityLabel}
+                                  </span>
+                                ) : null}
+                                {task.dueTime ? (
+                                  <span className={styles.time}>{task.dueTime}</span>
+                                ) : null}
+                              </div>
+                            ) : null}
                           </div>
                           <button
                             type="button"
