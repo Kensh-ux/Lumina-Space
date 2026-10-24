@@ -1,46 +1,24 @@
 import type { Task } from '../../lib/types';
-import TaskEditRow from './TaskEditRow';
-import {
-  formatDueDate,
-  isTaskOverdue,
-  TASK_PRIORITY_META,
-  type TaskPatch,
-} from './task';
+import { formatDueDate, isTaskOverdue, TASK_PRIORITY_META } from './task';
 import styles from './tasks.module.css';
 
 interface TaskRowProps {
   task: Task;
-  editing: boolean;
   today: string;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
-  onUpdate: (id: string, patch: TaskPatch) => void;
-  onStartEdit: (id: string) => void;
-  onCancelEdit: () => void;
+  onEdit: () => void;
   titleButtonRef?: (element: HTMLButtonElement | null) => void;
 }
 
 export default function TaskRow({
   task,
-  editing,
   today,
   onToggle,
   onDelete,
-  onUpdate,
-  onStartEdit,
-  onCancelEdit,
+  onEdit,
   titleButtonRef,
 }: TaskRowProps) {
-  if (editing) {
-    return (
-      <TaskEditRow
-        task={task}
-        onSave={(patch) => onUpdate(task.id, patch)}
-        onCancel={onCancelEdit}
-      />
-    );
-  }
-
   const overdue = isTaskOverdue(task, today);
   const priorityLabel = task.priority
     ? TASK_PRIORITY_META.find((item) => item.value === task.priority)?.label
@@ -62,44 +40,52 @@ export default function TaskRow({
           onChange={() => onToggle(task.id)}
         />
       </label>
-      <button
-        ref={titleButtonRef}
-        type="button"
-        className={styles.titleButton}
-        title="点击编辑标题"
-        onClick={() => onStartEdit(task.id)}
-      >
-        {task.title}
-      </button>
-      <span className={styles.meta}>
-        {priorityLabel && task.priority ? (
-          <span className={styles.priority} data-priority={task.priority}>
-            <span className={styles.priorityDot} aria-hidden="true" />
-            {priorityLabel}
-          </span>
-        ) : null}
-        {task.dueDate ? (
-          <span className={styles.due} data-overdue={overdue}>
-            {formatDueDate(task.dueDate)}
-          </span>
-        ) : null}
-      </span>
-      <button
-        type="button"
-        className={styles.editButton}
-        aria-label={`编辑：${task.title}`}
-        onClick={() => onStartEdit(task.id)}
-      >
-        ✎
-      </button>
-      <button
-        type="button"
-        className={styles.deleteButton}
-        aria-label={`删除：${task.title}`}
-        onClick={() => onDelete(task.id)}
-      >
-        ×
-      </button>
+
+      <div className={styles.body}>
+        <button
+          ref={titleButtonRef}
+          type="button"
+          className={styles.cardTitle}
+          title="编辑任务"
+          onClick={onEdit}
+        >
+          {task.title}
+        </button>
+        {task.description ? <p className={styles.description}>{task.description}</p> : null}
+        <div className={styles.metaRow}>
+          {priorityLabel && task.priority ? (
+            <span className={styles.priority} data-priority={task.priority}>
+              <span className={styles.priorityDot} aria-hidden="true" />
+              {priorityLabel}
+            </span>
+          ) : null}
+          {task.dueDate ? (
+            <span className={styles.due} data-overdue={overdue}>
+              {formatDueDate(task.dueDate)}
+              {task.dueTime ? ` ${task.dueTime}` : ''}
+            </span>
+          ) : null}
+        </div>
+      </div>
+
+      <div className={styles.actions}>
+        <button
+          type="button"
+          className={styles.editButton}
+          aria-label={`编辑：${task.title}`}
+          onClick={onEdit}
+        >
+          ✎
+        </button>
+        <button
+          type="button"
+          className={styles.deleteButton}
+          aria-label={`删除：${task.title}`}
+          onClick={() => onDelete(task.id)}
+        >
+          ×
+        </button>
+      </div>
     </li>
   );
 }

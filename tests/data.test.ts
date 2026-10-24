@@ -4,7 +4,6 @@ import {
   appendMoodLog,
   exportData,
   formatMinutes,
-  getRecentMoodDays,
   getTodayFocusStats,
   getWeekFocusStats,
 } from '../src/lib/data';
@@ -156,26 +155,5 @@ describe('exportData', () => {
 
     expect(parsed.moodLog).toEqual([]);
     expect(parsed.focusSessions).toEqual([]);
-  });
-});
-
-describe('getRecentMoodDays', () => {
-  it('返回 7 天、今天在最后、同一天取最后一条', () => {
-    const log = [
-      moodEntry('neutral', at(2026, 10, 24, 8)),
-      moodEntry('positive', at(2026, 10, 24, 12)),
-      moodEntry('negative', at(2026, 10, 22, 9)),
-    ];
-
-    const days = getRecentMoodDays(log, NOW);
-
-    expect(days).toHaveLength(7);
-    expect(days[0].date).toBe('2026-10-18');
-    expect(days[6].date).toBe('2026-10-24');
-    expect(days[6].mood).toBe('positive');
-    expect(days[6].label).toBe('周六');
-    expect(days[4].date).toBe('2026-10-22');
-    expect(days[4].mood).toBe('negative');
-    expect(days[0].mood).toBeNull();
   });
 });

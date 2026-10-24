@@ -1,55 +1,15 @@
-.visuallyHidden {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-.composer {
+.newTaskButton {
   display: flex;
-  gap: 8px;
-  margin-top: 22px;
-}
-
-.input {
-  flex: 1;
-  min-width: 0;
-  min-height: 44px;
-  padding: 10px 14px;
-  border: 1px solid var(--color-border);
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 46px;
+  margin-bottom: 10px;
+  border: 1px dashed var(--color-border);
   border-radius: 12px;
-  background-color: var(--color-surface);
+  background-color: transparent;
   color: var(--color-text);
   font-size: 0.9375rem;
-  transition:
-    background-color var(--transition-theme),
-    border-color var(--transition-theme),
-    color var(--transition-theme);
-}
-
-.input::placeholder {
-  color: var(--color-muted);
-}
-
-.input:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
-}
-
-.addButton {
-  min-height: 44px;
-  padding: 0 18px;
-  border: 1px solid var(--color-accent);
-  border-radius: 12px;
-  background-color: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface));
-  color: var(--color-text);
-  font-size: 0.9375rem;
-  font-weight: 600;
   cursor: pointer;
   transition:
     background-color var(--transition-theme),
@@ -57,52 +17,54 @@
     color var(--transition-theme);
 }
 
-.addButton:hover {
-  background-color: color-mix(in srgb, var(--color-accent) 26%, var(--color-surface));
+.newTaskButton:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
-.addButton:focus-visible {
+.newTaskButton:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
-.summary {
-  margin-top: 18px;
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-}
-
-.listBlockCompact .summary {
-  margin-top: 0;
-}
-
-.listBlockCompact .list {
-  max-height: none;
+.listBlockCompact .newTaskButton {
+  margin-bottom: 8px;
+  font-size: 0.875rem;
 }
 
 .list {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  max-height: 40vh;
-  margin: 8px 0 0;
+  gap: 8px;
+  max-height: 46vh;
+  margin: 4px 0 0;
   padding: 0;
   overflow-y: auto;
   list-style: none;
 }
 
+.listBlockCompact .list {
+  max-height: none;
+  gap: 6px;
+}
+
 .item {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  padding: 4px;
-  border-radius: 10px;
-  transition: background-color var(--transition-theme);
+  gap: 10px;
+  align-items: flex-start;
+  min-height: 76px;
+  padding: 14px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background-color: var(--color-surface);
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme);
 }
 
 .item:hover {
-  background-color: color-mix(in srgb, var(--color-accent) 8%, transparent);
+  border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border));
+  background-color: color-mix(in srgb, var(--color-accent) 4%, var(--color-surface));
 }
 
 .checkArea {
@@ -112,6 +74,7 @@
   justify-content: center;
   width: 44px;
   height: 44px;
+  margin-top: -2px;
   cursor: pointer;
 }
 
@@ -123,49 +86,72 @@
   cursor: pointer;
 }
 
-.titleButton {
+.body {
+  display: flex;
   flex: 1;
+  flex-direction: column;
+  gap: 4px;
   min-width: 0;
-  padding: 6px 2px;
+}
+
+.cardTitle {
+  padding: 2px 0;
   border: 0;
   border-radius: 6px;
   background-color: transparent;
   color: var(--color-text);
-  font-size: 0.9375rem;
-  line-height: 1.45;
+  font-size: 1.0625rem;
+  font-weight: 600;
+  line-height: 1.35;
   text-align: left;
   overflow-wrap: anywhere;
-  cursor: text;
+  cursor: pointer;
 }
 
-.titleButton:hover {
+.cardTitle:hover {
   color: var(--color-accent);
 }
 
-.titleButton:focus-visible {
+.cardTitle:focus-visible {
   outline: 2px solid var(--color-accent);
   outline-offset: 2px;
 }
 
-.item[data-done='true'] .titleButton {
+.item[data-done='true'] .cardTitle {
   color: var(--color-muted);
   text-decoration: line-through;
   opacity: 0.75;
 }
 
-.meta {
+.description {
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.metaRow {
   display: flex;
-  flex: none;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
+  margin-top: 2px;
 }
 
 .priority {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 5px;
+  padding: 2px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
   color: var(--color-muted);
   font-size: 0.75rem;
+  line-height: 1.5;
   white-space: nowrap;
 }
 
@@ -185,11 +171,12 @@
 }
 
 .due {
-  padding: 2px 6px;
+  padding: 2px 8px;
   border-radius: 999px;
   background-color: color-mix(in srgb, var(--color-border) 36%, transparent);
   color: var(--color-muted);
   font-size: 0.75rem;
+  line-height: 1.5;
   white-space: nowrap;
 }
 
@@ -199,9 +186,15 @@
   font-weight: 600;
 }
 
+.actions {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  margin-top: -4px;
+}
+
 .editButton,
 .deleteButton {
-  flex: none;
   width: 44px;
   height: 44px;
   padding: 0;
@@ -238,84 +231,41 @@
   outline-offset: 2px;
 }
 
-.listBlockCompact .editButton {
-  display: none;
-}
-
-.itemEditing {
-  list-style: none;
-}
-
-.editForm {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
+.listBlockCompact .item {
+  min-height: 0;
   gap: 6px;
-  padding: 8px;
-  border: 1px solid var(--color-accent);
+  padding: 10px;
   border-radius: 12px;
-  background-color: color-mix(in srgb, var(--color-accent) 5%, var(--color-surface));
 }
 
-.editTitle {
-  flex: 1 1 160px;
-  min-width: 0;
-  min-height: 44px;
-  padding: 8px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background-color: var(--color-surface);
-  color: var(--color-text);
+.listBlockCompact .checkArea {
+  width: 36px;
+  height: 40px;
+}
+
+.listBlockCompact .cardTitle {
   font-size: 0.9375rem;
 }
 
-.editSelect,
-.editDate {
-  min-height: 44px;
-  padding: 0 8px;
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  background-color: var(--color-surface);
-  color: var(--color-text);
-  font-size: 0.875rem;
+.listBlockCompact .description {
+  font-size: 0.75rem;
+  -webkit-line-clamp: 2;
 }
 
-.editTitle:focus-visible,
-.editSelect:focus-visible,
-.editDate:focus-visible,
-.saveButton:focus-visible,
-.cancelButton:focus-visible {
-  outline: 2px solid var(--color-accent);
-  outline-offset: 2px;
+.listBlockCompact .priority,
+.listBlockCompact .due {
+  font-size: 0.6875rem;
 }
 
-.saveButton,
-.cancelButton {
-  min-height: 44px;
-  padding: 0 12px;
-  border-radius: 10px;
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.saveButton {
-  border: 1px solid var(--color-accent);
-  background-color: color-mix(in srgb, var(--color-accent) 18%, var(--color-surface));
-  color: var(--color-text);
-  font-weight: 600;
-}
-
-.cancelButton {
-  border: 1px solid var(--color-border);
-  background-color: transparent;
-  color: var(--color-muted);
+.listBlockCompact .editButton {
+  display: none;
 }
 
 .filters {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-top: 16px;
+  margin-bottom: 4px;
 }
 
 .searchRow {
@@ -429,22 +379,13 @@
 }
 
 @media (max-width: 719px) {
-  .composer {
-    gap: 6px;
-    margin-top: 18px;
-  }
-
-  .addButton {
-    padding: 0 14px;
-  }
-
   .item {
     gap: 4px;
-    padding: 6px 2px;
+    padding: 12px 8px;
   }
 
   .filters {
-    margin-top: 14px;
+    margin-top: 4px;
   }
 
   .filterRow {
@@ -459,15 +400,12 @@
   .filterButton {
     padding: 0 10px;
   }
-
-  .editTitle {
-    flex-basis: 100%;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .newTaskButton,
   .item,
-  .titleButton,
+  .cardTitle,
   .editButton,
   .deleteButton {
     transition: none;

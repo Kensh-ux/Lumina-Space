@@ -1,9 +1,14 @@
-import { isValidDueDate, isValidPriority } from '../../lib/types';
+import {
+  isValidDueDate,
+  isValidDueTime,
+  isValidPriority,
+  TASK_DESCRIPTION_MAX_LENGTH,
+} from '../../lib/types';
 import type { Task, TaskPriority } from '../../lib/types';
 import { toLocalDateString } from '../../lib/date';
 
 export { isTask } from '../../lib/types';
-export { toLocalDateString };
+export { TASK_DESCRIPTION_MAX_LENGTH, toLocalDateString };
 
 export const TASK_TITLE_MAX_LENGTH = 120;
 
@@ -17,8 +22,18 @@ export type TaskFilter = 'all' | 'open' | 'done';
 
 export interface TaskPatch {
   title?: string;
+  description?: string;
   priority?: TaskPriority | null;
   dueDate?: string | null;
+  dueTime?: string | null;
+}
+
+export interface TaskDraft {
+  title: string;
+  description?: string;
+  priority?: TaskPriority | null;
+  dueDate?: string | null;
+  dueTime?: string | null;
 }
 
 let idCounter = 0;
@@ -35,19 +50,42 @@ function normalizeTitle(title: string): string {
   return Array.from(title.trim()).slice(0, TASK_TITLE_MAX_LENGTH).join('');
 }
 
-// 纯函数：返回 null 表示标题无效，不抛错。
-export function createTask(title: string, now: Date = new Date()): Task | null {
-  const trimmed = normalizeTitle(title);
-  if (trimmed.length === 0) {
+function normalizeDescription(description: string): string {
+  return Array.from(description.trim()).slice(0, TASK_DESCRIPTION_MAX_LENGTH).join('');
+}
+
+// 新建/编辑共用的字段校验；返回 null 表示标题无效。
+export function createTaskWithDetails(draft: TaskDraft, now: Date = new Date()): Task | null {
+  const title = normalizeTitle(draft.title);
+  if (title.length === 0) {
     return null;
   }
-  return {
+  const task: Task = {
     id: createTaskId(),
-    title: trimmed,
+    title,
     done: false,
     createdAt: now.toISOString(),
     completedAt: null,
   };
+  const description = normalizeDescription(draft.description ?? '');
+  if (description.length > 0) {
+    task.description = description;
+  }
+  if (draft.priority !== null && draft.priority !== undefined && isValidPriority(draft.priority)) {
+    task.priority = draft.priority;
+  }
+  if (draft.dueDate && isValidDueDate(draft.dueDate)) {
+    task.dueDate = draft.dueDate;
+    if (draft.dueTime && isValidDueTime(draft.dueTime)) {
+      task.dueTime = draft.dueTime;
+    }
+  }
+  return task;
+}
+
+// 纯函数：返回 null 表示标题无效，不抛错。
+export function createTask(title: string, now: Date = new Date()): Task | null {
+  return createTaskWithDetails({ title }, now);
 }
 
 export function addTask(tasks: readonly Task[], title: string, now: Date = new Date()): Task[] {
@@ -80,7 +118,7 @@ export function clearCompleted(tasks: readonly Task[]): Task[] {
   return tasks.filter((task) => !task.done);
 }
 
-// 只改 title / priority / dueDate；空标题保持原值，非法值忽略。
+// 只改 title / description / priority / dueDate / dueTime；空标题保持原值，非法值忽略。
 export function updateTask(tasks: readonly Task[], id: string, patch: TaskPatch): Task[] {
   return tasks.map((task) => {
     if (task.id !== id) {
@@ -93,6 +131,14 @@ export function updateTask(tasks: readonly Task[], id: string, patch: TaskPatch)
         next.title = title;
       }
     }
+    if ('description' in patch) {
+      const description = normalizeDescription(patch.description ?? '');
+      if (description.length > 0) {
+        next.description = description;
+      } else {
+        delete next.description;
+      }
+    }
     if ('priority' in patch) {
       if (patch.priority === null || patch.priority === undefined) {
         delete next.priority;
@@ -103,8 +149,21 @@ export function updateTask(tasks: readonly Task[], id: string, patch: TaskPatch)
     if ('dueDate' in patch) {
       if (patch.dueDate === null || patch.dueDate === undefined) {
         next.dueDate = null;
+        delete next.dueTime;
       } else if (isValidDueDate(patch.dueDate)) {
         next.dueDate = patch.dueDate;
+      }
+    }
+    if ('dueTime' in patch) {
+      if (
+        patch.dueTime === null ||
+        patch.dueTime === undefined ||
+        !next.dueDate ||
+        !isValidDueTime(patch.dueTime)
+      ) {
+        delete next.dueTime;
+      } else {
+        next.dueTime = patch.dueTime;
       }
     }
     return next;

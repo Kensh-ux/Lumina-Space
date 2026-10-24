@@ -17,7 +17,11 @@ export interface Task {
   completedAt: string | null;
   priority?: TaskPriority;
   dueDate?: string | null;
+  description?: string;
+  dueTime?: string | null;
 }
+
+export const TASK_DESCRIPTION_MAX_LENGTH = 500;
 
 export interface MoodEntry {
   id: string;
@@ -48,6 +52,10 @@ export function isValidDueDate(value: unknown): value is string {
   return (
     date.getFullYear() === year && date.getMonth() === month - 1 && date.getDate() === day
   );
+}
+
+export function isValidDueTime(value: unknown): value is string {
+  return typeof value === 'string' && /^([01]\d|2[0-3]):[0-5]\d$/.test(value);
 }
 
 export function isTask(value: unknown): value is Task {
@@ -88,6 +96,15 @@ export function normalizeTask(value: unknown): Task | null {
     normalized.dueDate = task.dueDate;
   } else if (task.dueDate !== undefined) {
     normalized.dueDate = null;
+  }
+  if (typeof task.description === 'string') {
+    const description = task.description.trim().slice(0, TASK_DESCRIPTION_MAX_LENGTH);
+    if (description.length > 0) {
+      normalized.description = description;
+    }
+  }
+  if (normalized.dueDate && isValidDueTime(task.dueTime)) {
+    normalized.dueTime = task.dueTime;
   }
   return normalized;
 }

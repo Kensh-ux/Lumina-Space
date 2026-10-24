@@ -17,9 +17,7 @@ function readDevParam(name: string): string | null {
 
 function readInitialPanel(): SidebarPanelId | null {
   const value = readDevParam('panel');
-  return value === 'today' || value === 'focus' || value === 'mood' || value === 'settings'
-    ? value
-    : null;
+  return value === 'today' || value === 'focus' || value === 'settings' ? value : null;
 }
 
 // 仅开发/截图使用：?sidebar=collapsed 让侧栏默认收起。
@@ -36,10 +34,9 @@ function App() {
   const {
     mood,
     tasks,
-    moodLog,
     focusSessions,
     setMood,
-    addTask,
+    createTask,
     toggleTask,
     deleteTask,
     updateTask,
@@ -65,10 +62,9 @@ function App() {
         layout={sidebar}
         mood={mood}
         tasks={tasks}
-        moodLog={moodLog}
         focusSessions={focusSessions}
         setMood={setMood}
-        onAddTask={addTask}
+        onCreateTask={createTask}
         onToggleTask={toggleTask}
         onDeleteTask={deleteTask}
         onUpdateTask={updateTask}
@@ -83,7 +79,7 @@ function App() {
         <Stage
           mood={mood}
           tasks={tasks}
-          onAddTask={addTask}
+          onCreateTask={createTask}
           onToggleTask={toggleTask}
           onDeleteTask={deleteTask}
           onUpdateTask={updateTask}

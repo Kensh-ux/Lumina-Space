@@ -1,9 +1,9 @@
-import type { FocusSession, MoodEntry, MoodId, Task } from '../lib/types';
+import type { FocusSession, MoodId, Task } from '../lib/types';
 import type { ExportResult } from '../lib/data';
-import type { TaskPatch } from '../features/tasks/task';
+import type { TaskDraft, TaskPatch } from '../features/tasks/task';
 import SettingsPanel from '../features/settings/SettingsPanel';
 import SidebarResizeHandle from './SidebarResizeHandle';
-import { FocusPanel, MoodPanel, TodayPanel } from './SidebarPanels';
+import { FocusPanel, TodayPanel } from './SidebarPanels';
 import { useSidebarPanels, type SidebarPanelId } from './useSidebarPanels';
 import { SIDEBAR_MAX_WIDTH, SIDEBAR_MIN_WIDTH, type SidebarLayout } from './useSidebar';
 import styles from './Sidebar.module.css';
@@ -19,7 +19,6 @@ interface ModuleMeta {
 const MODULES: readonly ModuleMeta[] = [
   { id: 'today', label: '今日', icon: '📋' },
   { id: 'focus', label: '专注', icon: '⏳' },
-  { id: 'mood', label: '情绪', icon: '🌤️' },
   { id: 'settings', label: '设置', icon: '⚙️' },
 ];
 
@@ -27,10 +26,9 @@ interface SidebarProps {
   layout: SidebarLayout;
   mood: MoodId;
   tasks: readonly Task[];
-  moodLog: readonly MoodEntry[];
   focusSessions: readonly FocusSession[];
   setMood: (mood: MoodId) => void;
-  onAddTask: (title: string) => void;
+  onCreateTask: (draft: TaskDraft) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onUpdateTask: (id: string, patch: TaskPatch) => void;
@@ -45,10 +43,9 @@ export default function Sidebar({
   layout,
   mood,
   tasks,
-  moodLog,
   focusSessions,
   setMood,
-  onAddTask,
+  onCreateTask,
   onToggleTask,
   onDeleteTask,
   onUpdateTask,
@@ -123,7 +120,7 @@ export default function Sidebar({
         {activePanel === 'today' ? (
           <TodayPanel
             tasks={tasks}
-            onAddTask={onAddTask}
+            onCreateTask={onCreateTask}
             onToggleTask={onToggleTask}
             onDeleteTask={onDeleteTask}
             onUpdateTask={onUpdateTask}
@@ -132,7 +129,6 @@ export default function Sidebar({
         {activePanel === 'focus' ? (
           <FocusPanel sessions={focusSessions} onComplete={onRecordFocusSession} />
         ) : null}
-        {activePanel === 'mood' ? <MoodPanel mood={mood} log={moodLog} /> : null}
         {activePanel === 'settings' ? (
           <>
             <SettingsPanel
@@ -141,7 +137,6 @@ export default function Sidebar({
               storageError={storageError}
               counts={{
                 tasks: tasks.length,
-                moodEntries: moodLog.length,
                 focusSessions: focusSessions.length,
               }}
               onExportData={onExportData}

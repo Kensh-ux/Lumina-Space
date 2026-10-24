@@ -5,7 +5,6 @@ import styles from './SettingsPanel.module.css';
 
 export interface DataCounts {
   tasks: number;
-  moodEntries: number;
   focusSessions: number;
 }
 
@@ -77,7 +76,7 @@ export default function SettingsPanel({
         <h3 className={styles.sectionTitle}>数据</h3>
         <p className={styles.note}>数据保存在本机浏览器（localStorage），不会上传。</p>
         <p className={styles.dataCounts} aria-label="数据概况">
-          任务 {counts.tasks} 条 · 情绪记录 {counts.moodEntries} 条 · 专注 {counts.focusSessions} 次
+          任务 {counts.tasks} 条 · 专注 {counts.focusSessions} 次
         </p>
         <div className={styles.actionRow}>
           <button type="button" className={styles.secondaryButton} onClick={handleExport}>

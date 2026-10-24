@@ -131,38 +131,3 @@ export function exportData(data: AppDataV1, now: Date = new Date()): ExportResul
     json: JSON.stringify(payload, null, 2),
   };
 }
-
-export interface MoodDay {
-  date: string;
-  label: string;
-  mood: MoodId | null;
-}
-
-const WEEKDAY_LABELS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
-
-export function getRecentMoodDays(
-  log: readonly MoodEntry[],
-  now: Date = new Date(),
-  days = 7,
-): MoodDay[] {
-  const result: MoodDay[] = [];
-  for (let offset = days - 1; offset >= 0; offset -= 1) {
-    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - offset);
-    const dateString = toLocalDateString(date);
-    let latest: MoodEntry | null = null;
-    for (const entry of log) {
-      if (toLocalDateString(new Date(entry.at)) !== dateString) {
-        continue;
-      }
-      if (!latest || entry.at >= latest.at) {
-        latest = entry;
-      }
-    }
-    result.push({
-      date: dateString,
-      label: WEEKDAY_LABELS[date.getDay()],
-      mood: latest?.mood ?? null,
-    });
-  }
-  return result;
-}

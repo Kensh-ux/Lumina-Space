@@ -1,15 +1,13 @@
-import type { FocusSession, MoodEntry, MoodId, Task } from '../lib/types';
-import { countTasks, type TaskPatch } from '../features/tasks/task';
-import TaskComposer from '../features/tasks/TaskComposer';
+import type { FocusSession, Task } from '../lib/types';
+import { countTasks, type TaskDraft, type TaskPatch } from '../features/tasks/task';
 import TaskList from '../features/tasks/TaskList';
 import FocusTimer from '../features/focus/FocusTimer';
 import FocusStats from '../features/focus/FocusStats';
-import MoodHistory from '../features/mood/MoodHistory';
 import styles from './Sidebar.module.css';
 
 interface TodayPanelProps {
   tasks: readonly Task[];
-  onAddTask: (title: string) => void;
+  onCreateTask: (draft: TaskDraft) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onUpdateTask: (id: string, patch: TaskPatch) => void;
@@ -17,7 +15,7 @@ interface TodayPanelProps {
 
 export function TodayPanel({
   tasks,
-  onAddTask,
+  onCreateTask,
   onToggleTask,
   onDeleteTask,
   onUpdateTask,
@@ -34,10 +32,10 @@ export function TodayPanel({
         onToggle={onToggleTask}
         onDelete={onDeleteTask}
         onUpdate={onUpdateTask}
+        onCreateTask={onCreateTask}
         compact
-        showSummary={false}
+        showCreate
       />
-      <TaskComposer onAdd={onAddTask} />
     </>
   );
 }
@@ -54,8 +52,4 @@ export function FocusPanel({ sessions, onComplete }: FocusPanelProps) {
       <FocusStats sessions={sessions} />
     </>
   );
-}
-
-export function MoodPanel({ mood, log }: { mood: MoodId; log: readonly MoodEntry[] }) {
-  return <MoodHistory mood={mood} log={log} />;
 }

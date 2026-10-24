@@ -4,6 +4,7 @@ import {
   clearCompleted,
   countTasks,
   createTask,
+  createTaskWithDetails,
   deleteTask,
   filterTasks,
   formatDueDate,
@@ -351,5 +352,78 @@ describe('日期辅助', () => {
     expect(isTaskOverdue(makeTask({ dueDate: '2026-10-29' }), today)).toBe(false);
     expect(isTaskOverdue(makeTask({ dueDate: today }), today)).toBe(false);
     expect(isTaskOverdue(makeTask(), today)).toBe(false);
+  });
+});
+
+describe('任务描述与截止时间', () => {
+  it('createTaskWithDetails 保存描述、优先级、日期与时间', () => {
+    const task = createTaskWithDetails(
+      {
+        title: '  复习  ',
+        description: '  看笔记  ',
+        priority: 3,
+        dueDate: '2026-10-28',
+        dueTime: '18:00',
+      },
+      NOW,
+    );
+
+    expect(task).toMatchObject({
+      title: '复习',
+      description: '看笔记',
+      priority: 3,
+      dueDate: '2026-10-28',
+      dueTime: '18:00',
+    });
+  });
+
+  it('createTaskWithDetails 空标题返回 null，无日期时忽略时间', () => {
+    expect(createTaskWithDetails({ title: '   ' }, NOW)).toBeNull();
+
+    const task = createTaskWithDetails({ title: '只写时间', dueTime: '18:00' }, NOW);
+    expect(task?.dueTime).toBeUndefined();
+  });
+
+  it('updateTask 更新描述，空描述清除', () => {
+    const task = makeTask({ description: '旧描述' });
+    const withDescription = updateTask([task], task.id, { description: '  新描述  ' });
+    expect(withDescription[0].description).toBe('新描述');
+
+    const cleared = updateTask(withDescription, task.id, { description: '   ' });
+    expect(cleared[0].description).toBeUndefined();
+  });
+
+  it('updateTask 设置日期与时间，清空日期时一并清时间', () => {
+    const task = makeTask();
+    const withDue = updateTask([task], task.id, {
+      dueDate: '2026-10-28',
+      dueTime: '18:00',
+    });
+    expect(withDue[0].dueDate).toBe('2026-10-28');
+    expect(withDue[0].dueTime).toBe('18:00');
+
+    const cleared = updateTask(withDue, task.id, { dueDate: null });
+    expect(cleared[0].dueDate).toBeNull();
+    expect(cleared[0].dueTime).toBeUndefined();
+  });
+
+  it('normalizeTask 清理非法描述/时间，保留合法值', () => {
+    const valid = normalizeTask({
+      ...makeTask(),
+      description: '  说明  ',
+      dueDate: '2026-10-28',
+      dueTime: '18:00',
+    });
+    expect(valid?.description).toBe('说明');
+    expect(valid?.dueTime).toBe('18:00');
+
+    const invalid = normalizeTask({
+      ...makeTask(),
+      description: 123,
+      dueDate: '2026-10-28',
+      dueTime: '25:00',
+    });
+    expect(invalid?.description).toBeUndefined();
+    expect(invalid?.dueTime).toBeUndefined();
   });
 });

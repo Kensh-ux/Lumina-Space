@@ -183,6 +183,63 @@ describe('loadData', () => {
     expect(data.tasks[0].dueDate).toBe('2026-10-30');
   });
 
+  it('合法 description / dueTime 往返保留', () => {
+    storage.setItem(
+      KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        tasks: [
+          {
+            id: 'task-details',
+            title: '带描述与时间',
+            done: false,
+            createdAt: '2026-10-23T00:00:00.000Z',
+            completedAt: null,
+            description: '  补充说明  ',
+            dueDate: '2026-10-30',
+            dueTime: '18:00',
+          },
+        ],
+        mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+      }),
+    );
+
+    const data = loadData(storage);
+
+    expect(data.tasks[0].description).toBe('补充说明');
+    expect(data.tasks[0].dueTime).toBe('18:00');
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+  });
+
+  it('非法 description / dueTime 被清理但任务保留', () => {
+    storage.setItem(
+      KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        tasks: [
+          {
+            id: 'task-bad-details',
+            title: '坏描述与时间',
+            done: false,
+            createdAt: '2026-10-23T00:00:00.000Z',
+            completedAt: null,
+            description: 42,
+            dueDate: '2026-10-30',
+            dueTime: '25:00',
+          },
+        ],
+        mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+      }),
+    );
+
+    const data = loadData(storage);
+
+    expect(data.tasks).toHaveLength(1);
+    expect(data.tasks[0].description).toBeUndefined();
+    expect(data.tasks[0].dueTime).toBeUndefined();
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+  });
+
   it('priority 非法时 normalize 为 undefined，保留任务与 mood，不备份', () => {
     const raw = JSON.stringify({
       schemaVersion: 1,

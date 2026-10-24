@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { AppDataV1, FocusSession, MoodEntry, MoodId, Task } from '../lib/types';
+import type { AppDataV1, FocusSession, MoodId, Task } from '../lib/types';
 import { clearData, createDefaultData, loadData, saveData } from '../lib/storage';
 import {
   addFocusSession,
@@ -8,11 +8,12 @@ import {
   type ExportResult,
 } from '../lib/data';
 import {
-  addTask as addTaskToTasks,
   clearCompleted as clearCompletedFromTasks,
+  createTaskWithDetails,
   deleteTask as deleteTaskFromTasks,
   toggleTask as toggleTaskInTasks,
   updateTask as updateTaskInTasks,
+  type TaskDraft,
   type TaskPatch,
 } from '../features/tasks/task';
 import { isMoodId } from '../features/mood/mood';
@@ -20,10 +21,9 @@ import { isMoodId } from '../features/mood/mood';
 export interface UseAppDataResult {
   mood: MoodId;
   tasks: Task[];
-  moodLog: MoodEntry[];
   focusSessions: FocusSession[];
   setMood: (next: MoodId) => void;
-  addTask: (title: string) => void;
+  createTask: (draft: TaskDraft) => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
   updateTask: (id: string, patch: TaskPatch) => void;
@@ -76,8 +76,11 @@ export function useAppData(): UseAppDataResult {
     });
   }, []);
 
-  const addTask = useCallback((title: string) => {
-    setData((prev) => ({ ...prev, tasks: addTaskToTasks(prev.tasks, title) }));
+  const createTask = useCallback((draft: TaskDraft) => {
+    setData((prev) => {
+      const task = createTaskWithDetails(draft);
+      return task ? { ...prev, tasks: [...prev.tasks, task] } : prev;
+    });
   }, []);
 
   const toggleTask = useCallback((id: string) => {
@@ -115,10 +118,9 @@ export function useAppData(): UseAppDataResult {
   return {
     mood,
     tasks: data.tasks,
-    moodLog: data.moodLog ?? [],
     focusSessions: data.focusSessions ?? [],
     setMood,
-    addTask,
+    createTask,
     toggleTask,
     deleteTask,
     updateTask,
