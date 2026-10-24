@@ -1,18 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
 import type { MoodId, Task } from '../lib/types';
-import { closeOverlay, getActiveOverlay, openOverlay, subscribeOverlay } from '../lib/overlay';
 import FocusTimer from '../features/focus/FocusTimer';
 import SettingsPanel from '../features/settings/SettingsPanel';
 import SidebarResizeHandle from './SidebarResizeHandle';
 import { MoodPanel, TodayPanel } from './SidebarPanels';
-import {
-  SIDEBAR_MAX_WIDTH,
-  SIDEBAR_MIN_WIDTH,
-  type SidebarLayout,
-} from './useSidebar';
+import { useSidebarPanels, type SidebarPanelId } from './useSidebarPanels';
+import { SIDEBAR_MAX_WIDTH, SIDEBAR_MIN_WIDTH, type SidebarLayout } from './useSidebar';
 import styles from './Sidebar.module.css';
 
-export type SidebarPanelId = 'today' | 'focus' | 'mood' | 'settings';
+export type { SidebarPanelId } from './useSidebarPanels';
 
 interface ModuleMeta {
   id: SidebarPanelId;
@@ -52,104 +47,8 @@ export default function Sidebar({
   storageError,
   initialPanel = null,
 }: SidebarProps) {
-  const [activePanel, setActivePanel] = useState<SidebarPanelId>(initialPanel ?? 'today');
-  const [sheetOpen, setSheetOpen] = useState(Boolean(initialPanel));
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 1119px)').matches,
-  );
-  const sheetOpenRef = useRef(sheetOpen);
-  sheetOpenRef.current = sheetOpen;
-  const sheetCloseRef = useRef<HTMLButtonElement>(null);
-  const navRefs = useRef<Record<SidebarPanelId, HTMLButtonElement | null>>({
-    today: null,
-    focus: null,
-    mood: null,
-    settings: null,
-  });
-  const firstSheetEffectRef = useRef(true);
-  const previousSheetRef = useRef(sheetOpen);
-
-  useEffect(() => {
-    const query = window.matchMedia('(max-width: 1119px)');
-    const handleChange = () => setIsMobile(query.matches);
-    query.addEventListener('change', handleChange);
-    return () => query.removeEventListener('change', handleChange);
-  }, []);
-
-  // 只有移动端 sheet 参与 overlay 协调；桌面侧栏是布局的一部分。
-  useEffect(() => {
-    if (!isMobile || !sheetOpen) {
-      if (getActiveOverlay() === 'sidebar') {
-        closeOverlay('sidebar');
-      }
-      return;
-    }
-    openOverlay('sidebar');
-    return () => {
-      if (getActiveOverlay() === 'sidebar') {
-        closeOverlay('sidebar');
-      }
-    };
-  }, [isMobile, sheetOpen]);
-
-  // 打开圆盘等其它浮层时，sheet 自动收起。
-  useEffect(() => {
-    return subscribeOverlay((activeId) => {
-      if (activeId !== null && activeId !== 'sidebar' && sheetOpenRef.current) {
-        setSheetOpen(false);
-      }
-    });
-  }, []);
-
-  // sheet 打开时焦点到关闭按钮，关闭时回对应导航项；首帧预览不抢焦点。
-  useEffect(() => {
-    if (firstSheetEffectRef.current) {
-      firstSheetEffectRef.current = false;
-      previousSheetRef.current = sheetOpen;
-      return;
-    }
-    if (isMobile && sheetOpen) {
-      sheetCloseRef.current?.focus();
-    } else if (isMobile && previousSheetRef.current) {
-      navRefs.current[activePanel]?.focus();
-    }
-    previousSheetRef.current = sheetOpen;
-  }, [isMobile, sheetOpen, activePanel]);
-
-  // Esc：圆盘优先；否则移动端收 sheet、桌面收起侧栏。
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || getActiveOverlay() === 'mood-dial') {
-        return;
-      }
-      if (isMobile && sheetOpen) {
-        event.preventDefault();
-        setSheetOpen(false);
-        return;
-      }
-      if (!isMobile && layout.expanded) {
-        event.preventDefault();
-        layout.collapse();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isMobile, sheetOpen, layout.expanded, layout.collapse]);
-
-  const handleSelect = useCallback(
-    (id: SidebarPanelId) => {
-      setActivePanel(id);
-      if (isMobile) {
-        setSheetOpen((previous) => !(previous && activePanel === id));
-        return;
-      }
-      if (!layout.expanded) {
-        layout.expand();
-      }
-    },
-    [isMobile, activePanel, layout],
-  );
-
+  const { activePanel, sheetOpen, isMobile, sheetCloseRef, navRefs, setSheetOpen, handleSelect } =
+    useSidebarPanels(initialPanel, layout);
   const activeLabel = MODULES.find((module) => module.id === activePanel)?.label ?? '今日';
 
   return (
