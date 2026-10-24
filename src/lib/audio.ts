@@ -133,6 +133,10 @@ export function createSoundEngine(): SoundEngine {
     gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
     oscillator.connect(gain);
     gain.connect(master);
+    oscillator.onended = () => {
+      oscillator.disconnect();
+      gain.disconnect();
+    };
     oscillator.start(now);
     oscillator.stop(now + duration + 0.01);
   };
@@ -156,6 +160,11 @@ export function createSoundEngine(): SoundEngine {
     source.connect(filter);
     filter.connect(gain);
     gain.connect(master);
+    source.onended = () => {
+      source.disconnect();
+      filter.disconnect();
+      gain.disconnect();
+    };
     source.start(now);
     source.stop(now + 0.32);
   };
@@ -183,6 +192,11 @@ export function createSoundEngine(): SoundEngine {
     source.connect(filter);
     filter.connect(gain);
     gain.connect(master);
+    source.onended = () => {
+      source.disconnect();
+      filter.disconnect();
+      gain.disconnect();
+    };
     source.start();
     noise = source;
     noiseGain = gain;

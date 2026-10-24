@@ -1,4 +1,5 @@
 import type { KeyboardEvent as ReactKeyboardEvent, RefObject } from 'react';
+import { useAudio } from '../../lib/AudioProvider';
 import { getDialPosition } from './dialGeometry';
 import { MOODS, type MoodId } from './mood';
 import styles from './MoodDial.module.css';
@@ -10,6 +11,7 @@ interface MoodDialMenuProps {
 }
 
 export default function MoodDialMenu({ current, itemRefs, onSelect }: MoodDialMenuProps) {
+  const { playHover, playClick } = useAudio();
   const moveFocus = (step: number) => {
     const items = itemRefs.current.filter((item): item is HTMLButtonElement => item !== null);
     if (items.length === 0) {
@@ -66,7 +68,11 @@ export default function MoodDialMenu({ current, itemRefs, onSelect }: MoodDialMe
             aria-checked={mood.id === current}
             className={styles.item}
             style={{ left: `${position.left}px`, top: `${position.top}px` }}
-            onClick={() => onSelect(mood.id)}
+            onPointerEnter={playHover}
+            onClick={() => {
+              playClick();
+              onSelect(mood.id);
+            }}
           >
             <span className={styles.itemEmoji} aria-hidden="true">
               {mood.emoji}

@@ -43,10 +43,7 @@ export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowPro
           type="button"
           className={styles.cardTitle}
           title="编辑任务"
-          onClick={() => {
-            playClick();
-            onEdit();
-          }}
+          onClick={onEdit}
         >
           {task.title}
         </button>
@@ -72,10 +69,7 @@ export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowPro
           type="button"
           className={styles.editButton}
           aria-label={`编辑：${task.title}`}
-          onClick={() => {
-            playClick();
-            onEdit();
-          }}
+          onClick={onEdit}
         >
           ✎
         </button>

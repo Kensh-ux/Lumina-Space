@@ -5,6 +5,7 @@ import type {
   PointerEvent as ReactPointerEvent,
 } from 'react';
 import { closeOverlay, getActiveOverlay, openOverlay, subscribeOverlay } from '../../lib/overlay';
+import { useAudio } from '../../lib/AudioProvider';
 import MoodDialMenu from './MoodDialMenu';
 import { getMoodMeta, type MoodId } from './mood';
 import styles from './MoodDial.module.css';
@@ -24,6 +25,7 @@ export default function MoodDial({ current, onChange, defaultOpen = false }: Moo
   const triggerRef = useRef<HTMLButtonElement>(null);
   const itemRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const meta = getMoodMeta(current);
+  const { playHover, playClick } = useAudio();
   openRef.current = open;
 
   const setOpenSafe = useCallback((next: boolean) => {
@@ -177,7 +179,11 @@ export default function MoodDial({ current, onChange, defaultOpen = false }: Moo
         aria-expanded={open}
         aria-controls={open ? 'mood-dial-menu' : undefined}
         aria-label={`当前情绪：${meta.label}，打开情绪选择`}
-        onClick={handleTriggerClick}
+        onPointerEnter={playHover}
+        onClick={() => {
+          playClick();
+          handleTriggerClick();
+        }}
         onKeyDown={handleTriggerKeyDown}
       >
         <span className={styles.triggerEmoji} aria-hidden="true">
