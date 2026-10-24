@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import type { MoodId } from '../lib/types';
-import { createParticleScene } from '../lib/particles';
-import styles from './ParticleField.module.css';
+import { createMoodScene } from '../lib/moodScene';
+import styles from './MoodScene.module.css';
 
-export default function ParticleField({ mood }: { mood: MoodId }) {
+export default function MoodScene({ mood }: { mood: MoodId }) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -11,7 +11,7 @@ export default function ParticleField({ mood }: { mood: MoodId }) {
     if (!canvas) {
       return;
     }
-    return createParticleScene(canvas, mood);
+    return createMoodScene(canvas, mood);
   }, [mood]);
 
   return <canvas ref={canvasRef} className={styles.canvas} aria-hidden="true" />;

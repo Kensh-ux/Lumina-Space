@@ -3,7 +3,7 @@ import { getMoodMeta } from '../features/mood/mood';
 import { countTasks } from '../features/tasks/task';
 import { getTodayFocusStats } from '../lib/data';
 import { formatHeroDate, formatTodaySummary, getGreeting } from '../lib/greeting';
-import ParticleField from './ParticleField';
+import MoodScene from './MoodScene';
 import styles from './Stage.module.css';
 
 interface StageProps {
@@ -30,13 +30,10 @@ export default function Stage({ mood, tasks, focusSessions, orbOpen = false }: S
         <div className={`${styles.layer} ${styles.layerNeutral}`} />
         <div className={`${styles.layer} ${styles.layerNegative}`} />
         <div className={styles.aurora} />
-        <ParticleField mood={mood} />
-        <div className={styles.halo} />
+        <MoodScene mood={mood} />
       </div>
 
       <div className={styles.hero}>
-        <span className={styles.ringOuter} aria-hidden="true" />
-        <span className={styles.ringInner} aria-hidden="true" />
         <h2 className={styles.greeting}>{getGreeting()}</h2>
         <p className={styles.date}>{formatHeroDate()}</p>
         <p className={styles.mood}>

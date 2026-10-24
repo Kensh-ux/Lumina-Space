@@ -27,11 +27,11 @@
 }
 
 .layerPositive {
-  background: radial-gradient(120% 110% at 78% 8%, #ffe2b0 0%, #ffd38f 30%, #fff4e3 62%, #fff7ed 100%);
+  background: radial-gradient(115% 105% at 80% 2%, #fff7e4 0%, #ffedc8 28%, #fff7e9 62%, #fffdf9 100%);
 }
 
 .layerNeutral {
-  background: radial-gradient(120% 110% at 72% 6%, #e4ebf4 0%, #f1f3f7 48%, #fbfcfd 100%);
+  background: radial-gradient(120% 110% at 72% 6%, #e9f0f8 0%, #f2f6fb 46%, #fcfdff 100%);
 }
 
 .layerNegative {
@@ -71,23 +71,6 @@
     radial-gradient(42% 38% at 74% 22%, rgba(96, 130, 172, 0.28), transparent 72%);
 }
 
-.halo {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: min(64vw, 760px);
-  aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    color-mix(in srgb, var(--color-accent) 16%, transparent) 0%,
-    transparent 64%
-  );
-  transform: translate(-50%, -50%);
-  filter: blur(10px);
-  opacity: 0.9;
-}
-
 .hero {
   position: relative;
   z-index: 2;
@@ -107,33 +90,6 @@
 .stage[data-orb-open='true'] .hero {
   transform: translateX(-160px);
   opacity: 0.62;
-}
-
-.ringOuter,
-.ringInner {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  border-radius: 50%;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-}
-
-.ringOuter {
-  width: min(52vw, 540px);
-  aspect-ratio: 1;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 26%, transparent);
-  box-shadow:
-    inset 0 0 100px color-mix(in srgb, var(--color-accent) 10%, transparent),
-    0 0 120px color-mix(in srgb, var(--color-accent) 12%, transparent);
-  animation: breathe 7s ease-in-out infinite;
-}
-
-.ringInner {
-  width: min(34vw, 360px);
-  aspect-ratio: 1;
-  border: 1px solid color-mix(in srgb, var(--color-accent) 18%, transparent);
-  opacity: 0.8;
 }
 
 .greeting {
@@ -170,19 +126,6 @@
   backdrop-filter: blur(8px);
 }
 
-@keyframes breathe {
-  0%,
-  100% {
-    transform: translate(-50%, -50%) scale(0.965);
-    opacity: 0.65;
-  }
-
-  50% {
-    transform: translate(-50%, -50%) scale(1.035);
-    opacity: 1;
-  }
-}
-
 @keyframes auroraDrift {
   from {
     transform: translate3d(-1.5%, -1%, 0) scale(1);
@@ -196,14 +139,6 @@
 @media (max-width: 1119px) {
   .stage {
     padding: 84px 20px 120px;
-  }
-
-  .ringOuter {
-    width: min(70vw, 460px);
-  }
-
-  .ringInner {
-    width: min(48vw, 320px);
   }
 }
 
@@ -234,8 +169,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .aurora,
-  .ringOuter {
+  .aurora {
     animation: none;
   }
 
