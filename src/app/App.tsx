@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react';
 import MoodDial from '../features/mood/MoodDial';
 import Sidebar, { type SidebarPanelId } from './Sidebar';
 import Stage from './Stage';
+import TodayOrb from './TodayOrb';
 import { useAppData } from './useAppData';
 import { SIDEBAR_COLLAPSED_WIDTH, useSidebar } from './useSidebar';
 import styles from './App.module.css';
@@ -76,15 +77,7 @@ function App() {
       />
 
       <main className={styles.main}>
-        <Stage
-          mood={mood}
-          tasks={tasks}
-          onCreateTask={createTask}
-          onToggleTask={toggleTask}
-          onDeleteTask={deleteTask}
-          onUpdateTask={updateTask}
-          onClearCompletedTasks={clearCompletedTasks}
-        />
+        <Stage mood={mood} tasks={tasks} focusSessions={focusSessions} />
 
         <header className={styles.topbar}>
           <p className={styles.wordmark}>Lumina-Space</p>
@@ -92,6 +85,15 @@ function App() {
         </header>
 
         <MoodDial current={mood} onChange={setMood} defaultOpen={dialOpen} />
+
+        <TodayOrb
+          tasks={tasks}
+          onToggleTask={toggleTask}
+          onDeleteTask={deleteTask}
+          onUpdateTask={updateTask}
+          onCreateTask={createTask}
+          onClearCompletedTasks={clearCompletedTasks}
+        />
       </main>
 
       {storageError ? (

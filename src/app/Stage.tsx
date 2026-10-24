@@ -1,31 +1,21 @@
-import type { MoodId, Task } from '../lib/types';
+import type { FocusSession, MoodId, Task } from '../lib/types';
 import { getMoodMeta } from '../features/mood/mood';
-import type { TaskDraft, TaskPatch } from '../features/tasks/task';
-import TaskList from '../features/tasks/TaskList';
+import { countTasks } from '../features/tasks/task';
+import { getTodayFocusStats } from '../lib/data';
+import { formatHeroDate, formatTodaySummary, getGreeting } from '../lib/greeting';
+import ParticleField from './ParticleField';
 import styles from './Stage.module.css';
 
 interface StageProps {
   mood: MoodId;
   tasks: readonly Task[];
-  onCreateTask: (draft: TaskDraft) => void;
-  onToggleTask: (id: string) => void;
-  onDeleteTask: (id: string) => void;
-  onUpdateTask: (id: string, patch: TaskPatch) => void;
-  onClearCompletedTasks: () => void;
+  focusSessions: readonly FocusSession[];
 }
 
-const RAIN_DROPS = 12;
-
-export default function Stage({
-  mood,
-  tasks,
-  onCreateTask,
-  onToggleTask,
-  onDeleteTask,
-  onUpdateTask,
-  onClearCompletedTasks,
-}: StageProps) {
+export default function Stage({ mood, tasks, focusSessions }: StageProps) {
   const meta = getMoodMeta(mood);
+  const counts = countTasks(tasks);
+  const focusMinutes = Math.floor(getTodayFocusStats(focusSessions).seconds / 60);
 
   return (
     <section className={styles.stage} data-mood={mood} aria-label="主界面">
@@ -33,33 +23,23 @@ export default function Stage({
         <div className={`${styles.layer} ${styles.layerPositive}`} />
         <div className={`${styles.layer} ${styles.layerNeutral}`} />
         <div className={`${styles.layer} ${styles.layerNegative}`} />
-        <div className={styles.sun} />
-        <div className={styles.cloudLayer}>
-          <span className={`${styles.cloud} ${styles.cloudA}`} />
-          <span className={`${styles.cloud} ${styles.cloudB}`} />
-        </div>
-        <div className={styles.rainLayer}>
-          {Array.from({ length: RAIN_DROPS }, (_, index) => (
-            <span key={`drop-${index}`} className={styles.rainDrop} />
-          ))}
-        </div>
+        <div className={styles.aurora} />
+        <ParticleField mood={mood} />
+        <div className={styles.halo} />
       </div>
 
-      <article className={styles.card}>
-        <p className={styles.eyebrow}>当前情绪 · {meta.label}</p>
-        <h2 className={styles.title}>今天想做什么？</h2>
-        <p className={styles.text}>{meta.description}。先写下一件小事，再开始。</p>
-        <TaskList
-          tasks={tasks}
-          onToggle={onToggleTask}
-          onDelete={onDeleteTask}
-          onUpdate={onUpdateTask}
-          onCreateTask={onCreateTask}
-          onClearCompleted={onClearCompletedTasks}
-          toolbar
-          showCreate
-        />
-      </article>
+      <div className={styles.hero}>
+        <span className={styles.ringOuter} aria-hidden="true" />
+        <span className={styles.ringInner} aria-hidden="true" />
+        <h2 className={styles.greeting}>{getGreeting()}</h2>
+        <p className={styles.date}>{formatHeroDate()}</p>
+        <p className={styles.mood}>
+          {meta.label} · {meta.description}
+        </p>
+        <p className={styles.summary}>
+          {formatTodaySummary(counts.open, counts.done, focusMinutes)}
+        </p>
+      </div>
     </section>
   );
 }
