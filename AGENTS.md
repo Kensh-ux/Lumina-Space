@@ -9,6 +9,7 @@ Guidance for AI agents working on **Lumina-Space** — a mood-aware todo and foc
 - **v0.3 (2026-10-24)**: task CRUD, sidebar drawer (today/focus/settings), pomodoro.
 - **v0.4 (2026-10-24)**: resizable full-height sidebar, large task editor (title/description/due date+time/priority), filters/search, focus stats, export; mood history UI removed.
 - **v1.0 (2026-10-24)**: particle hero, floating today orb, 7-day planner, focus timer tuning, generated hover/click/white-noise audio, mute.
+- **v1.1 (2026-10-24)**: Qoder-generated mood scenes (positive/neutral/negative, no central orb), global white noise in settings, per-mood soundscapes.
 - **Current v2.0**: 3D cottage. Do not start 3D before the v2.0 card.
 
 ## Stack

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/screenshots/hero-positive.png" alt="Lumina-Space v1.0 主界面" width="900">
+  <img src="docs/screenshots/mood-positive.png" alt="Lumina-Space v1.1 主界面" width="900">
 </p>
 
 <h1 align="center">Lumina-Space</h1>
@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-2ea44f"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-v1.0-5b7c99">
+  <img alt="Version" src="https://img.shields.io/badge/version-v1.1-5b7c99">
   <img alt="Status" src="https://img.shields.io/badge/status-alpha-d97706">
   <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white">
@@ -51,13 +51,13 @@ Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心�
 - **本地优先**：数据只存在浏览器 `localStorage`，没有账号、没有后端。
 - **基础质量**：键盘可达、焦点可见、`prefers-reduced-motion` 关闭动效；129 条单元测试。
 
-> v1.0 已完成（2026-10-24）：声音系统、粒子主界面、今日光球与规划师。v1.1 进行中：全局白噪音、三情绪声景与三套场景动画。v2.0 再做 3D 小屋。
+> v1.1 已完成（2026-10-24）：三套 Qoder 场景动画、全局白噪音与三情绪声景；v2.0 再做 3D 小屋。
 
 ## 截图
 
 | 积极 | 中性 | 消极 |
 |---|---|---|
-| ![积极](docs/screenshots/hero-positive.png) | ![中性](docs/screenshots/hero-neutral.png) | ![消极](docs/screenshots/hero-negative.png) |
+| ![积极](docs/screenshots/mood-positive.png) | ![中性](docs/screenshots/mood-neutral.png) | ![消极](docs/screenshots/mood-negative.png) |
 
 **今日光球**
 
@@ -69,11 +69,11 @@ Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心�
 
 ![规划师 900](docs/screenshots/planner-900.png)
 
-**专注 / 声音**
+**设置 / 专注**
 
-![番茄钟](docs/screenshots/focus-centered.png)
+![声音与白噪音设置](docs/screenshots/settings-noise.png)
 
-![声音设置](docs/screenshots/sound-settings.png)
+![专注面板](docs/screenshots/focus-no-noise.png)
 
 ## 快速开始
 
@@ -95,7 +95,8 @@ npm run dev
 | v0.3.0 | 2026-10-24 | 任务 CRUD、侧边栏抽屉、番茄钟 |
 | v0.4.0 | 2026-10-24 | 全高可调左侧栏、大任务编辑器、任务增强、专注统计 |
 | v1.0.0 | 2026-10-24 | 声音系统、粒子主界面、今日光球、规划师 |
-| v1.1.0 | 开发中 | 全局白噪音与三情绪声景 |
+| v1.1.0 | 2026-10-24 | 三套 Qoder 场景动画、全局白噪音、三情绪声景 |
+
 | v2.0.0 | 计划 | 3D 小屋 |
 
 完整记录见 [CHANGELOG.md](CHANGELOG.md)。
