@@ -183,7 +183,7 @@ describe('loadData', () => {
     expect(data.tasks[0].dueDate).toBe('2026-10-30');
   });
 
-  it('priority 非法时返回默认值并备份', () => {
+  it('priority 非法时 normalize 为 undefined，保留任务与 mood，不备份', () => {
     const raw = JSON.stringify({
       schemaVersion: 1,
       tasks: [
@@ -196,15 +196,20 @@ describe('loadData', () => {
           priority: 9,
         },
       ],
-      mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+      mood: { current: 'negative', updatedAt: '2026-10-23T00:00:00.000Z' },
     });
     storage.setItem(KEY, raw);
 
-    expect(loadData(storage).tasks).toEqual([]);
-    expect(storage.getItem(BACKUP_KEY)).toBe(raw);
+    const data = loadData(storage);
+
+    expect(data.tasks).toHaveLength(1);
+    expect(data.tasks[0].title).toBe('坏优先级');
+    expect(data.tasks[0].priority).toBeUndefined();
+    expect(data.mood.current).toBe('negative');
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
   });
 
-  it('dueDate 非法时返回默认值并备份', () => {
+  it('dueDate 非法时 normalize 为 null，保留任务，不备份', () => {
     const raw = JSON.stringify({
       schemaVersion: 1,
       tasks: [
@@ -221,8 +226,48 @@ describe('loadData', () => {
     });
     storage.setItem(KEY, raw);
 
-    expect(loadData(storage).tasks).toEqual([]);
-    expect(storage.getItem(BACKUP_KEY)).toBe(raw);
+    const data = loadData(storage);
+
+    expect(data.tasks).toHaveLength(1);
+    expect(data.tasks[0].dueDate).toBeNull();
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+  });
+
+  it('一条坏 priority + 一条好任务 + negative mood 时全部保留，坏字段被清', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [
+        {
+          id: 'task-bad-priority',
+          title: '坏优先级',
+          done: false,
+          createdAt: '2026-10-23T00:00:00.000Z',
+          completedAt: null,
+          priority: 9,
+        },
+        {
+          id: 'task-good',
+          title: '好任务',
+          done: false,
+          createdAt: '2026-10-23T01:00:00.000Z',
+          completedAt: null,
+          priority: 2,
+          dueDate: '2026-10-28',
+        },
+      ],
+      mood: { current: 'negative', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    const data = loadData(storage);
+
+    expect(data.tasks.map((task) => task.id)).toEqual(['task-bad-priority', 'task-good']);
+    expect(data.tasks[0].priority).toBeUndefined();
+    expect(data.tasks[1].priority).toBe(2);
+    expect(data.tasks[1].dueDate).toBe('2026-10-28');
+    expect(data.mood.current).toBe('negative');
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+    expect(storage.getItem(KEY)).toBe(raw);
   });
 
   it('任务字段非法时返回默认值并备份', () => {

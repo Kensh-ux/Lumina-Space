@@ -35,8 +35,13 @@ export function isValidDueDate(value: unknown): value is string {
 }
 
 export function isTask(value: unknown): value is Task {
+  return normalizeTask(value) !== null;
+}
+
+// 核心字段坏 → null（整包 invalid）；可选字段坏 → 清理后保留任务。
+export function normalizeTask(value: unknown): Task | null {
   if (typeof value !== 'object' || value === null) {
-    return false;
+    return null;
   }
   const task = value as Record<string, unknown>;
   const coreValid =
@@ -49,15 +54,26 @@ export function isTask(value: unknown): value is Task {
     !Number.isNaN(Date.parse(task.createdAt)) &&
     (task.completedAt === null || typeof task.completedAt === 'string');
   if (!coreValid) {
-    return false;
+    return null;
   }
-  if (task.priority !== undefined && !isValidPriority(task.priority)) {
-    return false;
+  const normalized: Task = {
+    id: task.id as string,
+    title: task.title as string,
+    done: task.done as boolean,
+    createdAt: task.createdAt as string,
+    completedAt: task.completedAt as string | null,
+  };
+  if (isValidPriority(task.priority)) {
+    normalized.priority = task.priority;
   }
-  if (task.dueDate !== undefined && task.dueDate !== null && !isValidDueDate(task.dueDate)) {
-    return false;
+  if (task.dueDate === null) {
+    normalized.dueDate = null;
+  } else if (isValidDueDate(task.dueDate)) {
+    normalized.dueDate = task.dueDate;
+  } else if (task.dueDate !== undefined) {
+    normalized.dueDate = null;
   }
-  return true;
+  return normalized;
 }
 
 export interface AppDataV1 {

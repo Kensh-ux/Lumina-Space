@@ -1,4 +1,4 @@
-import { isTask, MOOD_IDS, STORAGE_KEY, THEME_KEY } from './types';
+import { MOOD_IDS, normalizeTask, STORAGE_KEY, THEME_KEY } from './types';
 import type { AppDataV1, MoodId, Task } from './types';
 
 const BACKUP_KEY = `${STORAGE_KEY}:backup`;
@@ -21,29 +21,38 @@ function isValidMoodId(value: unknown): value is MoodId {
   return typeof value === 'string' && (MOOD_IDS as readonly string[]).includes(value);
 }
 
-function isValidData(value: unknown): value is AppDataV1 {
+// 核心字段坏 → null（走 backup+默认）；可选字段坏 → normalize 后保留 mood 与其它任务。
+function normalizeData(value: unknown): AppDataV1 | null {
   if (typeof value !== 'object' || value === null) {
-    return false;
+    return null;
   }
   const data = value as Record<string, unknown>;
-  if (data.schemaVersion !== SCHEMA_VERSION) {
-    return false;
+  if (data.schemaVersion !== SCHEMA_VERSION || !Array.isArray(data.tasks)) {
+    return null;
   }
-  if (!Array.isArray(data.tasks)) {
-    return false;
+  const tasks = data.tasks.map((task) => normalizeTask(task));
+  if (tasks.some((task) => task === null)) {
+    return null;
   }
-  if (!data.tasks.every((task) => isTask(task))) {
-    return false;
-  }
-  const tasks = data.tasks as Task[];
-  if (new Set(tasks.map((task) => task.id)).size !== tasks.length) {
-    return false;
+  const normalizedTasks = tasks as Task[];
+  if (new Set(normalizedTasks.map((task) => task.id)).size !== normalizedTasks.length) {
+    return null;
   }
   if (typeof data.mood !== 'object' || data.mood === null) {
-    return false;
+    return null;
   }
   const mood = data.mood as Record<string, unknown>;
-  return isValidMoodId(mood.current) && typeof mood.updatedAt === 'string';
+  if (!isValidMoodId(mood.current) || typeof mood.updatedAt !== 'string') {
+    return null;
+  }
+  return {
+    schemaVersion: 1,
+    tasks: normalizedTasks,
+    mood: {
+      current: mood.current,
+      updatedAt: mood.updatedAt,
+    },
+  };
 }
 
 // v0.1/v0.2 写下的数据还没有 tasks 字段：迁移为空数组并保留情绪，不走 backup/默认值。
@@ -106,8 +115,9 @@ export function loadData(storage: Storage | null = resolveStorage()): AppDataV1 
   }
   try {
     const parsed: unknown = JSON.parse(raw);
-    if (isValidData(parsed)) {
-      return parsed;
+    const normalized = normalizeData(parsed);
+    if (normalized) {
+      return normalized;
     }
     const migrated = migrateMissingTasks(parsed);
     if (migrated) {

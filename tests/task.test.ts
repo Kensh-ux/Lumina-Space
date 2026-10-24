@@ -18,6 +18,7 @@ import {
   updateTask,
   TASK_TITLE_MAX_LENGTH,
 } from '../src/features/tasks/task';
+import { normalizeTask } from '../src/lib/types';
 import type { Task, TaskPriority } from '../src/lib/types';
 
 const NOW = new Date('2026-10-23T08:00:00.000Z');
@@ -307,7 +308,7 @@ describe('clearCompleted', () => {
   });
 });
 
-describe('isTask 新可选字段', () => {
+describe('isTask / normalizeTask 可选字段', () => {
   it('接受缺 priority / dueDate 的旧任务', () => {
     expect(isTask(makeTask())).toBe(true);
   });
@@ -317,14 +318,19 @@ describe('isTask 新可选字段', () => {
     expect(isTask({ ...makeTask(), dueDate: null })).toBe(true);
   });
 
-  it('拒绝非法 priority', () => {
-    expect(isTask({ ...makeTask(), priority: 4 })).toBe(false);
-    expect(isTask({ ...makeTask(), priority: 'high' })).toBe(false);
+  it('非法 priority / dueDate 不影响核心有效性，由 normalizeTask 清理', () => {
+    expect(isTask({ ...makeTask(), priority: 4 })).toBe(true);
+    expect(isTask({ ...makeTask(), dueDate: '2026-02-30' })).toBe(true);
+
+    const normalized = normalizeTask({ ...makeTask(), priority: 4, dueDate: '2026-02-30' });
+    expect(normalized?.priority).toBeUndefined();
+    expect(normalized?.dueDate).toBeNull();
   });
 
-  it('拒绝非法 dueDate', () => {
-    expect(isTask({ ...makeTask(), dueDate: '2026-02-30' })).toBe(false);
-    expect(isTask({ ...makeTask(), dueDate: '10/28' })).toBe(false);
+  it('核心字段坏时 normalizeTask 返回 null', () => {
+    expect(normalizeTask({ ...makeTask(), id: '' })).toBeNull();
+    expect(normalizeTask({ ...makeTask(), createdAt: 'not-a-date' })).toBeNull();
+    expect(normalizeTask(null)).toBeNull();
   });
 });
 

@@ -91,7 +91,11 @@ export function useSidebarPanels(
   // Esc：圆盘优先；否则移动端收 sheet、桌面收起侧栏。
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape' || getActiveOverlay() === 'mood-dial') {
+      if (
+        event.defaultPrevented ||
+        event.key !== 'Escape' ||
+        getActiveOverlay() === 'mood-dial'
+      ) {
         return;
       }
       if (isMobile && sheetOpen) {
