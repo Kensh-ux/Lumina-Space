@@ -345,13 +345,27 @@ describe('日期辅助', () => {
   });
 
   it('isTaskOverdue 只对过期且未完成的任务为 true', () => {
-    const today = '2026-10-28';
+    const morning = new Date(2026, 9, 28, 10, 0);
 
-    expect(isTaskOverdue(makeTask({ dueDate: '2026-10-27' }), today)).toBe(true);
-    expect(isTaskOverdue(makeTask({ dueDate: '2026-10-27', done: true }), today)).toBe(false);
-    expect(isTaskOverdue(makeTask({ dueDate: '2026-10-29' }), today)).toBe(false);
-    expect(isTaskOverdue(makeTask({ dueDate: today }), today)).toBe(false);
-    expect(isTaskOverdue(makeTask(), today)).toBe(false);
+    expect(isTaskOverdue(makeTask({ dueDate: '2026-10-27' }), morning)).toBe(true);
+    expect(isTaskOverdue(makeTask({ dueDate: '2026-10-27', done: true }), morning)).toBe(false);
+    expect(isTaskOverdue(makeTask({ dueDate: '2026-10-29' }), morning)).toBe(false);
+    expect(isTaskOverdue(makeTask({ dueDate: '2026-10-28' }), morning)).toBe(false);
+    expect(isTaskOverdue(makeTask(), morning)).toBe(false);
+  });
+
+  it('今天带截止时间时按当前时间判断', () => {
+    const evening = new Date(2026, 9, 28, 18, 0);
+
+    expect(
+      isTaskOverdue(makeTask({ dueDate: '2026-10-28', dueTime: '10:00' }), evening),
+    ).toBe(true);
+    expect(
+      isTaskOverdue(makeTask({ dueDate: '2026-10-28', dueTime: '18:00' }), evening),
+    ).toBe(false);
+    expect(
+      isTaskOverdue(makeTask({ dueDate: '2026-10-29', dueTime: '09:00' }), evening),
+    ).toBe(false);
   });
 });
 

@@ -215,8 +215,22 @@ export function formatDueDate(dueDate: string): string {
   return `${month}/${day}`;
 }
 
-export function isTaskOverdue(task: Task, today: string = toLocalDateString()): boolean {
-  return Boolean(task.dueDate) && !task.done && (task.dueDate as string) < today;
+export function isTaskOverdue(task: Task, now: Date = new Date()): boolean {
+  if (!task.dueDate || task.done) {
+    return false;
+  }
+  const today = toLocalDateString(now);
+  if (task.dueDate > today) {
+    return false;
+  }
+  if (task.dueDate < today) {
+    return true;
+  }
+  if (!task.dueTime) {
+    return false;
+  }
+  const currentTime = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+  return task.dueTime < currentTime;
 }
 
 export interface TaskCounts {

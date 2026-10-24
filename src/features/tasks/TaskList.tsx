@@ -8,7 +8,6 @@ import {
   filterTasks,
   searchTasks,
   sortTasks,
-  toLocalDateString,
   type TaskDraft,
   type TaskFilter,
   type TaskPatch,
@@ -45,10 +44,8 @@ export default function TaskList({
   const [editor, setEditor] = useState<EditorState>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
   const createButtonRef = useRef<HTMLButtonElement>(null);
-  const titleRefs = useRef<Record<string, HTMLButtonElement | null>>({});
   const counts = countTasks(tasks);
   const visibleTasks = sortTasks(filterTasks(searchTasks(tasks, query), filter));
-  const today = toLocalDateString();
 
   const openEditor = useCallback((next: EditorState) => {
     triggerRef.current = document.activeElement as HTMLElement | null;
@@ -116,13 +113,9 @@ export default function TaskList({
             <TaskRow
               key={task.id}
               task={task}
-              today={today}
               onToggle={onToggle}
               onDelete={onDelete}
               onEdit={() => openEditor({ mode: 'edit', task })}
-              titleButtonRef={(element) => {
-                titleRefs.current[task.id] = element;
-              }}
             />
           ))}
         </ul>

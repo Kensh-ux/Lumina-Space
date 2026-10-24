@@ -3,6 +3,7 @@ import type { FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { Task, TaskPriority } from '../../lib/types';
 import { TASK_DESCRIPTION_MAX_LENGTH, TASK_TITLE_MAX_LENGTH, type TaskDraft } from './task';
+import { useModalFocus } from './useModalFocus';
 import styles from './TaskEditor.module.css';
 
 const PRIORITY_OPTIONS: readonly { value: TaskPriority; label: string }[] = [
@@ -28,7 +29,7 @@ export default function TaskEditor({ mode, task, onSubmit, onCancel }: TaskEdito
   const [dueDate, setDueDate] = useState(task?.dueDate ?? '');
   const [dueTime, setDueTime] = useState(task?.dueTime ?? '');
   const [error, setError] = useState('');
-
+  const { dialogRef, handleKeyDown: handleTabKeyDown } = useModalFocus();
   useEffect(() => {
     titleRef.current?.focus();
     titleRef.current?.select();
@@ -47,7 +48,6 @@ export default function TaskEditor({ mode, task, onSubmit, onCancel }: TaskEdito
     document.addEventListener('keydown', handleKeyDown, true);
     return () => document.removeEventListener('keydown', handleKeyDown, true);
   }, [onCancel]);
-
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (title.trim().length === 0) {
@@ -63,7 +63,6 @@ export default function TaskEditor({ mode, task, onSubmit, onCancel }: TaskEdito
       dueTime: dueDate && dueTime ? dueTime : null,
     });
   };
-
   return createPortal(
     <div
       className={styles.overlay}
@@ -74,10 +73,12 @@ export default function TaskEditor({ mode, task, onSubmit, onCancel }: TaskEdito
       }}
     >
       <div
+        ref={dialogRef}
         className={styles.dialog}
         role="dialog"
         aria-modal="true"
         aria-labelledby={headingId}
+        onKeyDown={handleTabKeyDown}
       >
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
           <header className={styles.header}>

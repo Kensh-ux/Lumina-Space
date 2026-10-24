@@ -7,7 +7,7 @@ import { useAppData } from './useAppData';
 import { SIDEBAR_COLLAPSED_WIDTH, useSidebar } from './useSidebar';
 import styles from './App.module.css';
 
-// 仅开发/截图使用：?panel=today|focus|mood|settings 打开对应侧栏模块。
+// 仅开发/截图使用：?panel=today|focus|settings 打开对应侧栏模块。
 function readDevParam(name: string): string | null {
   if (!import.meta.env.DEV) {
     return null;

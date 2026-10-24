@@ -4,22 +4,13 @@ import styles from './tasks.module.css';
 
 interface TaskRowProps {
   task: Task;
-  today: string;
   onToggle: (id: string) => void;
   onDelete: (id: string) => void;
   onEdit: () => void;
-  titleButtonRef?: (element: HTMLButtonElement | null) => void;
 }
 
-export default function TaskRow({
-  task,
-  today,
-  onToggle,
-  onDelete,
-  onEdit,
-  titleButtonRef,
-}: TaskRowProps) {
-  const overdue = isTaskOverdue(task, today);
+export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowProps) {
+  const overdue = isTaskOverdue(task);
   const priorityLabel = task.priority
     ? TASK_PRIORITY_META.find((item) => item.value === task.priority)?.label
     : null;
@@ -43,7 +34,6 @@ export default function TaskRow({
 
       <div className={styles.body}>
         <button
-          ref={titleButtonRef}
           type="button"
           className={styles.cardTitle}
           title="编辑任务"
