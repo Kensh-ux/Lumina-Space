@@ -1,4 +1,3 @@
-import { useEffect } from 'react';
 import type { FocusSession, MoodId, Task } from '../lib/types';
 import type { ExportResult } from '../lib/data';
 import type { TaskDraft, TaskPatch } from '../features/tasks/task';
@@ -63,14 +62,7 @@ export default function Sidebar({
   const { activePanel, sheetOpen, isMobile, sheetCloseRef, navRefs, setSheetOpen, handleSelect } =
     useSidebarPanels(initialPanel, layout, onPanelChange);
   const activeLabel = MODULES.find((module) => module.id === activePanel)?.label ?? '今日';
-  const { playHover, playClick, playOpen, playClose, stopWhiteNoise } = useAudio();
-
-  // 收起桌面侧栏或关闭移动 sheet 时，白噪音不能继续在后台响。
-  useEffect(() => {
-    if ((isMobile && !sheetOpen) || (!isMobile && !layout.expanded)) {
-      stopWhiteNoise();
-    }
-  }, [isMobile, sheetOpen, layout.expanded, stopWhiteNoise]);
+  const { playHover, playClick, playOpen, playClose } = useAudio();
 
   return (
     <aside

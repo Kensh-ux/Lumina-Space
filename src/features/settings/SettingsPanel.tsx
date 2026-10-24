@@ -30,7 +30,8 @@ export default function SettingsPanel({
   const [cleared, setCleared] = useState(false);
   const [exportMessage, setExportMessage] = useState('');
   const clearButtonRef = useRef<HTMLButtonElement>(null);
-  const { muted, toggleMuted, playClick, playHover } = useAudio();
+  const { muted, toggleMuted, whiteNoiseEnabled, toggleWhiteNoise, playClick, playHover } =
+    useAudio();
 
   const handleExport = () => {
     const { filename, json } = onExportData();
@@ -93,7 +94,22 @@ export default function SettingsPanel({
           <span aria-hidden="true">{muted ? '🔇' : '🔊'}</span>
           声音 {muted ? '关闭' : '开启'}
         </button>
-        <p className={styles.note}>轻提示音与白噪音；首次交互后启用。</p>
+        <p className={styles.note}>轻提示音；首次交互后启用。</p>
+        <button
+          type="button"
+          className={styles.soundButton}
+          aria-pressed={whiteNoiseEnabled}
+          onPointerEnter={playHover}
+          onClick={() => {
+            playClick();
+            toggleWhiteNoise();
+          }}
+        >
+          <span aria-hidden="true">🌧️</span>
+          白噪音 {whiteNoiseEnabled ? '开启' : '关闭'}
+        </button>
+        <p className={styles.note}>低音量循环；切换面板不会停止；随情绪变化。</p>
+        {muted ? <p className={styles.note}>当前已静音，取消静音后恢复。</p> : null}
       </section>
 
       <section className={styles.section}>
@@ -114,7 +130,9 @@ export default function SettingsPanel({
         ) : null}
         {confirming ? (
           <div className={styles.confirmRow} role="group" aria-label="确认清空数据">
-            <p className={styles.confirmText}>确认清空所有任务和设置？此操作不可撤销。</p>
+            <p className={styles.confirmText}>
+              确认清空所有任务与记录？声音偏好会保留，此操作不可撤销。
+            </p>
             <div className={styles.confirmActions}>
               <button type="button" className={styles.dangerButton} onClick={handleClear}>
                 确认清空
@@ -140,7 +158,7 @@ export default function SettingsPanel({
         )}
         {cleared ? (
           <p className={styles.cleared} role="status">
-            已清空，恢复为默认数据。
+            已清空，声音偏好保留。
           </p>
         ) : null}
       </section>
@@ -149,7 +167,7 @@ export default function SettingsPanel({
         <p className={styles.storageError}>浏览器存储不可用，本次改动不会被记住。</p>
       ) : null}
 
-      <p className={styles.version}>Lumina-Space v1.0.0</p>
+      <p className={styles.version}>Lumina-Space v1.1.0</p>
     </div>
   );
 }

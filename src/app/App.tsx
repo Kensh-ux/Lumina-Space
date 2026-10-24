@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { CSSProperties } from 'react';
 import MoodDial from '../features/mood/MoodDial';
+import { useAudio } from '../lib/AudioProvider';
 import Sidebar, { type SidebarPanelId } from './Sidebar';
 import PlannerView from './PlannerView';
 import Stage from './Stage';
@@ -50,6 +51,10 @@ function App() {
     clearAppData,
     storageError,
   } = useAppData();
+  const { syncMood } = useAudio();
+  useEffect(() => {
+    syncMood(mood);
+  }, [mood, syncMood]);
   const sidebar = useSidebar(readInitialSidebarExpanded());
   const [initialPanel] = useState<SidebarPanelId | null>(readInitialPanel);
   const [activeView, setActiveView] = useState<SidebarPanelId>(initialPanel ?? 'today');

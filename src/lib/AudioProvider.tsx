@@ -8,19 +8,29 @@ import {
   useState,
 } from 'react';
 import type { ReactNode } from 'react';
+import type { MoodId } from './types';
 import {
   createSoundEngine,
   readSoundMuted,
+  readWhiteNoiseEnabled,
   writeSoundMuted,
+  writeWhiteNoiseEnabled,
+  type NoiseState,
   type SoundCue,
 } from './audio';
+
+declare global {
+  interface Window {
+    __luminaAudio?: { getState: () => NoiseState };
+  }
+}
 
 interface AudioContextValue {
   muted: boolean;
   toggleMuted: () => void;
-  whiteNoiseOn: boolean;
+  whiteNoiseEnabled: boolean;
   toggleWhiteNoise: () => void;
-  stopWhiteNoise: () => void;
+  syncMood: (mood: MoodId) => void;
   playHover: () => void;
   playClick: () => void;
   playOpen: () => void;
@@ -36,56 +46,78 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   }
   const engine = engineRef.current;
   const [muted, setMuted] = useState(readSoundMuted);
-  const [whiteNoiseOn, setWhiteNoiseOn] = useState(false);
+  const [whiteNoiseEnabled, setWhiteNoiseEnabled] = useState(readWhiteNoiseEnabled);
   const mutedRef = useRef(muted);
+  const enabledRef = useRef(whiteNoiseEnabled);
+  const moodRef = useRef<MoodId>('neutral');
+  const unlockedRef = useRef(false);
   mutedRef.current = muted;
+  enabledRef.current = whiteNoiseEnabled;
 
   useEffect(() => {
     engine.setMuted(muted);
     writeSoundMuted(muted);
+    if (!muted && enabledRef.current && unlockedRef.current) {
+      engine.startWhiteNoise(moodRef.current);
+    }
   }, [engine, muted]);
 
   useEffect(() => {
-    const unlock = () => engine.unlock();
-    window.addEventListener('pointerdown', unlock, { once: true, capture: true });
-    window.addEventListener('keydown', unlock, { once: true, capture: true });
+    const handleUnlock = () => {
+      engine.unlock();
+      unlockedRef.current = true;
+      if (enabledRef.current && !mutedRef.current) {
+        engine.startWhiteNoise(moodRef.current);
+      }
+    };
+    window.addEventListener('pointerdown', handleUnlock, { once: true, capture: true });
+    window.addEventListener('keydown', handleUnlock, { once: true, capture: true });
     return () => {
-      window.removeEventListener('pointerdown', unlock, true);
-      window.removeEventListener('keydown', unlock, true);
+      window.removeEventListener('pointerdown', handleUnlock, true);
+      window.removeEventListener('keydown', handleUnlock, true);
       engine.stopWhiteNoise();
       engine.dispose();
     };
   }, [engine]);
 
+  // 仅开发/截图使用：让 CDP 能读取当前声景 chain 的 filter/frequency/gain。
+  useEffect(() => {
+    if (!import.meta.env.DEV) {
+      return;
+    }
+    window.__luminaAudio = { getState: engine.getNoiseState };
+    return () => {
+      delete window.__luminaAudio;
+    };
+  }, [engine]);
+
   const toggleMuted = useCallback(() => {
-    setMuted((previous) => {
+    setMuted((previous) => !previous);
+  }, []);
+
+  const toggleWhiteNoise = useCallback(() => {
+    setWhiteNoiseEnabled((previous) => {
       const next = !previous;
+      enabledRef.current = next;
+      writeWhiteNoiseEnabled(next);
       if (next) {
+        if (unlockedRef.current && !mutedRef.current) {
+          engine.startWhiteNoise(moodRef.current);
+        }
+      } else {
         engine.stopWhiteNoise();
-        setWhiteNoiseOn(false);
       }
       return next;
     });
   }, [engine]);
 
-  const toggleWhiteNoise = useCallback(() => {
-    if (mutedRef.current) {
-      return;
-    }
-    setWhiteNoiseOn((previous) => {
-      if (previous) {
-        engine.stopWhiteNoise();
-      } else {
-        engine.startWhiteNoise();
-      }
-      return !previous;
-    });
-  }, [engine]);
-
-  const stopWhiteNoise = useCallback(() => {
-    engine.stopWhiteNoise();
-    setWhiteNoiseOn(false);
-  }, [engine]);
+  const syncMood = useCallback(
+    (mood: MoodId) => {
+      moodRef.current = mood;
+      engine.setMood(mood);
+    },
+    [engine],
+  );
 
   const play = useCallback((cue: SoundCue) => engine.play(cue), [engine]);
 
@@ -93,15 +125,15 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     () => ({
       muted,
       toggleMuted,
-      whiteNoiseOn,
+      whiteNoiseEnabled,
       toggleWhiteNoise,
-      stopWhiteNoise,
+      syncMood,
       playHover: () => play('hover'),
       playClick: () => play('click'),
       playOpen: () => play('open'),
       playClose: () => play('close'),
     }),
-    [muted, toggleMuted, whiteNoiseOn, toggleWhiteNoise, stopWhiteNoise, play],
+    [muted, toggleMuted, whiteNoiseEnabled, toggleWhiteNoise, syncMood, play],
   );
 
   return <AudioCtx.Provider value={value}>{children}</AudioCtx.Provider>;

@@ -1,8 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  getNoiseProfile,
+  NOISE_KEY,
   readSoundMuted,
+  readWhiteNoiseEnabled,
   SOUND_KEY,
   writeSoundMuted,
+  writeWhiteNoiseEnabled,
 } from '../src/lib/audio';
 
 class MemoryStorage implements Storage {
@@ -69,5 +73,51 @@ describe('声音静音持久化', () => {
   it('没有 storage 时安全返回', () => {
     expect(readSoundMuted(null)).toBe(false);
     expect(writeSoundMuted(true, null)).toBe(false);
+  });
+});
+
+describe('白噪音偏好持久化', () => {
+  it('没有记录时默认关闭', () => {
+    expect(readWhiteNoiseEnabled(new MemoryStorage())).toBe(false);
+  });
+
+  it('写入 true / false 后能读回，且不影响静音 key', () => {
+    const storage = new MemoryStorage();
+
+    expect(writeWhiteNoiseEnabled(true, storage)).toBe(true);
+    expect(storage.getItem(NOISE_KEY)).toBe('true');
+    expect(readWhiteNoiseEnabled(storage)).toBe(true);
+    expect(readSoundMuted(storage)).toBe(false);
+
+    expect(writeWhiteNoiseEnabled(false, storage)).toBe(true);
+    expect(readWhiteNoiseEnabled(storage)).toBe(false);
+
+    expect(writeWhiteNoiseEnabled(true, new BlockedStorage())).toBe(false);
+    expect(readWhiteNoiseEnabled(null)).toBe(false);
+  });
+});
+
+describe('三情绪声景配置', () => {
+  it('积极为带通+pad，中性为棕噪声低通，消极为高通+缓慢调制', () => {
+    const positive = getNoiseProfile('positive');
+    const neutral = getNoiseProfile('neutral');
+    const negative = getNoiseProfile('negative');
+
+    expect(positive).toMatchObject({ filterType: 'bandpass', noiseColor: 'pink' });
+    expect(positive.padFrequencies?.length).toBeGreaterThan(0);
+    expect(neutral).toMatchObject({ filterType: 'lowpass', noiseColor: 'brown' });
+    expect(negative).toMatchObject({ filterType: 'highpass', noiseColor: 'white' });
+    expect(negative.modulation?.rate).toBeGreaterThan(0);
+    expect(negative.modulation?.depth).toBeGreaterThan(0);
+  });
+
+  it('三种情绪的 filter/frequency/gain 都不相同', () => {
+    const profiles = ['positive', 'neutral', 'negative'].map((mood) =>
+      getNoiseProfile(mood as 'positive' | 'neutral' | 'negative'),
+    );
+
+    expect(new Set(profiles.map((profile) => profile.filterType)).size).toBe(3);
+    expect(new Set(profiles.map((profile) => profile.frequency)).size).toBe(3);
+    expect(new Set(profiles.map((profile) => profile.gain)).size).toBe(3);
   });
 });
