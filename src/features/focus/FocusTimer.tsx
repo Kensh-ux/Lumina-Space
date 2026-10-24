@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
 import {
   clampMinutes,
   formatDuration,
@@ -17,16 +17,31 @@ const STATUS_LABELS: Record<TimerStatus, string> = {
   done: '完成',
 };
 
-export default function FocusTimer() {
+export default function FocusTimer({
+  onComplete,
+}: {
+  onComplete?: (durationSec: number) => void;
+}) {
   const { state, setMinutes, startTimer, pauseTimer, resumeTimer, resetTimer, restartTimer } =
     useFocusTimer();
   const inputId = useId();
   const currentMinutes = Math.round(state.durationSec / 60);
   const [minutesInput, setMinutesInput] = useState(String(currentMinutes));
+  const previousStatusRef = useRef(state.status);
+  const onCompleteRef = useRef(onComplete);
+  onCompleteRef.current = onComplete;
 
   useEffect(() => {
     setMinutesInput(String(currentMinutes));
   }, [currentMinutes]);
+
+  // 只在 running → done 的那次记录；重启后下一次 done 会再次记录。
+  useEffect(() => {
+    if (previousStatusRef.current !== 'done' && state.status === 'done') {
+      onCompleteRef.current?.(state.durationSec);
+    }
+    previousStatusRef.current = state.status;
+  }, [state.status, state.durationSec]);
 
   const commitMinutes = (): number => {
     const parsed = Number.parseInt(minutesInput, 10);

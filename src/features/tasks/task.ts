@@ -1,7 +1,9 @@
 import { isValidDueDate, isValidPriority } from '../../lib/types';
 import type { Task, TaskPriority } from '../../lib/types';
+import { toLocalDateString } from '../../lib/date';
 
 export { isTask } from '../../lib/types';
+export { toLocalDateString };
 
 export const TASK_TITLE_MAX_LENGTH = 120;
 
@@ -147,13 +149,6 @@ export function sortTasks(tasks: readonly Task[]): Task[] {
     }
     return b.createdAt.localeCompare(a.createdAt);
   });
-}
-
-export function toLocalDateString(date: Date = new Date()): string {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const day = String(date.getDate()).padStart(2, '0');
-  return `${year}-${month}-${day}`;
 }
 
 export function formatDueDate(dueDate: string): string {

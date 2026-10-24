@@ -1,8 +1,10 @@
-import type { MoodId, Task } from '../lib/types';
+import type { FocusSession, MoodEntry, MoodId, Task } from '../lib/types';
 import { countTasks, type TaskPatch } from '../features/tasks/task';
 import TaskComposer from '../features/tasks/TaskComposer';
 import TaskList from '../features/tasks/TaskList';
-import { getMoodMeta } from '../features/mood/mood';
+import FocusTimer from '../features/focus/FocusTimer';
+import FocusStats from '../features/focus/FocusStats';
+import MoodHistory from '../features/mood/MoodHistory';
 import styles from './Sidebar.module.css';
 
 interface TodayPanelProps {
@@ -40,16 +42,20 @@ export function TodayPanel({
   );
 }
 
-export function MoodPanel({ mood }: { mood: MoodId }) {
-  const meta = getMoodMeta(mood);
+interface FocusPanelProps {
+  sessions: readonly FocusSession[];
+  onComplete: (durationSec: number) => void;
+}
 
+export function FocusPanel({ sessions, onComplete }: FocusPanelProps) {
   return (
-    <div className={styles.moodPanel}>
-      <p className={styles.moodCurrent}>
-        <span aria-hidden="true">{meta.emoji}</span>
-        <span>{meta.label}</span>
-      </p>
-      <p className={styles.moodNote}>{meta.description}。情绪记录会在 009 接入。</p>
-    </div>
+    <>
+      <FocusTimer onComplete={onComplete} />
+      <FocusStats sessions={sessions} />
+    </>
   );
+}
+
+export function MoodPanel({ mood, log }: { mood: MoodId; log: readonly MoodEntry[] }) {
+  return <MoodHistory mood={mood} log={log} />;
 }

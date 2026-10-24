@@ -9,10 +9,13 @@
 - 移动端底部导航 + sheet；拖拽时关闭过渡，`prefers-reduced-motion` 关闭动画。
 - 任务增强：行内编辑标题（Enter 保存 / Esc 取消 / 失焦保存 / 空回退），优先级 1–3、截止日期与过期高亮。
 - 任务筛选栏：全部 / 未完成 / 已完成、标题搜索、清除已完成；旧任务缺新字段兼容，坏 priority / dueDate 读取时 normalize（undefined / null），不再整包回退。
+- 情绪记录：切换情绪时 append（同 mood 去重，cap 365），侧栏显示今日情绪与最近 7 天情绪点。
+- 专注统计：FocusTimer 完成回调记录 ≥60s 的专注（cap 500），侧栏显示今日/本周分钟与次数。
+- 设置数据概况（任务 / 情绪记录 / 专注次数）与导出 JSON（不含备份键）。
 
 ### 质量
 
-- 90 条单元测试（task 43、storage 22、mood 7、dialGeometry 3、timer 11、sidebar 4）。
+- 106 条单元测试（task 43、storage 25、data 13、mood 7、dialGeometry 3、timer 11、sidebar 4）。
 
 ## v0.3.0 — 2026-10-24
 

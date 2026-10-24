@@ -1,9 +1,9 @@
-import type { MoodId, Task } from '../lib/types';
+import type { FocusSession, MoodEntry, MoodId, Task } from '../lib/types';
+import type { ExportResult } from '../lib/data';
 import type { TaskPatch } from '../features/tasks/task';
-import FocusTimer from '../features/focus/FocusTimer';
 import SettingsPanel from '../features/settings/SettingsPanel';
 import SidebarResizeHandle from './SidebarResizeHandle';
-import { MoodPanel, TodayPanel } from './SidebarPanels';
+import { FocusPanel, MoodPanel, TodayPanel } from './SidebarPanels';
 import { useSidebarPanels, type SidebarPanelId } from './useSidebarPanels';
 import { SIDEBAR_MAX_WIDTH, SIDEBAR_MIN_WIDTH, type SidebarLayout } from './useSidebar';
 import styles from './Sidebar.module.css';
@@ -27,11 +27,15 @@ interface SidebarProps {
   layout: SidebarLayout;
   mood: MoodId;
   tasks: readonly Task[];
+  moodLog: readonly MoodEntry[];
+  focusSessions: readonly FocusSession[];
   setMood: (mood: MoodId) => void;
   onAddTask: (title: string) => void;
   onToggleTask: (id: string) => void;
   onDeleteTask: (id: string) => void;
   onUpdateTask: (id: string, patch: TaskPatch) => void;
+  onRecordFocusSession: (durationSec: number) => void;
+  onExportData: () => ExportResult;
   onClearData: () => void;
   storageError: boolean;
   initialPanel?: SidebarPanelId | null;
@@ -41,11 +45,15 @@ export default function Sidebar({
   layout,
   mood,
   tasks,
+  moodLog,
+  focusSessions,
   setMood,
   onAddTask,
   onToggleTask,
   onDeleteTask,
   onUpdateTask,
+  onRecordFocusSession,
+  onExportData,
   onClearData,
   storageError,
   initialPanel = null,
@@ -121,14 +129,22 @@ export default function Sidebar({
             onUpdateTask={onUpdateTask}
           />
         ) : null}
-        {activePanel === 'focus' ? <FocusTimer /> : null}
-        {activePanel === 'mood' ? <MoodPanel mood={mood} /> : null}
+        {activePanel === 'focus' ? (
+          <FocusPanel sessions={focusSessions} onComplete={onRecordFocusSession} />
+        ) : null}
+        {activePanel === 'mood' ? <MoodPanel mood={mood} log={moodLog} /> : null}
         {activePanel === 'settings' ? (
           <>
             <SettingsPanel
               mood={mood}
               onChangeMood={setMood}
               storageError={storageError}
+              counts={{
+                tasks: tasks.length,
+                moodEntries: moodLog.length,
+                focusSessions: focusSessions.length,
+              }}
+              onExportData={onExportData}
               onClearData={onClearData}
             />
             <section className={styles.widthControl}>

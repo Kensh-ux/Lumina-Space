@@ -270,6 +270,76 @@ describe('loadData', () => {
     expect(storage.getItem(KEY)).toBe(raw);
   });
 
+  it('旧数据缺 moodLog / focusSessions 时读取为空数组，不备份', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [],
+      mood: { current: 'negative', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    const data = loadData(storage);
+
+    expect(data.moodLog).toEqual([]);
+    expect(data.focusSessions).toEqual([]);
+    expect(data.mood.current).toBe('negative');
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+  });
+
+  it('保留合法的 moodLog / focusSessions 条目', () => {
+    storage.setItem(
+      KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        tasks: [],
+        mood: { current: 'positive', updatedAt: '2026-10-23T00:00:00.000Z' },
+        moodLog: [{ id: 'm1', mood: 'positive', at: '2026-10-23T08:00:00.000Z' }],
+        focusSessions: [
+          { id: 'f1', durationSec: 1500, completedAt: '2026-10-23T09:00:00.000Z' },
+        ],
+      }),
+    );
+
+    const data = loadData(storage);
+
+    expect(data.moodLog).toEqual([
+      { id: 'm1', mood: 'positive', at: '2026-10-23T08:00:00.000Z' },
+    ]);
+    expect(data.focusSessions).toEqual([
+      { id: 'f1', durationSec: 1500, completedAt: '2026-10-23T09:00:00.000Z' },
+    ]);
+  });
+
+  it('坏 moodLog / focusSessions 条目被过滤，好条目保留，不备份', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [],
+      mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+      moodLog: [
+        { id: 'm-good', mood: 'positive', at: '2026-10-23T08:00:00.000Z' },
+        { id: 'm-bad-mood', mood: 'happy', at: '2026-10-23T08:10:00.000Z' },
+        { id: 'm-bad-date', mood: 'negative', at: 'not-a-date' },
+      ],
+      focusSessions: [
+        { id: 'f-good', durationSec: 60, completedAt: '2026-10-23T09:00:00.000Z' },
+        { id: 'f-too-short', durationSec: 30, completedAt: '2026-10-23T09:10:00.000Z' },
+        { id: 'f-bad-date', durationSec: 60, completedAt: 'nope' },
+      ],
+    });
+    storage.setItem(KEY, raw);
+
+    const data = loadData(storage);
+
+    expect(data.moodLog).toEqual([
+      { id: 'm-good', mood: 'positive', at: '2026-10-23T08:00:00.000Z' },
+    ]);
+    expect(data.focusSessions).toEqual([
+      { id: 'f-good', durationSec: 60, completedAt: '2026-10-23T09:00:00.000Z' },
+    ]);
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+    expect(storage.getItem(KEY)).toBe(raw);
+  });
+
   it('任务字段非法时返回默认值并备份', () => {
     const raw = JSON.stringify({
       schemaVersion: 1,

@@ -19,6 +19,22 @@ export interface Task {
   dueDate?: string | null;
 }
 
+export interface MoodEntry {
+  id: string;
+  mood: MoodId;
+  at: string;
+}
+
+export interface FocusSession {
+  id: string;
+  durationSec: number;
+  completedAt: string;
+}
+
+export const MOOD_LOG_LIMIT = 365;
+export const FOCUS_SESSION_LIMIT = 500;
+export const MIN_FOCUS_SESSION_SECONDS = 60;
+
 export function isValidPriority(value: unknown): value is TaskPriority {
   return value === 1 || value === 2 || value === 3;
 }
@@ -83,4 +99,6 @@ export interface AppDataV1 {
     current: MoodId;
     updatedAt: string;
   };
+  moodLog?: MoodEntry[];
+  focusSessions?: FocusSession[];
 }

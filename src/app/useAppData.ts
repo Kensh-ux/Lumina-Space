@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { AppDataV1, MoodId, Task } from '../lib/types';
+import type { AppDataV1, FocusSession, MoodEntry, MoodId, Task } from '../lib/types';
 import { clearData, createDefaultData, loadData, saveData } from '../lib/storage';
+import {
+  addFocusSession,
+  appendMoodLog,
+  exportData as buildExportData,
+  type ExportResult,
+} from '../lib/data';
 import {
   addTask as addTaskToTasks,
   clearCompleted as clearCompletedFromTasks,
@@ -14,12 +20,16 @@ import { isMoodId } from '../features/mood/mood';
 export interface UseAppDataResult {
   mood: MoodId;
   tasks: Task[];
+  moodLog: MoodEntry[];
+  focusSessions: FocusSession[];
   setMood: (next: MoodId) => void;
   addTask: (title: string) => void;
   toggleTask: (id: string) => void;
   deleteTask: (id: string) => void;
   updateTask: (id: string, patch: TaskPatch) => void;
   clearCompletedTasks: () => void;
+  recordFocusSession: (durationSec: number) => void;
+  exportData: () => ExportResult;
   clearAppData: () => void;
   storageError: boolean;
 }
@@ -53,13 +63,17 @@ export function useAppData(): UseAppDataResult {
 
   const setMood = useCallback((next: MoodId) => {
     setPreview(null);
-    setData((prev) => ({
-      ...prev,
-      mood: {
-        current: next,
-        updatedAt: new Date().toISOString(),
-      },
-    }));
+    setData((prev) => {
+      const changed = prev.mood.current !== next;
+      return {
+        ...prev,
+        mood: {
+          current: next,
+          updatedAt: new Date().toISOString(),
+        },
+        moodLog: changed ? appendMoodLog(prev.moodLog ?? [], next) : prev.moodLog,
+      };
+    });
   }, []);
 
   const addTask = useCallback((title: string) => {
@@ -82,6 +96,15 @@ export function useAppData(): UseAppDataResult {
     setData((prev) => ({ ...prev, tasks: clearCompletedFromTasks(prev.tasks) }));
   }, []);
 
+  const recordFocusSession = useCallback((durationSec: number) => {
+    setData((prev) => ({
+      ...prev,
+      focusSessions: addFocusSession(prev.focusSessions ?? [], durationSec),
+    }));
+  }, []);
+
+  const exportData = useCallback(() => buildExportData(data), [data]);
+
   // 真正清掉 lumina:data / lumina:theme，再以默认数据重新起一份（不会把旧数据写回）。
   const clearAppData = useCallback(() => {
     clearData();
@@ -92,12 +115,16 @@ export function useAppData(): UseAppDataResult {
   return {
     mood,
     tasks: data.tasks,
+    moodLog: data.moodLog ?? [],
+    focusSessions: data.focusSessions ?? [],
     setMood,
     addTask,
     toggleTask,
     deleteTask,
     updateTask,
     clearCompletedTasks,
+    recordFocusSession,
+    exportData,
     clearAppData,
     storageError,
   };

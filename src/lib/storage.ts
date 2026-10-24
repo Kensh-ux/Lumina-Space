@@ -1,5 +1,13 @@
-import { MOOD_IDS, normalizeTask, STORAGE_KEY, THEME_KEY } from './types';
-import type { AppDataV1, MoodId, Task } from './types';
+import {
+  FOCUS_SESSION_LIMIT,
+  MIN_FOCUS_SESSION_SECONDS,
+  MOOD_LOG_LIMIT,
+  MOOD_IDS,
+  normalizeTask,
+  STORAGE_KEY,
+  THEME_KEY,
+} from './types';
+import type { AppDataV1, FocusSession, MoodEntry, MoodId, Task } from './types';
 
 const BACKUP_KEY = `${STORAGE_KEY}:backup`;
 const SCHEMA_VERSION = 1;
@@ -19,6 +27,66 @@ function resolveStorage(): Storage | null {
 
 function isValidMoodId(value: unknown): value is MoodId {
   return typeof value === 'string' && (MOOD_IDS as readonly string[]).includes(value);
+}
+
+// 旧数据缺字段 / 字段类型不对 → []；坏条目逐条丢弃，不触发整包 backup。
+function normalizeMoodLog(value: unknown): MoodEntry[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const entries: MoodEntry[] = [];
+  for (const item of value) {
+    if (typeof item !== 'object' || item === null) {
+      continue;
+    }
+    const entry = item as Record<string, unknown>;
+    if (typeof entry.id !== 'string' || entry.id.length === 0) {
+      continue;
+    }
+    if (!isValidMoodId(entry.mood)) {
+      continue;
+    }
+    if (typeof entry.at !== 'string' || Number.isNaN(Date.parse(entry.at))) {
+      continue;
+    }
+    entries.push({ id: entry.id, mood: entry.mood, at: entry.at });
+  }
+  return entries.slice(-MOOD_LOG_LIMIT);
+}
+
+function normalizeFocusSessions(value: unknown): FocusSession[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const sessions: FocusSession[] = [];
+  for (const item of value) {
+    if (typeof item !== 'object' || item === null) {
+      continue;
+    }
+    const session = item as Record<string, unknown>;
+    if (typeof session.id !== 'string' || session.id.length === 0) {
+      continue;
+    }
+    if (
+      typeof session.durationSec !== 'number' ||
+      !Number.isFinite(session.durationSec) ||
+      session.durationSec < MIN_FOCUS_SESSION_SECONDS
+    ) {
+      continue;
+    }
+    if (
+      typeof session.completedAt !== 'string' ||
+      Number.isNaN(Date.parse(session.completedAt))
+    ) {
+      continue;
+    }
+    sessions.push({
+      id: session.id,
+      durationSec: Math.round(session.durationSec),
+      completedAt: session.completedAt,
+    });
+  }
+  return sessions.slice(-FOCUS_SESSION_LIMIT);
 }
 
 // 核心字段坏 → null（走 backup+默认）；可选字段坏 → normalize 后保留 mood 与其它任务。
@@ -52,6 +120,8 @@ function normalizeData(value: unknown): AppDataV1 | null {
       current: mood.current,
       updatedAt: mood.updatedAt,
     },
+    moodLog: normalizeMoodLog(data.moodLog),
+    focusSessions: normalizeFocusSessions(data.focusSessions),
   };
 }
 
@@ -78,6 +148,8 @@ function migrateMissingTasks(value: unknown): AppDataV1 | null {
       current: mood.current,
       updatedAt: mood.updatedAt,
     },
+    moodLog: [],
+    focusSessions: [],
   };
 }
 
@@ -97,6 +169,8 @@ export function createDefaultData(): AppDataV1 {
       current: 'neutral',
       updatedAt: new Date().toISOString(),
     },
+    moodLog: [],
+    focusSessions: [],
   };
 }
 

@@ -36,12 +36,16 @@ function App() {
   const {
     mood,
     tasks,
+    moodLog,
+    focusSessions,
     setMood,
     addTask,
     toggleTask,
     deleteTask,
     updateTask,
     clearCompletedTasks,
+    recordFocusSession,
+    exportData,
     clearAppData,
     storageError,
   } = useAppData();
@@ -61,11 +65,15 @@ function App() {
         layout={sidebar}
         mood={mood}
         tasks={tasks}
+        moodLog={moodLog}
+        focusSessions={focusSessions}
         setMood={setMood}
         onAddTask={addTask}
         onToggleTask={toggleTask}
         onDeleteTask={deleteTask}
         onUpdateTask={updateTask}
+        onRecordFocusSession={recordFocusSession}
+        onExportData={exportData}
         onClearData={clearAppData}
         storageError={storageError}
         initialPanel={initialPanel}
