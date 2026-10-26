@@ -16,6 +16,7 @@ import {
   writeSoundMuted,
   writeWhiteNoiseEnabled,
   type NoiseState,
+  type NoiseStatus,
   type SoundCue,
 } from './audio';
 
@@ -33,6 +34,8 @@ interface AudioContextValue {
   toggleMuted: () => void;
   whiteNoiseEnabled: boolean;
   toggleWhiteNoise: () => void;
+  /** 背景音乐状态：已关闭 / 加载中 / 加载较慢 / 播放中。 */
+  noiseStatus: NoiseStatus;
   syncMood: (mood: MoodId) => void;
   playHover: () => void;
   playClick: () => void;
@@ -50,11 +53,26 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const engine = engineRef.current;
   const [muted, setMuted] = useState(readSoundMuted);
   const [whiteNoiseEnabled, setWhiteNoiseEnabled] = useState(readWhiteNoiseEnabled);
+  const [noiseStatus, setNoiseStatus] = useState<NoiseStatus>('off');
   const mutedRef = useRef(muted);
   const enabledRef = useRef(whiteNoiseEnabled);
   const moodRef = useRef<MoodId>('neutral');
   mutedRef.current = muted;
   enabledRef.current = whiteNoiseEnabled;
+
+  // 状态迁移（加载中 → 播放中）由 audio 元素事件驱动，UI 每 500 ms 取一次快照；
+  // 只在真的变了才 setState，避免淡化期间反复重渲染。
+  useEffect(() => {
+    const sync = () => {
+      const next = engine.getNoiseState().status;
+      setNoiseStatus((previous) => (previous === next ? previous : next));
+    };
+    sync();
+    const timer = window.setInterval(sync, 500);
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, [engine]);
 
   useEffect(() => {
     engine.setMuted(muted);
@@ -79,10 +97,9 @@ export function AudioProvider({ children }: { children: ReactNode }) {
     return () => {
       window.removeEventListener('pointerdown', handleGesture, true);
       window.removeEventListener('keydown', handleGesture, true);
-      // 只停止播放，**不要 dispose**。
-      // StrictMode 在开发下会立刻跑一次 cleanup；dispose 会把
-      // useRef 里那个单例引擎永久置为 disposed，之后所有播放调用都被挡掉，
-      // 表现为「开了白噪音却没有声音」。
+      // 只停止播放，不销毁引擎。
+      // StrictMode 在开发下会立刻跑一次 cleanup；把 useRef 里那个单例引擎
+      // 一起丢掉，之后的所有播放调用就会落空，表现为「开了背景音乐却没有声音」。
       engine.stopWhiteNoise(0);
     };
   }, [engine]);
@@ -122,6 +139,11 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const syncMood = useCallback(
     (mood: MoodId) => {
       moodRef.current = mood;
+      // 双保险：开关关闭或静音时，先把引擎的开关标记压成关，再只更新情绪记账。
+      // 与手势路径同款守卫；引擎内部同样认 enabled / muted，这是第二道锁。
+      if (!enabledRef.current || mutedRef.current) {
+        engine.setEnabled(false);
+      }
       engine.setMood(mood);
     },
     [engine],
@@ -135,13 +157,14 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       toggleMuted,
       whiteNoiseEnabled,
       toggleWhiteNoise,
+      noiseStatus,
       syncMood,
       playHover: () => play('hover'),
       playClick: () => play('click'),
       playOpen: () => play('open'),
       playClose: () => play('close'),
     }),
-    [muted, toggleMuted, whiteNoiseEnabled, toggleWhiteNoise, syncMood, play],
+    [muted, toggleMuted, whiteNoiseEnabled, toggleWhiteNoise, noiseStatus, syncMood, play],
   );
 
   return <AudioCtx.Provider value={value}>{children}</AudioCtx.Provider>;
