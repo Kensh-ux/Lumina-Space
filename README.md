@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/screenshots/mood-positive.png" alt="Lumina-Space v1.1 主界面" width="900">
+  <img src="docs/screenshots/mood-positive.png" alt="Lumina-Space 主界面（简易模式）" width="900">
 </p>
 
 <h1 align="center">Lumina-Space</h1>
@@ -15,7 +15,8 @@
 
 <p align="center">
   <a href="LICENSE"><img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-2ea44f"></a>
-  <img alt="Version" src="https://img.shields.io/badge/version-v1.1-5b7c99">
+  <img alt="Version" src="https://img.shields.io/badge/version-v1.2-5b7c99">
+  <img alt="Mode" src="https://img.shields.io/badge/mode-%E7%AE%80%E6%98%93%E6%A8%A1%E5%BC%8F-8c5a5f">
   <img alt="Status" src="https://img.shields.io/badge/status-alpha-d97706">
   <img alt="React" src="https://img.shields.io/badge/React-19-61dafb?logo=react&logoColor=white">
   <img alt="TypeScript" src="https://img.shields.io/badge/TypeScript-6-3178c6?logo=typescript&logoColor=white">
@@ -43,11 +44,11 @@ Lumina-Space 想把「情绪」放回工作台的第一屏。不是加一个心�
 ## 现在能做什么
 
 - **情绪圆盘**：左上角圆形情绪盘，鼠标移入 / 点击 / Enter 展开积极 / 中性 / 消极三个选项；选中后整站切换主题，刷新后保持。
-- **主界面**：三套 Canvas 2D 场景——积极暖阳光束 / 流动光带 / 浮粒，中性雾团 / 纸片 / 星座 / 水波，消极雨丝 / 水面 / 涟漪 / 倒影；无中央大球，中心保留问候、日期与今日概况，右侧「今日」光球打开任务玻璃面板（新建 / 编辑 / 筛选 / 搜索），点外部或 Esc 回到主界面。
+- **主界面**：三套 Canvas 2D 场景——积极暖阳光束 / 流动光带 / 浮粒，中性黄昏暮色（雾团 / 纸片 / 暮色星座 / 水面 / 涟漪），消极雨丝 / 水面 / 涟漪 / 倒影；无中央大球，中心保留问候、日期与今日概况，右侧「今日」光球打开任务玻璃面板（新建 / 编辑 / 筛选 / 搜索），点外部或 Esc 回到主界面。
 - **规划师**：侧栏「规划师」把主界面切成从今天开始连续 7 天的待办视图；180–220px 可读列宽，按截止日期分列，每列可添加 / 编辑 / 完成 / 删除；任务行显示优先级 / 时间，未排期计数；窄屏横向滚动。
 - **待办任务**：大编辑器新建 / 编辑（标题、描述、截止日期 + 时间、优先级）；完成 / 删除、全部/未完成/已完成筛选 + 标题搜索、清除已完成；刷新后保持。
 - **左侧栏**：全高可折叠、可拖拽调宽（默认 300px，240–420，刷新保持）；今日 / 规划师 / 专注（番茄钟 + 今日/本周统计）/ 设置（数据概况 + 导出 JSON）模块；窄屏变底部导航 + sheet。
-- **轻音效**：hover / 点击 / 面板开合轻提示音，可一键静音；白噪音在设置里全局开关，跨面板持续，随积极 / 中性 / 消极切换声景，`lumina:noise` 刷新保持。
+- **轻音效**：hover / 点击 / 面板开合轻提示音，可一键静音；白噪音在设置里全局开关，跨面板持续，随积极 / 中性 / 消极切换声景（**真实录音**：林间鸟鸣 / 黄昏环境音 / 平静雨声，各约 20 分钟无缝循环），`lumina:noise` 刷新保持；设置面板会显示当前声景名。
 - **本地优先**：数据只存在浏览器 `localStorage`，没有账号、没有后端。
 - **基础质量**：键盘可达、焦点可见、`prefers-reduced-motion` 关闭动效；129 条单元测试。
 
@@ -90,16 +91,12 @@ npm run dev
 
 | 版本 | 日期 | 内容 |
 |---|---|---|
-| v0.1.0 | 2026-10-22 | 框架、三种情绪主题、左下侧边栏、Stage 场景、本地持久化 |
-| v0.2.0 | 2026-10-23 | 全屏主界面、情绪圆盘、触屏/键盘交互 |
-| v0.3.0 | 2026-10-24 | 任务 CRUD、侧边栏抽屉、番茄钟 |
-| v0.4.0 | 2026-10-24 | 全高可调左侧栏、大任务编辑器、任务增强、专注统计 |
-| v1.0.0 | 2026-10-24 | 声音系统、粒子主界面、今日光球、规划师 |
-| v1.1.0 | 2026-10-24 | 三套 Qoder 场景动画、全局白噪音、三情绪声景 |
+| **v1.2**（当前） | 2026-10-26 | 中性改为黄昏暮色、场景绘制性能修复、三情绪白噪音换成真实录音（鸟鸣 / 黄昏 / 雨声） |
+| v2.0 | 计划 | 3D 模式：代码生成的风格化小屋，随情绪 / 专注联动 |
 
-| v2.0.0 | 计划 | 3D 小屋 |
+> **v1.2 是「简易模式」。** 它只用 Canvas 2D + CSS，首屏极轻、任何设备都能跑。下一版 v2.0 的 3D 模式会用 `three` 搭一间低多边形小屋，观感更丰富、也更吃性能。两个模式不是替代关系：不想换的继续用简易模式。
 
-完整记录见 [CHANGELOG.md](CHANGELOG.md)。
+完整历史（v0.1 起每个小版本）见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## License
 

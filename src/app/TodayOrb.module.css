@@ -34,9 +34,10 @@
 }
 
 [data-theme='neutral'] .orb {
+  /* 黄昏光球：暖玫高光压暗一档，避免在暮色底上过曝 */
   background:
-    radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.65), transparent 46%),
-    radial-gradient(circle at 62% 72%, #5b7c99, #829bb2 74%);
+    radial-gradient(circle at 32% 26%, rgba(255, 248, 240, 0.42), transparent 46%),
+    radial-gradient(circle at 62% 72%, var(--color-accent), color-mix(in srgb, var(--color-accent) 62%, var(--color-surface)) 74%);
 }
 
 [data-theme='negative'] .orb {

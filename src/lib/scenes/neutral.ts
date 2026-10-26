@@ -55,7 +55,24 @@ const PAPER_COUNT = 15;
 const STAR_COUNT = 40;
 const RIPPLE_INTERVAL = 2500;
 
-// 中性：浅冷色雾团、纸片、星座连线、水面波纹与随机涟漪。
+// drawMist 的 3 个「整屏径向」改成「按尺寸缓存 + 每帧 drawImage」：
+// 半径固定为 width*0.25，圆外本身就是全透明，所以烘成 2R×2R 的小图逐帧贴回，
+// 位置与相位一字不差地保留。DPR2 实测这三笔整屏渐变 3.32ms/帧（占中性空闲帧时间 21%）。
+const CACHE_SCALE = Math.min(window.devicePixelRatio || 1, 2);
+
+function makeLayer(width: number, height: number): HTMLCanvasElement {
+  const layer = document.createElement('canvas');
+  layer.width = Math.max(1, Math.round(width * CACHE_SCALE));
+  layer.height = Math.max(1, Math.round(height * CACHE_SCALE));
+  const layerCtx = layer.getContext('2d');
+  if (layerCtx) {
+    layerCtx.setTransform(CACHE_SCALE, 0, 0, CACHE_SCALE, 0, 0);
+  }
+  return layer;
+}
+
+// 中性 = 黄昏暮色：暖、低饱和、不悲不喜。冷灰蓝已换成晚霞褪色后的暖灰与玫紫。
+// 中性：暖灰雾团、米色纸片、暮色星座连线、水面波纹与随机涟漪。
 export function createNeutralScene(): SceneRenderer {
   let width = 0;
   let height = 0;
@@ -66,6 +83,7 @@ export function createNeutralScene(): SceneRenderer {
   let links: Link[] = [];
   let ripples: Ripple[] = [];
   let lastRipple = 0;
+  let mistLayer: HTMLCanvasElement | null = null;
 
   const init = (nextWidth: number, nextHeight: number) => {
     width = nextWidth;
@@ -122,6 +140,23 @@ export function createNeutralScene(): SceneRenderer {
       speed: rand(0.018, 0.03),
     }));
     lastRipple = 0;
+    mistLayer = buildMistLayer();
+  };
+
+  // 单张雾团小图：内容 = 一个半径 width*0.25 的径向渐变（圆外全透明的部分不必画）
+  const buildMistLayer = () => {
+    const radius = width * 0.25;
+    const layer = makeLayer(radius * 2, radius * 2);
+    const layerCtx = layer.getContext('2d');
+    if (!layerCtx) {
+      return layer;
+    }
+    const gradient = layerCtx.createRadialGradient(radius, radius, 0, radius, radius, radius);
+    gradient.addColorStop(0, 'rgba(255, 246, 235, 0.13)');
+    gradient.addColorStop(1, 'rgba(246, 234, 226, 0)');
+    layerCtx.fillStyle = gradient;
+    layerCtx.fillRect(0, 0, radius * 2, radius * 2);
+    return layer;
   };
 
   const drawFogs = (ctx: CanvasRenderingContext2D, time: number, reduced: boolean) => {
@@ -139,9 +174,9 @@ export function createNeutralScene(): SceneRenderer {
       ctx.translate(fog.x, fog.y);
       ctx.scale(1, fog.ry / fog.rx);
       const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, fog.rx * pulse);
-      gradient.addColorStop(0, `rgba(165, 190, 214, ${fog.alpha})`);
-      gradient.addColorStop(0.45, `rgba(190, 208, 226, ${fog.alpha * 0.5})`);
-      gradient.addColorStop(1, 'rgba(205, 218, 232, 0)');
+      gradient.addColorStop(0, `rgba(206, 178, 164, ${fog.alpha})`);
+      gradient.addColorStop(0.45, `rgba(222, 201, 189, ${fog.alpha * 0.5})`);
+      gradient.addColorStop(1, 'rgba(233, 217, 206, 0)');
       ctx.fillStyle = gradient;
       ctx.beginPath();
       ctx.arc(0, 0, fog.rx * pulse, 0, Math.PI * 2);
@@ -167,15 +202,15 @@ export function createNeutralScene(): SceneRenderer {
       ctx.translate(paper.x, paper.y);
       ctx.rotate(paper.rotation);
       ctx.globalAlpha = paper.alpha * (0.78 + 0.22 * Math.sin(time * 0.001 + paper.phase));
-      ctx.shadowColor = 'rgba(53, 78, 108, 0.14)';
+      ctx.shadowColor = 'rgba(86, 62, 66, 0.16)';
       ctx.shadowBlur = 7;
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.82)';
+      ctx.fillStyle = 'rgba(253, 245, 233, 0.86)';
       ctx.fillRect(-paper.width / 2, -paper.height / 2, paper.width, paper.height);
       ctx.shadowBlur = 0;
-      ctx.strokeStyle = 'rgba(98, 124, 152, 0.24)';
+      ctx.strokeStyle = 'rgba(150, 118, 110, 0.26)';
       ctx.lineWidth = 0.6;
       ctx.strokeRect(-paper.width / 2, -paper.height / 2, paper.width, paper.height);
-      ctx.fillStyle = 'rgba(120, 145, 170, 0.18)';
+      ctx.fillStyle = 'rgba(166, 130, 122, 0.2)';
       ctx.fillRect(-paper.width / 2 + 2, -paper.height / 2 + 3, paper.width * 0.56, 1);
       ctx.fillRect(-paper.width / 2 + 2, -paper.height / 2 + 6, paper.width * 0.36, 1);
       ctx.restore();
@@ -185,9 +220,9 @@ export function createNeutralScene(): SceneRenderer {
 
   const drawWater = (ctx: CanvasRenderingContext2D, time: number) => {
     const gradient = ctx.createLinearGradient(0, waterY, 0, height);
-    gradient.addColorStop(0, 'rgba(164, 190, 216, 0.02)');
-    gradient.addColorStop(0.18, 'rgba(156, 185, 214, 0.16)');
-    gradient.addColorStop(1, 'rgba(139, 173, 206, 0.28)');
+    gradient.addColorStop(0, 'rgba(184, 140, 126, 0.02)');
+    gradient.addColorStop(0.18, 'rgba(170, 122, 112, 0.15)');
+    gradient.addColorStop(1, 'rgba(128, 86, 88, 0.3)');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, waterY, width, height - waterY);
 
@@ -203,7 +238,7 @@ export function createNeutralScene(): SceneRenderer {
         if (x === 0) ctx.moveTo(x, wave);
         else ctx.lineTo(x, wave);
       }
-      ctx.strokeStyle = `rgba(78, 112, 148, ${0.12 - line * 0.01})`;
+      ctx.strokeStyle = `rgba(126, 88, 92, ${0.12 - line * 0.01})`;
       ctx.lineWidth = 0.65;
       ctx.stroke();
     }
@@ -216,7 +251,7 @@ export function createNeutralScene(): SceneRenderer {
       const b = stars[link.b];
       const pulse = 0.5 + 0.5 * Math.sin(time * 0.0005 + link.distance * 0.01);
       ctx.globalAlpha = 0.1 * pulse;
-      ctx.strokeStyle = '#4f7298';
+      ctx.strokeStyle = '#8a6a70';
       ctx.lineWidth = 0.6;
       ctx.beginPath();
       ctx.moveTo(a.x, a.y);
@@ -227,7 +262,7 @@ export function createNeutralScene(): SceneRenderer {
     for (const star of stars) {
       const twinkle = 0.5 + 0.5 * Math.sin(time * star.speed + star.phase);
       ctx.globalAlpha = star.alpha * twinkle;
-      ctx.fillStyle = '#426488';
+      ctx.fillStyle = '#7d5470';
       ctx.beginPath();
       ctx.arc(star.x, star.y, star.radius, 0, Math.PI * 2);
       ctx.fill();
@@ -240,14 +275,15 @@ export function createNeutralScene(): SceneRenderer {
   };
 
   const drawMist = (ctx: CanvasRenderingContext2D, time: number) => {
+    if (!mistLayer) {
+      return;
+    }
+    const radius = width * 0.25;
+    // 3 个雾团共用同一张缓存（渐变参数一致，只有位置/相位不同）
     for (let index = 0; index < 3; index += 1) {
       const x = width * (0.2 + index * 0.3) + 70 * Math.sin(time * 0.00012 + index * 2);
       const y = height * 0.44 + 28 * Math.cos(time * 0.00018 + index);
-      const gradient = ctx.createRadialGradient(x, y, 0, x, y, width * 0.25);
-      gradient.addColorStop(0, 'rgba(255, 255, 255, 0.11)');
-      gradient.addColorStop(1, 'rgba(235, 241, 248, 0)');
-      ctx.fillStyle = gradient;
-      ctx.fillRect(0, 0, width, height);
+      ctx.drawImage(mistLayer, x - radius, y - radius, radius * 2, radius * 2);
     }
   };
 
@@ -279,7 +315,7 @@ export function createNeutralScene(): SceneRenderer {
         if (radius < 0) continue;
         ctx.beginPath();
         ctx.ellipse(ripple.x, ripple.y, radius, radius * 0.34, 0, 0, Math.PI * 2);
-        ctx.strokeStyle = `rgba(69, 105, 143, ${alpha * (1 - ring * 0.25)})`;
+        ctx.strokeStyle = `rgba(150, 108, 110, ${alpha * (1 - ring * 0.25)})`;
         ctx.lineWidth = 0.8 - ring * 0.18;
         ctx.stroke();
       }

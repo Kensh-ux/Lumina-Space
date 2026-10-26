@@ -10,7 +10,11 @@ Guidance for AI agents working on **Lumina-Space** — a mood-aware todo and foc
 - **v0.4 (2026-10-24)**: resizable full-height sidebar, large task editor (title/description/due date+time/priority), filters/search, focus stats, export; mood history UI removed.
 - **v1.0 (2026-10-24)**: particle hero, floating today orb, 7-day planner, focus timer tuning, generated hover/click/white-noise audio, mute.
 - **v1.1 (2026-10-24)**: Qoder-generated mood scenes (positive/neutral/negative, no central orb), global white noise in settings, per-mood soundscapes.
-- **Current v2.0**: 3D cottage. Do not start 3D before the v2.0 card.
+- **v1.2 (2026-10-26)**: neutral theme re-done as a dusk palette; soundscapes replaced with real recordings (birdsong / dusk lo-fi / rain) streamed from GitHub Releases; scene draw cost cut by removing the full-screen aurora blur and caching full-screen gradients. **This is the "simple mode"** — pure Canvas 2D + CSS, light first paint, runs anywhere.
+- **Next: v2.0 "3D mode"** — a code-generated stylized cottage (`three` + R3F). It is an *alternative* to simple mode, not a replacement. Do not start 3D before the v2.0 card.
+
+> Soundscape note: the three looping mp3s are **not** in this repo; they live in GitHub Release `audio-v1.2`
+> and are referenced by URL in `src/lib/audio.ts`. See `docs/audio-sources.md`.
 
 ## Stack
 
@@ -97,6 +101,11 @@ If code is copied or adapted: record source, commit, license, and changes in the
 8. Do not use external 3D models or AIGC backgrounds as if they were code-generated scenes.
 9. No "while I'm here" refactors outside the task card.
 10. If blocked for more than 20 minutes, stop and report what you tried.
+11. **Never run delete commands** (`cmd.exe`, `del`, `rd`, `Remove-Item`). Move anything disposable to the
+    workspace quarantine folder (`06_待删\<project>\`) and let the user delete it. A past shell mistake
+    wiped an entire drive; this rule exists because of it.
+12. **Do not trust `D:\...` paths.** The working drive was lost; all workspace paths are under
+    `C:\记事本\workplace\` now. Copies of old docs may still show `D:\` — verify before running them.
 
 ## Where to look
 

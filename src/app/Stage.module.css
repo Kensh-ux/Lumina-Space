@@ -31,7 +31,8 @@
 }
 
 .layerNeutral {
-  background: radial-gradient(120% 110% at 72% 6%, #e9f0f8 0%, #f2f6fb 46%, #fcfdff 100%);
+  /* 黄昏：天空自上方残留的暖光过渡到地平线的深暮色 */
+  background: radial-gradient(120% 110% at 72% 6%, #f7e3cf 0%, #e9cfc4 42%, #cbb2ae 100%);
 }
 
 .layerNegative {
@@ -48,7 +49,12 @@
   position: absolute;
   inset: -10%;
   opacity: 0.75;
-  filter: blur(44px);
+  /* 性能：这里原有的 filter: blur(44px) 是全页最贵的一项（DPR2 实测 3.0–3.6ms/帧，占空闲帧时间 22–26%）：
+     22s 的 auroraDrift 每帧都在改 transform，带 filter 的元素无法停在合成层上复用位图，
+     每帧都要对 1560×1080（DPR2 下 4.9Mpx）重新做一次高斯模糊。
+     两层 radial-gradient 本身已是软边（峰值 alpha 线性降到 0，透明终点 70%/72%），
+     去掉 blur 后与「原样 + blur」的逐像素差：mean 0.44/255、p95 2/255、单通道最大 6/255
+     （工具_视觉对比_v01.mjs 实测；4 个「预柔化渐变」补偿方案都比它更远，故不做补偿）。 */
   transition: opacity 400ms ease;
   animation: auroraDrift 22s ease-in-out infinite alternate;
 }
@@ -60,9 +66,10 @@
 }
 
 .stage[data-mood='neutral'] .aurora {
+  /* 暮色云霞：低饱和暖玫与淡桃，替代原来的冷白与灰蓝 */
   background:
-    radial-gradient(40% 34% at 30% 24%, rgba(255, 255, 255, 0.7), transparent 70%),
-    radial-gradient(44% 36% at 74% 30%, rgba(203, 219, 238, 0.55), transparent 72%);
+    radial-gradient(40% 34% at 30% 24%, rgba(255, 234, 214, 0.62), transparent 70%),
+    radial-gradient(44% 36% at 74% 30%, rgba(216, 168, 150, 0.5), transparent 72%);
 }
 
 .stage[data-mood='negative'] .aurora {
