@@ -106,6 +106,10 @@ If code is copied or adapted: record source, commit, license, and changes in the
     wiped an entire drive; this rule exists because of it.
 12. **Do not trust `D:\...` paths.** The working drive was lost; all workspace paths are under
     `C:\记事本\workplace\` now. Copies of old docs may still show `D:\` — verify before running them.
+13. **The staging folder must mirror this repo.** `05_暂存\01_Lumina-Space\` is not a scratch area —
+    whatever gets pushed is its content. Edit staging first, copy into WSL, then commit. Never edit repo
+    files without writing the same change back to staging. Run `node _tools/check_mirror.mjs <stage> .`
+    before committing and after pushing; it must print `✓ 镜像一致`.
 
 ## Where to look
 
