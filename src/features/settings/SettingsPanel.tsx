@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react';
 import type { ExportResult } from '../../lib/data';
 import { useAudio } from '../../lib/AudioProvider';
-import { getNoiseProfile } from '../../lib/audio';
+import { describeNoiseStatus, getNoiseProfile } from '../../lib/audio';
 import { MOODS, type MoodId } from '../mood/mood';
 import styles from './SettingsPanel.module.css';
 
@@ -31,7 +31,7 @@ export default function SettingsPanel({
   const [cleared, setCleared] = useState(false);
   const [exportMessage, setExportMessage] = useState('');
   const clearButtonRef = useRef<HTMLButtonElement>(null);
-  const { muted, toggleMuted, whiteNoiseEnabled, toggleWhiteNoise, playClick, playHover } =
+  const { muted, toggleMuted, whiteNoiseEnabled, toggleWhiteNoise, noiseStatus, playClick, playHover } =
     useAudio();
 
   const handleExport = () => {
@@ -109,8 +109,9 @@ export default function SettingsPanel({
           <span aria-hidden="true">🌧️</span>
           背景音乐 {whiteNoiseEnabled ? '开启' : '关闭'}
         </button>
-        <p className={styles.note}>
-          当前声景：{getNoiseProfile(mood).label}（随情绪切换，约 20 分钟无缝循环）
+        <p className={styles.note} role="status">
+          当前声景：{getNoiseProfile(mood).label} ·{' '}
+          {describeNoiseStatus(noiseStatus)}（随情绪切换，约 20 分钟无缝循环）
         </p>
         {muted ? <p className={styles.note}>当前已静音，取消静音后恢复。</p> : null}
       </section>

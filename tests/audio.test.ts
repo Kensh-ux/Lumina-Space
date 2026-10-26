@@ -1,13 +1,22 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
+  createSoundEngine,
+  describeNoiseStatus,
   getNoiseProfile,
+  isNoiseAudible,
   NOISE_CROSSFADE_MS,
+  NOISE_ERROR_MAX_RETRIES,
+  NOISE_ERROR_RETRY_MS,
   NOISE_KEY,
+  NOISE_LOAD_TIMEOUT_MS,
+  NOISE_READY_STATE,
   readSoundMuted,
   readWhiteNoiseEnabled,
+  resolveNoiseStatus,
   SOUND_KEY,
   writeSoundMuted,
   writeWhiteNoiseEnabled,
+  type SoundEngine,
 } from '../src/lib/audio';
 
 class MemoryStorage implements Storage {
@@ -138,5 +147,326 @@ describe('三情绪声景配置', () => {
   it('交叉淡化时长是正数且不超过 1 秒，避免切情绪时明显停顿', () => {
     expect(NOISE_CROSSFADE_MS).toBeGreaterThan(0);
     expect(NOISE_CROSSFADE_MS).toBeLessThanOrEqual(1000);
+  });
+});
+
+describe('背景音乐加载态', () => {
+  it('只有缓冲到 HAVE_FUTURE_DATA 且未暂停才算能出声', () => {
+    expect(isNoiseAudible(4, false)).toBe(true);
+    expect(isNoiseAudible(3, false)).toBe(true);
+    expect(isNoiseAudible(2, false)).toBe(false);
+    expect(isNoiseAudible(0, false)).toBe(false);
+    // 有缓冲但被暂停（如自动播放被拦）不算能出声
+    expect(isNoiseAudible(4, true)).toBe(false);
+  });
+
+  it('可出声阈值就是 3，边界严格', () => {
+    expect(NOISE_READY_STATE).toBe(3);
+    expect(isNoiseAudible(NOISE_READY_STATE - 1, false)).toBe(false);
+    expect(isNoiseAudible(NOISE_READY_STATE, false)).toBe(true);
+  });
+
+  it('没有播放意图时是已关闭', () => {
+    expect(resolveNoiseStatus({ active: false, audible: true, waitingMs: 0 })).toBe('off');
+    expect(resolveNoiseStatus({ active: false, audible: false, waitingMs: 99_999 })).toBe('off');
+  });
+
+  it('要放但还不能出声是加载中；超过上限变加载较慢（仍是等待，不放弃）', () => {
+    expect(resolveNoiseStatus({ active: true, audible: false, waitingMs: 0 })).toBe('loading');
+    expect(
+      resolveNoiseStatus({ active: true, audible: false, waitingMs: NOISE_LOAD_TIMEOUT_MS - 1 }),
+    ).toBe('loading');
+    expect(
+      resolveNoiseStatus({ active: true, audible: false, waitingMs: NOISE_LOAD_TIMEOUT_MS }),
+    ).toBe('slow');
+    expect(
+      resolveNoiseStatus({ active: true, audible: false, waitingMs: NOISE_LOAD_TIMEOUT_MS * 3 }),
+    ).toBe('slow');
+  });
+
+  it('能出声就是播放中，即使等待已经超过上限', () => {
+    expect(resolveNoiseStatus({ active: true, audible: true, waitingMs: 0 })).toBe('playing');
+    expect(
+      resolveNoiseStatus({ active: true, audible: true, waitingMs: NOISE_LOAD_TIMEOUT_MS * 5 }),
+    ).toBe('playing');
+  });
+
+  it('加载上限是 20 秒量级，且可注入自定义值', () => {
+    expect(NOISE_LOAD_TIMEOUT_MS).toBe(20_000);
+    expect(
+      resolveNoiseStatus({ active: true, audible: false, waitingMs: 999, timeoutMs: 1000 }),
+    ).toBe('loading');
+    expect(
+      resolveNoiseStatus({ active: true, audible: false, waitingMs: 1000, timeoutMs: 1000 }),
+    ).toBe('slow');
+  });
+
+  it('五种状态都有不同的中文文案', () => {
+    const labels = (['off', 'loading', 'slow', 'playing', 'error'] as const).map(
+      describeNoiseStatus,
+    );
+
+    expect(labels).toEqual(['已关闭', '加载中…', '加载较慢…', '播放中', '加载失败']);
+    expect(new Set(labels).size).toBe(5);
+  });
+
+  it('报错优先于可出声：failed 即「加载失败」', () => {
+    expect(resolveNoiseStatus({ active: true, audible: true, waitingMs: 0, failed: true })).toBe(
+      'error',
+    );
+    expect(
+      resolveNoiseStatus({ active: true, audible: false, waitingMs: 99_999, failed: true }),
+    ).toBe('error');
+    // 没有播放意图时仍然是「已关闭」
+    expect(resolveNoiseStatus({ active: false, audible: false, waitingMs: 0, failed: true })).toBe(
+      'off',
+    );
+  });
+
+  it('报错自动重试参数是正数、上限为正整数', () => {
+    expect(NOISE_ERROR_RETRY_MS).toBeGreaterThan(0);
+    expect(NOISE_ERROR_MAX_RETRIES).toBeGreaterThanOrEqual(1);
+    expect(Number.isInteger(NOISE_ERROR_MAX_RETRIES)).toBe(true);
+  });
+});
+
+// ---- 引擎级：注入假 audio 元素（引擎是纯逻辑，不碰 React） ----
+interface DebugPlayer {
+  src: string;
+  volume: number;
+  paused: boolean;
+  preload: string;
+  currentTime: number;
+  error: string | null;
+}
+
+class FakeAudioElement {
+  src: string;
+  loop = false;
+  preload = 'auto';
+  volume = 0;
+  paused = true;
+  readyState = 0;
+  currentTime = 0;
+  networkState = 1;
+  error: MediaError | null = null;
+  /** 置 true 后每次 play() 都报错（模拟坏资源）。 */
+  broken = false;
+  playCalls = 0;
+  loadCalls = 0;
+  readonly buffered = { length: 0 } as unknown as TimeRanges;
+  private listeners = new Map<string, Set<() => void>>();
+
+  constructor(src?: string) {
+    this.src = src ?? '';
+  }
+
+  addEventListener(type: string, listener: () => void): void {
+    const set = this.listeners.get(type) ?? new Set<() => void>();
+    set.add(listener);
+    this.listeners.set(type, set);
+  }
+
+  removeEventListener(type: string, listener: () => void): void {
+    this.listeners.get(type)?.delete(listener);
+  }
+
+  emit(type: string): void {
+    for (const listener of Array.from(this.listeners.get(type) ?? [])) {
+      listener();
+    }
+  }
+
+  play(): Promise<void> {
+    this.playCalls += 1;
+    if (this.broken) {
+      this.error = { code: 4 } as unknown as MediaError;
+      this.paused = true;
+      this.readyState = 0;
+      this.emit('error');
+      return Promise.reject(new Error('fake media error'));
+    }
+    // 假元素立刻可出声；引擎必须在 readyState>=3 且非暂停之后才淡入。
+    this.readyState = 4;
+    this.paused = false;
+    return Promise.resolve();
+  }
+
+  pause(): void {
+    this.paused = true;
+  }
+
+  load(): void {
+    this.loadCalls += 1;
+    this.readyState = 0;
+    this.paused = true;
+  }
+}
+
+describe('背景音乐开关（引擎级）', () => {
+  const originalAudio = window.Audio;
+  let created: FakeAudioElement[] = [];
+
+  beforeEach(() => {
+    created = [];
+    Object.defineProperty(window, 'Audio', {
+      value: function (src?: string): FakeAudioElement {
+        const element = new FakeAudioElement(src);
+        created.push(element);
+        return element;
+      },
+      configurable: true,
+      writable: true,
+    });
+  });
+
+  afterEach(() => {
+    Object.defineProperty(window, 'Audio', {
+      value: originalAudio,
+      configurable: true,
+      writable: true,
+    });
+  });
+
+  const sleep = (ms: number): Promise<void> =>
+    new Promise((resolve) => {
+      setTimeout(resolve, ms);
+    });
+
+  const waitFor = async (
+    predicate: () => boolean,
+    timeoutMs = 2000,
+  ): Promise<boolean> => {
+    const started = Date.now();
+    while (Date.now() - started < timeoutMs) {
+      if (predicate()) {
+        return true;
+      }
+      await sleep(25);
+    }
+    return predicate();
+  };
+
+  const playersOf = (engine: SoundEngine): DebugPlayer[] =>
+    (engine.__debug().players ?? []) as DebugPlayer[];
+
+  const debugOf = (engine: SoundEngine): { errorRetries: number; pendingWake: boolean } =>
+    engine.__debug() as { errorRetries: number; pendingWake: boolean };
+
+  it('setEnabled(true) 只解锁，不主动放声', () => {
+    const engine = createSoundEngine();
+
+    engine.setEnabled(true);
+
+    expect(engine.getNoiseState().status).toBe('off');
+    expect(playersOf(engine).length).toBe(0);
+  });
+
+  it('打开开关后切情绪：新曲淡入、音量到目标', async () => {
+    const engine = createSoundEngine();
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => engine.getNoiseState().volume > 0.4)).toBe(true);
+    expect(engine.getNoiseState().status).toBe('playing');
+
+    engine.setMood('positive');
+    expect(await waitFor(() => /bird-forest/.test(engine.getNoiseState().src))).toBe(true);
+
+    expect(await waitFor(() => engine.getNoiseState().volume > 0.5)).toBe(true);
+    expect(engine.getNoiseState().status).toBe('playing');
+    engine.stopWhiteNoise(0);
+  });
+
+  it('关闭开关后切情绪不会再放声（关掉后声音不得自己回来）', async () => {
+    const engine = createSoundEngine();
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => engine.getNoiseState().volume > 0.1)).toBe(true);
+
+    engine.stopWhiteNoise(0);
+    engine.setMood('positive');
+
+    await sleep(150);
+    const state = engine.getNoiseState();
+    expect(state.status).toBe('off');
+    expect(state.volume).toBe(0);
+    expect(state.playing).toBe(false);
+    // 情绪仍然记账：重新打开时放的是新情绪
+    expect(state.mood).toBe('positive');
+    // 没有任何播放器在响，也没有为新情绪建播放器（不会偷偷开始下载）
+    const players = playersOf(engine);
+    expect(players.every((player) => player.paused)).toBe(true);
+    expect(players.some((player) => /bird-forest/.test(player.src))).toBe(false);
+  });
+
+  it('静音时切情绪也不放声', async () => {
+    const engine = createSoundEngine();
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => engine.getNoiseState().status === 'playing')).toBe(true);
+
+    engine.setMuted(true);
+    engine.setMood('positive');
+
+    // 先等淡出收尾（关闭会淡出 0.6 s），再确认没有重新淡入
+    expect(await waitFor(() => playersOf(engine).every((player) => player.paused))).toBe(true);
+    await sleep(150);
+    const state = engine.getNoiseState();
+    expect(state.status).toBe('off');
+    expect(state.volume).toBe(0);
+    expect(playersOf(engine).every((player) => player.paused)).toBe(true);
+  });
+
+  it('切走的曲子暂停并停下载（preload=none），但保留播放位置', async () => {
+    const engine = createSoundEngine();
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => created.length === 1)).toBe(true);
+    const neutral = created[0];
+    neutral.currentTime = 12.5;
+
+    engine.setMood('positive');
+
+    expect(
+      await waitFor(() => neutral.paused && neutral.preload === 'none'),
+    ).toBe(true);
+    expect(neutral.currentTime).toBe(12.5);
+    engine.stopWhiteNoise(0);
+  });
+
+  it('元素报错后显示加载失败，并自动重试恢复播放', async () => {
+    const engine = createSoundEngine({ errorRetryMs: 40 });
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => engine.getNoiseState().status === 'playing')).toBe(true);
+    const element = created[0];
+
+    element.error = { code: 4 } as unknown as MediaError;
+    element.emit('error');
+
+    expect(engine.getNoiseState().status).toBe('error');
+    expect(describeNoiseStatus(engine.getNoiseState().status)).toBe('加载失败');
+    expect(await waitFor(() => element.loadCalls > 0, 1000)).toBe(true);
+    expect(await waitFor(() => engine.getNoiseState().status === 'playing', 1000)).toBe(true);
+    engine.stopWhiteNoise(0);
+  });
+
+  it('自动重试用尽后仍可凭用户手势恢复（不放弃）', async () => {
+    const engine = createSoundEngine({ errorRetryMs: 30 });
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => engine.getNoiseState().status === 'playing')).toBe(true);
+    const element = created[0];
+    element.broken = true;
+
+    element.error = { code: 4 } as unknown as MediaError;
+    element.emit('error');
+
+    expect(await waitFor(() => debugOf(engine).errorRetries >= NOISE_ERROR_MAX_RETRIES, 2000)).toBe(
+      true,
+    );
+    expect(debugOf(engine).pendingWake).toBe(true);
+    expect(engine.getNoiseState().status).toBe('error');
+
+    // 资源恢复 + 用户手势 → 必须能重新放出来
+    element.broken = false;
+    engine.applyGesture();
+
+    expect(await waitFor(() => engine.getNoiseState().status === 'playing', 1000)).toBe(true);
+    engine.stopWhiteNoise(0);
   });
 });
