@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   getNoiseProfile,
+  NOISE_CROSSFADE_MS,
   NOISE_KEY,
   readSoundMuted,
   readWhiteNoiseEnabled,
@@ -98,26 +99,44 @@ describe('白噪音偏好持久化', () => {
 });
 
 describe('三情绪声景配置', () => {
-  it('积极为带通+pad，中性为棕噪声低通，消极为高通+缓慢调制', () => {
-    const positive = getNoiseProfile('positive');
-    const neutral = getNoiseProfile('neutral');
-    const negative = getNoiseProfile('negative');
+  const moods = ['positive', 'neutral', 'negative'] as const;
 
-    expect(positive).toMatchObject({ filterType: 'bandpass', noiseColor: 'pink' });
-    expect(positive.padFrequencies?.length).toBeGreaterThan(0);
-    expect(neutral).toMatchObject({ filterType: 'lowpass', noiseColor: 'brown' });
-    expect(negative).toMatchObject({ filterType: 'highpass', noiseColor: 'white' });
-    expect(negative.modulation?.rate).toBeGreaterThan(0);
-    expect(negative.modulation?.depth).toBeGreaterThan(0);
+  it('每种情绪都有自己的循环音频地址，且都是 https', () => {
+    const srcs = moods.map((mood) => getNoiseProfile(mood).src);
+
+    for (const src of srcs) {
+      expect(src.startsWith('https://')).toBe(true);
+      expect(src.endsWith('.mp3')).toBe(true);
+    }
+    expect(new Set(srcs).size).toBe(3);
   });
 
-  it('三种情绪的 filter/frequency/gain 都不相同', () => {
-    const profiles = ['positive', 'neutral', 'negative'].map((mood) =>
-      getNoiseProfile(mood as 'positive' | 'neutral' | 'negative'),
-    );
+  it('每种情绪都有非空中文说明，且各不相同', () => {
+    const labels = moods.map((mood) => getNoiseProfile(mood).label);
 
-    expect(new Set(profiles.map((profile) => profile.filterType)).size).toBe(3);
-    expect(new Set(profiles.map((profile) => profile.frequency)).size).toBe(3);
-    expect(new Set(profiles.map((profile) => profile.gain)).size).toBe(3);
+    for (const label of labels) {
+      expect(label.trim().length).toBeGreaterThan(0);
+    }
+    expect(new Set(labels).size).toBe(3);
+  });
+
+  it('音量在 0..1 内且三档互不相同：雨声最靠前、黄昏最退后', () => {
+    const positive = getNoiseProfile('positive').volume;
+    const neutral = getNoiseProfile('neutral').volume;
+    const negative = getNoiseProfile('negative').volume;
+
+    for (const value of [positive, neutral, negative]) {
+      expect(value).toBeGreaterThan(0);
+      expect(value).toBeLessThanOrEqual(1);
+    }
+    expect(new Set([positive, neutral, negative]).size).toBe(3);
+    // 消极（雨声）应最响：它承担主要安抚作用
+    expect(negative).toBeGreaterThan(positive);
+    expect(positive).toBeGreaterThan(neutral);
+  });
+
+  it('交叉淡化时长是正数且不超过 1 秒，避免切情绪时明显停顿', () => {
+    expect(NOISE_CROSSFADE_MS).toBeGreaterThan(0);
+    expect(NOISE_CROSSFADE_MS).toBeLessThanOrEqual(1000);
   });
 });

@@ -21,7 +21,10 @@ import {
 
 declare global {
   interface Window {
-    __luminaAudio?: { getState: () => NoiseState };
+    __luminaAudio?: {
+      getState: () => NoiseState;
+      debug: () => Record<string, unknown>;
+    };
   }
 }
 
@@ -50,42 +53,49 @@ export function AudioProvider({ children }: { children: ReactNode }) {
   const mutedRef = useRef(muted);
   const enabledRef = useRef(whiteNoiseEnabled);
   const moodRef = useRef<MoodId>('neutral');
-  const unlockedRef = useRef(false);
   mutedRef.current = muted;
   enabledRef.current = whiteNoiseEnabled;
 
   useEffect(() => {
     engine.setMuted(muted);
     writeSoundMuted(muted);
-    if (!muted && enabledRef.current && unlockedRef.current) {
+    if (!muted && enabledRef.current) {
       engine.startWhiteNoise(moodRef.current);
     }
   }, [engine, muted]);
 
   useEffect(() => {
-    const handleUnlock = () => {
-      engine.unlock();
-      unlockedRef.current = true;
+    // 每次手势都告知引擎：既解锁提示音，也让「曾被自动播放策略拦下」的
+    // 声景补放。不用一次性解锁标志——静音状态下切换开关不会产生新的手势，
+    // 一次性标志会让声景再也起不来。
+    const handleGesture = () => {
+      engine.applyGesture();
       if (enabledRef.current && !mutedRef.current) {
         engine.startWhiteNoise(moodRef.current);
       }
     };
-    window.addEventListener('pointerdown', handleUnlock, { once: true, capture: true });
-    window.addEventListener('keydown', handleUnlock, { once: true, capture: true });
+    window.addEventListener('pointerdown', handleGesture, { capture: true });
+    window.addEventListener('keydown', handleGesture, { capture: true });
     return () => {
-      window.removeEventListener('pointerdown', handleUnlock, true);
-      window.removeEventListener('keydown', handleUnlock, true);
-      engine.stopWhiteNoise();
-      engine.dispose();
+      window.removeEventListener('pointerdown', handleGesture, true);
+      window.removeEventListener('keydown', handleGesture, true);
+      // 只停止播放，**不要 dispose**。
+      // StrictMode 在开发下会立刻跑一次 cleanup；dispose 会把
+      // useRef 里那个单例引擎永久置为 disposed，之后所有播放调用都被挡掉，
+      // 表现为「开了白噪音却没有声音」。
+      engine.stopWhiteNoise(0);
     };
   }, [engine]);
 
-  // 仅开发/截图使用：让 CDP 能读取当前声景 chain 的 filter/frequency/gain。
+  // 仅开发/截图使用：让 CDP 能读取声景内部状态（含淡化调度），便于运行时诊断。
   useEffect(() => {
     if (!import.meta.env.DEV) {
       return;
     }
-    window.__luminaAudio = { getState: engine.getNoiseState };
+    window.__luminaAudio = {
+      getState: engine.getNoiseState,
+      debug: engine.__debug,
+    };
     return () => {
       delete window.__luminaAudio;
     };
@@ -101,9 +111,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       enabledRef.current = next;
       writeWhiteNoiseEnabled(next);
       if (next) {
-        if (unlockedRef.current && !mutedRef.current) {
-          engine.startWhiteNoise(moodRef.current);
-        }
+        engine.startWhiteNoise(moodRef.current);
       } else {
         engine.stopWhiteNoise();
       }
