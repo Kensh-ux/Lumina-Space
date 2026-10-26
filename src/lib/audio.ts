@@ -322,8 +322,13 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
       }
       if (progress >= 1) {
         done.push(audio);
-        if (fade.releaseWhenDone) {
-          // 淡出结束才真正停下载：既没有爆音，也不再抢带宽。
+        // 淡出结束才真正停下载：既没有爆音，也不再抢带宽。
+        // 但若这期间元素又被重新武装（fadeInTargets 里有它），说明这是一条**过期的释放**：
+        // 此刻 pause() 会让淡入永远等不到（淡入要求 !paused），必须跳过。
+        // 判据只能是 fadeInTargets：silenceAll 是先清 fadeInTargets 再排淡出，
+        // 若改用 enabled / canPlay() 判断，会把「关开关 / 静音」这两种合法释放一并跳过，
+        // 反而让旧曲下载永远停不下来。
+        if (fade.releaseWhenDone && !fadeInTargets.has(audio)) {
           releaseDownload(audio);
         }
       }
@@ -336,7 +341,17 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
     }
   }
 
-  /** 元素真的能出声了：清掉等待/失败记录，并按登记的目标音量开始淡入。 */
+  /** 元素数据够了：readyState >= HAVE_FUTURE_DATA。 */
+  const isDataReady = (audio: HTMLAudioElement): boolean =>
+    audio.readyState >= NOISE_READY_STATE;
+
+  /**
+   * 元素数据够了：清掉等待/失败记录，并按登记的目标音量开始淡入。
+   *
+   * 通用自愈：元素此刻若已被某条**异步收尾**暂停（例如释放淡出晚于重新武装），
+   * 这里先把播放拉起来再淡入。能暂停活动元素的异步收尾不止一处、以后还可能多，
+   * 所以不能靠「穷举所有入口」来保证安全，必须有一道与入口无关的兜底。
+   */
   const markAudible = (audio: HTMLAudioElement): void => {
     errorState.delete(audio);
     errorRetries = 0;
@@ -347,6 +362,15 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
       return;
     }
     fadeInTargets.delete(audio);
+    if (audio.paused) {
+      const resumed = audio.play();
+      if (resumed && typeof resumed.catch === 'function') {
+        resumed.catch(() => {
+          // 拉不起来（例如自动播放被拦）：保持待唤醒，等下一次用户手势
+          pendingWake = true;
+        });
+      }
+    }
     fadeTo(audio, target, NOISE_CROSSFADE_MS / 1000);
   };
 
@@ -363,7 +387,8 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
    */
   function watch(): void {
     for (const audio of Array.from(fadeInTargets.keys())) {
-      if (isNoiseAudible(audio.readyState, audio.paused)) {
+      // 用「数据够了」而不是「正在出声」：被暂停的武装元素交给 markAudible 自愈。
+      if (isDataReady(audio)) {
         markAudible(audio);
       } else {
         markWaiting(audio);
@@ -492,9 +517,10 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
     audio.preload = 'auto';
     audio.volume = 0;
     // 真的能出声才允许淡入；canplay = readyState >= HAVE_FUTURE_DATA。
+    // 判据用「数据够了」：元素若被异步收尾暂停，由 markAudible 负责重新拉起（自愈）。
     for (const name of ['canplay', 'canplaythrough', 'playing']) {
       audio.addEventListener(name, () => {
-        if (isNoiseAudible(audio.readyState, audio.paused)) {
+        if (isDataReady(audio)) {
           markAudible(audio);
         }
       });
@@ -544,6 +570,15 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
     if (isSettled(audio, profile.volume)) {
       return;
     }
+    // 撤掉可能还在跑的「释放淡出」（关→立刻开、静音→立刻取消、A→B→A 快速来回）。
+    // 不撤的话它会在 0.6 s 后把刚武装的元素 pause()，而淡入要求 !paused →
+    // 元素永远起不来（状态卡在 loading，20 s 后变 slow）。
+    // 只按「有待执行的释放淡出」判断，不碰 enabled/canPlay()：silenceAll 是先清
+    // fadeInTargets 再排淡出，用开关判断会把合法释放一起跳过，旧曲下载就停不掉了。
+    const staleFade = fades.get(audio);
+    if (staleFade?.releaseWhenDone) {
+      fades.delete(audio);
+    }
     // 之前可能为了停下载设过 preload='none'：重新开始加载。
     try {
       audio.preload = 'auto';
@@ -561,7 +596,7 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
           // 成功才算解除待唤醒
           pendingWake = false;
           lastPlayError = '';
-          if (isNoiseAudible(audio.readyState, audio.paused)) {
+          if (isDataReady(audio)) {
             markAudible(audio);
           }
         })
@@ -576,7 +611,7 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
       pendingWake = false;
     }
     // 切回已经缓冲好的曲目时元素当场就绪：直接淡入，不必等事件。
-    if (isNoiseAudible(audio.readyState, audio.paused)) {
+    if (isDataReady(audio)) {
       markAudible(audio);
     }
   };
@@ -746,9 +781,9 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
       if (enabled === next) {
         return;
       }
+      enabled = next;
       if (next) {
         // 只解锁，不主动放声：由 startWhiteNoise / 手势路径决定放什么。
-        enabled = true;
         return;
       }
       pendingWake = false;

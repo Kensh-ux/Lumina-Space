@@ -252,10 +252,15 @@ class FakeAudioElement {
   error: MediaError | null = null;
   /** 置 true 后每次 play() 都报错（模拟坏资源）。 */
   broken = false;
+  /**
+   * 置 true 后 play() 返回挂起的 promise：`paused=false` 但 `readyState` 停在 2，
+   * 也就是「已经开始播、但还没缓冲够」的真实加载态。用它才能覆盖加载门控本身。
+   */
+  stalled = false;
   playCalls = 0;
-  loadCalls = 0;
   readonly buffered = { length: 0 } as unknown as TimeRanges;
   private listeners = new Map<string, Set<() => void>>();
+  private playResolvers: Array<() => void> = [];
 
   constructor(src?: string) {
     this.src = src ?? '';
@@ -286,9 +291,16 @@ class FakeAudioElement {
       this.emit('error');
       return Promise.reject(new Error('fake media error'));
     }
+    this.paused = false;
+    if (this.stalled) {
+      // 还不能出声：readyState 停在 HAVE_CURRENT_DATA，play() 的 promise 保持挂起
+      this.readyState = 2;
+      return new Promise<void>((resolve) => {
+        this.playResolvers.push(resolve);
+      });
+    }
     // 假元素立刻可出声；引擎必须在 readyState>=3 且非暂停之后才淡入。
     this.readyState = 4;
-    this.paused = false;
     return Promise.resolve();
   }
 
@@ -297,21 +309,35 @@ class FakeAudioElement {
   }
 
   load(): void {
-    this.loadCalls += 1;
     this.readyState = 0;
     this.paused = true;
+  }
+
+  /** 缓冲够了：readyState 到 4 并发出 canplay / playing（不动 paused，那是元素自己的状态）。 */
+  becomeBuffered(): void {
+    this.stalled = false;
+    this.readyState = 4;
+    this.emit('canplay');
+    this.emit('playing');
+    for (const resolve of this.playResolvers.splice(0)) {
+      resolve();
+    }
   }
 }
 
 describe('背景音乐开关（引擎级）', () => {
   const originalAudio = window.Audio;
   let created: FakeAudioElement[] = [];
+  /** 下一次创建的元素是否处于「还在缓冲」状态（要在 startWhiteNoise 之前设置）。 */
+  let nextStalled = false;
 
   beforeEach(() => {
     created = [];
+    nextStalled = false;
     Object.defineProperty(window, 'Audio', {
       value: function (src?: string): FakeAudioElement {
         const element = new FakeAudioElement(src);
+        element.stalled = nextStalled;
         created.push(element);
         return element;
       },
@@ -430,6 +456,117 @@ describe('背景音乐开关（引擎级）', () => {
     engine.stopWhiteNoise(0);
   });
 
+  it('缓冲耗尽（waiting）时音量保持不变，恢复后继续播', async () => {
+    const engine = createSoundEngine();
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => created.length === 1)).toBe(true);
+    const element = created[0];
+    // 先等淡入收敛，拿一个稳定的基准音量
+    expect(await waitFor(() => Math.abs(element.volume - 0.5) < 0.001)).toBe(true);
+    const settledVolume = element.volume;
+
+    // 播放途中缓冲耗尽：readyState 掉到 HAVE_CURRENT_DATA 并进 waiting
+    element.readyState = 2;
+    element.emit('waiting');
+
+    await sleep(150);
+    const state = engine.getNoiseState();
+    expect(state.status).toBe('loading'); // 状态回到「加载中」
+    expect(element.paused).toBe(false); // 没有把元素停掉
+    expect(element.volume).toBe(settledVolume); // 音量保持，不来回淡入淡出
+
+    // 缓冲回来 → 回到播放，且不重新淡入
+    element.becomeBuffered();
+    expect(await waitFor(() => engine.getNoiseState().status === 'playing')).toBe(true);
+    expect(element.volume).toBe(settledVolume);
+    engine.stopWhiteNoise(0);
+  });
+
+  it('释放淡出还没收尾就重新武装：元素不得被停死（race 回归）', async () => {
+    nextStalled = true; // 元素处于「还在缓冲」，淡入必须等真正可播
+    const engine = createSoundEngine();
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => created.length === 1)).toBe(true);
+    const element = created[0];
+    expect(engine.getNoiseState().status).toBe('loading');
+
+    // 关键时序：关（排一条 0.6 s 的释放淡出）→ 0.6 s 内又开，且此时还不能出声
+    engine.stopWhiteNoise();
+    engine.startWhiteNoise('neutral');
+    await sleep(700); // 让那条释放淡出走完
+
+    const debug = engine.__debug() as { fades: number; watchRunning: boolean };
+    // 死锁指纹：paused=true + preload=none；正常应是「还在等可播」
+    expect({
+      paused: element.paused,
+      preload: element.preload,
+      fades: debug.fades,
+      watchRunning: debug.watchRunning,
+    }).toEqual({ paused: false, preload: 'auto', fades: 0, watchRunning: true });
+    expect(engine.getNoiseState().status).toBe('loading');
+
+    // 缓冲够了：必须能淡入到播放（被停死的话这里永远等不到）
+    element.becomeBuffered();
+    expect(await waitFor(() => engine.getNoiseState().status === 'playing')).toBe(true);
+    expect(await waitFor(() => element.volume > 0.4)).toBe(true);
+    engine.stopWhiteNoise(0);
+  });
+
+  it('加载中关掉开关：释放淡出结束后照样要停下载（防止把合法释放一起放过）', async () => {
+    nextStalled = true;
+    const engine = createSoundEngine();
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => created.length === 1)).toBe(true);
+    const element = created[0];
+    expect(engine.getNoiseState().status).toBe('loading');
+
+    // 加载中关闭：silenceAll 会先清 fadeInTargets、再排释放淡出。
+    // 释放判据若错用 enabled / canPlay()，这里就会被放过，旧曲下载永远停不下来。
+    engine.stopWhiteNoise();
+
+    expect(await waitFor(() => element.paused && element.preload === 'none', 2000)).toBe(true);
+    expect(engine.getNoiseState().status).toBe('off');
+  });
+
+  it('数据就绪但元素已被（别处）暂停时，自愈重新拉起再淡入', async () => {
+    nextStalled = true;
+    const engine = createSoundEngine();
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => created.length === 1)).toBe(true);
+    const element = created[0];
+
+    // 模拟「武装之后被某条异步收尾暂停」这个形状（H1 的根因形状）
+    element.pause();
+    expect(element.paused).toBe(true);
+
+    // 数据够了：引擎必须自己把播放拉起来，而不是卡在 paused 上
+    element.becomeBuffered();
+
+    expect(await waitFor(() => engine.getNoiseState().status === 'playing', 1000)).toBe(true);
+    expect(element.paused).toBe(false);
+    expect(await waitFor(() => element.volume > 0.4, 1000)).toBe(true);
+    engine.stopWhiteNoise(0);
+  });
+
+  it('setEnabled(false) 之后切情绪不放声', async () => {
+    const engine = createSoundEngine();
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => engine.getNoiseState().status === 'playing')).toBe(true);
+
+    engine.setEnabled(false);
+    expect(engine.getNoiseState().status).toBe('off');
+    expect(await waitFor(() => playersOf(engine).every((player) => player.paused))).toBe(true);
+
+    engine.setMood('positive');
+    await sleep(200);
+    const state = engine.getNoiseState();
+    expect(state.status).toBe('off');
+    expect(state.volume).toBe(0);
+    const players = playersOf(engine);
+    expect(players.every((player) => player.paused)).toBe(true);
+    expect(players.some((player) => /bird-forest/.test(player.src))).toBe(false);
+  });
+
   it('元素报错后显示加载失败，并自动重试恢复播放', async () => {
     const engine = createSoundEngine({ errorRetryMs: 40 });
     engine.startWhiteNoise('neutral');
@@ -441,7 +578,7 @@ describe('背景音乐开关（引擎级）', () => {
 
     expect(engine.getNoiseState().status).toBe('error');
     expect(describeNoiseStatus(engine.getNoiseState().status)).toBe('加载失败');
-    expect(await waitFor(() => element.loadCalls > 0, 1000)).toBe(true);
+    // 行为断言：自动重试之后必须真的回到播放（不钉 load() 这种实现细节）
     expect(await waitFor(() => engine.getNoiseState().status === 'playing', 1000)).toBe(true);
     engine.stopWhiteNoise(0);
   });
