@@ -107,12 +107,11 @@ export default function SettingsPanel({
           }}
         >
           <span aria-hidden="true">🌧️</span>
-          白噪音 {whiteNoiseEnabled ? '开启' : '关闭'}
+          背景音乐 {whiteNoiseEnabled ? '开启' : '关闭'}
         </button>
         <p className={styles.note}>
           当前声景：{getNoiseProfile(mood).label}（随情绪切换，约 20 分钟无缝循环）
         </p>
-        <p className={styles.note}>全局持续播放，切面板不会中断；音频从外部托管加载。</p>
         {muted ? <p className={styles.note}>当前已静音，取消静音后恢复。</p> : null}
       </section>
 

@@ -63,13 +63,14 @@ npm run preview    # preview dist/
 3. `npm run dev` starts without console errors.
 4. UI changes have a screenshot that a human/Lead actually looked at.
 5. `git status` contains only files in the task card.
-6. Commit message uses a prefix (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`); report the hash.
+6. Commit message uses a prefix (`feat:`, `fix:`, `docs:`, `test:`, `chore:`, `refactor:`) **and is written in English**; report the hash.
 7. Receipt: what changed / how verified / risks.
 
 Do not over-self-check: run the commands in the task card once. The reviewer handles verification.
 
 ## Commit and push
 
+- **Commit messages are written in English** (prefix + English body); do not mix Chinese into them.
 - Small change: commit directly on `main`; **only `git add` files in scope**, never `git add -A`.
 - Large change (refactor, stack change, many files): branch `feat/<name>`; do not merge until the user says so.
 - Never `git commit --amend`, `reset --hard`, `push -f`, or rewrite remote history.
