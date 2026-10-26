@@ -237,6 +237,7 @@ interface DebugPlayer {
   paused: boolean;
   preload: string;
   currentTime: number;
+  waiting: boolean;
   error: string | null;
 }
 
@@ -509,6 +510,42 @@ describe('背景音乐开关（引擎级）', () => {
     element.becomeBuffered();
     expect(await waitFor(() => engine.getNoiseState().status === 'playing')).toBe(true);
     expect(await waitFor(() => element.volume > 0.4)).toBe(true);
+    engine.stopWhiteNoise(0);
+  });
+
+  it('释放已排程但 poll 还没动过音量时重新开：不得把在播元素停死（settled 早退窗口）', async () => {
+    const engine = createSoundEngine();
+    engine.startWhiteNoise('neutral');
+    expect(await waitFor(() => created.length === 1)).toBe(true);
+    const element = created[0];
+    // 收敛到目标音量，元素进入 settled（在播、数据够、无目标、音量到位）
+    expect(await waitFor(() => Math.abs(element.volume - 0.5) < 0.001)).toBe(true);
+
+    // 生产路径的真实窗口：关闭排下 0.6 s 释放淡出，而 poll 是 30 ms 一跳、
+    // 这一拍还没写过音量，于是同一 tick 内重新开会命中 isSettled 早退。
+    // 控制台里 b.click(); b.click(); 就是这个时序（人手双击基本碰不到）。
+    engine.stopWhiteNoise();
+    engine.startWhiteNoise('neutral');
+    await sleep(700); // 让那条释放淡出走完
+
+    const debug = engine.__debug() as { fades: number; watchRunning: boolean };
+    const player = playersOf(engine)[0];
+    // 修复前：paused=true、音量被淡到 0、status 永远停在 loading，
+    // 且 waiting 与 watchRunning 都是 false（没人登记目标/等待起点，连 slow 都到不了）
+    expect({
+      paused: element.paused,
+      status: engine.getNoiseState().status,
+      waiting: player?.waiting,
+      fades: debug.fades,
+      watchRunning: debug.watchRunning,
+    }).toEqual({
+      paused: false,
+      status: 'playing',
+      waiting: false,
+      fades: 0,
+      watchRunning: false,
+    });
+    expect(element.volume).toBeGreaterThan(0.49);
     engine.stopWhiteNoise(0);
   });
 

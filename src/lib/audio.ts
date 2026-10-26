@@ -567,17 +567,19 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
         // 忽略
       }
     }
-    if (isSettled(audio, profile.volume)) {
-      return;
-    }
+    // 清理陈旧状态必须在任何早退之前无条件执行：
     // 撤掉可能还在跑的「释放淡出」（关→立刻开、静音→立刻取消、A→B→A 快速来回）。
-    // 不撤的话它会在 0.6 s 后把刚武装的元素 pause()，而淡入要求 !paused →
-    // 元素永远起不来（状态卡在 loading，20 s 后变 slow）。
-    // 只按「有待执行的释放淡出」判断，不碰 enabled/canPlay()：silenceAll 是先清
+    // 不撤的话它会在 0.6 s 后把元素 pause()，而淡入要求 !paused → 元素永远起不来。
+    // poll 是 30 ms 一跳：若本函数在首跳之前被调用，元素还满足 settled（音量仍是目标值），
+    // 把这次撤销排在 isSettled 之后就会漏掉，症状是「开关开着却没声音、状态永远 loading」。
+    // 判据只按「有待执行的释放淡出」，不碰 enabled/canPlay()：silenceAll 是先清
     // fadeInTargets 再排淡出，用开关判断会把合法释放一起跳过，旧曲下载就停不掉了。
     const staleFade = fades.get(audio);
     if (staleFade?.releaseWhenDone) {
       fades.delete(audio);
+    }
+    if (isSettled(audio, profile.volume)) {
+      return;
     }
     // 之前可能为了停下载设过 preload='none'：重新开始加载。
     try {
