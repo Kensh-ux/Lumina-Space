@@ -49,8 +49,13 @@ export default function CompletedTasks({ tasks, onToggle, onDelete }: CompletedT
         type="button"
         className={styles.toggleButton}
         aria-expanded={expanded}
-        disabled={counts.done === 0}
-        onClick={() => setExpanded((previous) => !previous)}
+        aria-disabled={counts.done === 0}
+        onClick={() => {
+          if (counts.done === 0) {
+            return;
+          }
+          setExpanded((previous) => !previous);
+        }}
       >
         已完成 {counts.done} 个任务
       </button>
