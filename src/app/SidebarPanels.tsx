@@ -1,6 +1,7 @@
 import type { FocusSession, Task } from '../lib/types';
-import { countTasks, type TaskDraft, type TaskPatch } from '../features/tasks/task';
+import type { TaskDraft, TaskPatch } from '../features/tasks/task';
 import TaskList from '../features/tasks/TaskList';
+import CompletedTasks from '../features/tasks/CompletedTasks';
 import FocusTimer from '../features/focus/FocusTimer';
 import FocusStats from '../features/focus/FocusStats';
 import styles from './Sidebar.module.css';
@@ -20,13 +21,8 @@ export function TodayPanel({
   onDeleteTask,
   onUpdateTask,
 }: TodayPanelProps) {
-  const counts = countTasks(tasks);
-
   return (
     <>
-      <p className={styles.counts}>
-        未完成 {counts.open} · 完成 {counts.done}
-      </p>
       <TaskList
         tasks={tasks}
         onToggle={onToggleTask}
@@ -36,6 +32,7 @@ export function TodayPanel({
         compact
         showCreate
       />
+      <CompletedTasks tasks={tasks} onToggle={onToggleTask} onDelete={onDeleteTask} />
     </>
   );
 }
@@ -57,11 +54,25 @@ export function FocusPanel({ sessions, onComplete }: FocusPanelProps) {
 export function PlannerPanel() {
   return (
     <div className={styles.plannerPanel}>
-      <p className={styles.plannerPanelTitle}>未来 7 天</p>
+      <p className={styles.plannerPanelTitle}>规划师</p>
       <p className={styles.plannerPanelNote}>
-        主界面从今天起连续 7 天展示任务，按截止日期自动分列。
+        主界面按所选的起始日期展示任务，按截止日期自动分列，左右滑动看更多天。
       </p>
-      <p className={styles.plannerPanelNote}>点每列「＋ 添加」可直接排到那一天。</p>
+      <p className={styles.plannerPanelNote}>
+        点每列「＋ 添加」可直接排到那一天；顶部可跳到任意日期。
+      </p>
+    </div>
+  );
+}
+
+export function JournalPanel() {
+  return (
+    <div className={styles.plannerPanel}>
+      <p className={styles.plannerPanelTitle}>情绪记录</p>
+      <p className={styles.plannerPanelNote}>
+        主界面记录每条情绪、事件和好感值，最新的在最上面。
+      </p>
+      <p className={styles.plannerPanelNote}>点「＋ 写一条」开始记录，数据只保存在本机。</p>
     </div>
   );
 }

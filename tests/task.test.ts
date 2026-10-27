@@ -7,12 +7,14 @@ import {
   createTaskWithDetails,
   deleteTask,
   filterTasks,
+  formatCompletedDate,
   formatDueDate,
   isTask,
   isTaskOverdue,
   searchTasks,
   setDueDate,
   setPriority,
+  sortCompletedTasks,
   sortTasks,
   toLocalDateString,
   toggleTask,
@@ -123,29 +125,156 @@ describe('deleteTask', () => {
 });
 
 describe('sortTasks', () => {
-  it('未完成排在已完成前面', () => {
-    const done = makeTask({ id: 'done', done: true, createdAt: '2026-10-23T03:00:00.000Z' });
-    const undone = makeTask({ id: 'undone', createdAt: '2026-10-23T01:00:00.000Z' });
+  const SORT_NOW = new Date(2026, 9, 25, 12);
 
-    expect(sortTasks([done, undone]).map((task) => task.id)).toEqual(['undone', 'done']);
+  function sortIds(tasks: Task[]): string[] {
+    return sortTasks(tasks, SORT_NOW).map((task) => task.id);
+  }
+
+  it('未完成排在已完成前面', () => {
+    const done = makeTask({
+      id: 'done',
+      done: true,
+      priority: 3,
+      dueDate: '2026-10-20',
+      completedAt: '2026-10-23T03:00:00.000Z',
+    });
+    const undone = makeTask({ id: 'undone' });
+
+    expect(sortIds([done, undone])).toEqual(['undone', 'done']);
   });
 
-  it('同组内按创建时间降序', () => {
-    const older = makeTask({ id: 'older', createdAt: '2026-10-22T00:00:00.000Z' });
-    const newer = makeTask({ id: 'newer', createdAt: '2026-10-23T00:00:00.000Z' });
+  it('用户例子：11/01 高 排在 10/31 低 前面', () => {
+    const high = makeTask({ id: 'high', priority: 3, dueDate: '2026-11-01' });
+    const low = makeTask({ id: 'low', priority: 1, dueDate: '2026-10-31' });
 
-    expect(sortTasks([older, newer]).map((task) => task.id)).toEqual(['newer', 'older']);
+    expect(sortIds([low, high])).toEqual(['high', 'low']);
+  });
+
+  it('同优先级看截止日期，更近的在前', () => {
+    const later = makeTask({ id: 'later', priority: 3, dueDate: '2026-11-01' });
+    const sooner = makeTask({ id: 'sooner', priority: 3, dueDate: '2026-10-26' });
+
+    expect(sortIds([later, sooner])).toEqual(['sooner', 'later']);
+  });
+
+  it('分数相同看截止日期，无日期排最后', () => {
+    const dated = makeTask({ id: 'dated', priority: 2, dueDate: '2026-12-09' });
+    const undated = makeTask({ id: 'undated', priority: 2 });
+
+    expect(sortIds([undated, dated])).toEqual(['dated', 'undated']);
+  });
+
+  it('未设置优先级按中（0.5）处理', () => {
+    const unset = makeTask({ id: 'unset' });
+    const low = makeTask({ id: 'low', priority: 1 });
+
+    expect(sortIds([low, unset])).toEqual(['unset', 'low']);
+  });
+
+  it('今天 / 过期得满分，未来日期按天数递减，无日期为 0', () => {
+    const overdue = makeTask({ id: 'overdue', priority: 2, dueDate: '2026-10-24' });
+    const today = makeTask({ id: 'today', priority: 2, dueDate: '2026-10-25' });
+    const future = makeTask({ id: 'future', priority: 2, dueDate: '2026-11-09' });
+    const undated = makeTask({ id: 'undated', priority: 2 });
+
+    expect(sortIds([undated, future, today, overdue])).toEqual([
+      'overdue',
+      'today',
+      'future',
+      'undated',
+    ]);
+  });
+
+  it('完全同分时保持原数组顺序（稳定）', () => {
+    const first = makeTask({ id: 'first', priority: 1 });
+    const second = makeTask({ id: 'second', priority: 1 });
+
+    expect(sortIds([first, second])).toEqual(['first', 'second']);
+    expect(sortIds([second, first])).toEqual(['second', 'first']);
+  });
+
+  it('已完成任务按创建时间降序', () => {
+    const olderDone = makeTask({
+      id: 'older-done',
+      done: true,
+      createdAt: '2026-10-21T00:00:00.000Z',
+      completedAt: '2026-10-24T00:00:00.000Z',
+    });
+    const newerDone = makeTask({
+      id: 'newer-done',
+      done: true,
+      createdAt: '2026-10-23T00:00:00.000Z',
+      completedAt: '2026-10-22T00:00:00.000Z',
+    });
+
+    expect(sortIds([olderDone, newerDone])).toEqual(['newer-done', 'older-done']);
   });
 
   it('不修改原数组', () => {
-    const older = makeTask({ id: 'older', createdAt: '2026-10-22T00:00:00.000Z' });
-    const newer = makeTask({ id: 'newer', createdAt: '2026-10-23T00:00:00.000Z' });
+    const older = makeTask({ id: 'older', priority: 1 });
+    const newer = makeTask({ id: 'newer', priority: 3 });
     const tasks = [older, newer];
 
-    const sorted = sortTasks(tasks);
+    const sorted = sortTasks(tasks, SORT_NOW);
 
     expect(sorted).not.toBe(tasks);
     expect(tasks.map((task) => task.id)).toEqual(['older', 'newer']);
+  });
+});
+
+describe('sortCompletedTasks', () => {
+  it('只取已完成，最新完成的在前，缺 completedAt 时回退创建时间', () => {
+    const older = makeTask({
+      id: 'older',
+      done: true,
+      createdAt: '2026-10-20T00:00:00.000Z',
+      completedAt: '2026-10-21T00:00:00.000Z',
+    });
+    const newer = makeTask({
+      id: 'newer',
+      done: true,
+      createdAt: '2026-10-22T00:00:00.000Z',
+      completedAt: '2026-10-23T00:00:00.000Z',
+    });
+    const legacy = makeTask({
+      id: 'legacy',
+      done: true,
+      createdAt: '2026-10-22T12:00:00.000Z',
+      completedAt: null,
+    });
+    const open = makeTask({ id: 'open' });
+
+    expect(
+      sortCompletedTasks([older, open, newer, legacy]).map((task) => task.id),
+    ).toEqual(['newer', 'legacy', 'older']);
+  });
+
+  it('不修改原数组', () => {
+    const first = makeTask({ id: 'first', done: true });
+    const second = makeTask({ id: 'second', done: true });
+    const tasks = [first, second];
+
+    const sorted = sortCompletedTasks(tasks);
+
+    expect(sorted).not.toBe(tasks);
+    expect(tasks.map((task) => task.id)).toEqual(['first', 'second']);
+  });
+});
+
+describe('formatCompletedDate', () => {
+  it('输出本地 MM/DD；缺 completedAt 时用创建时间', () => {
+    const completed = makeTask({
+      completedAt: new Date(2026, 9, 21, 12).toISOString(),
+      createdAt: new Date(2026, 9, 20, 12).toISOString(),
+    });
+    const legacy = makeTask({
+      completedAt: null,
+      createdAt: new Date(2026, 9, 18, 12).toISOString(),
+    });
+
+    expect(formatCompletedDate(completed)).toBe('10/21');
+    expect(formatCompletedDate(legacy)).toBe('10/18');
   });
 });
 
