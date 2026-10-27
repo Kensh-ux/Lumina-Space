@@ -4,7 +4,7 @@ import type { TaskDraft, TaskPatch } from '../features/tasks/task';
 import SettingsPanel from '../features/settings/SettingsPanel';
 import { useAudio } from '../lib/AudioProvider';
 import SidebarResizeHandle from './SidebarResizeHandle';
-import { FocusPanel, PlannerPanel, TodayPanel } from './SidebarPanels';
+import { FocusPanel, JournalPanel, PlannerPanel, TodayPanel } from './SidebarPanels';
 import { useSidebarPanels, type SidebarPanelId } from './useSidebarPanels';
 import { SIDEBAR_MAX_WIDTH, SIDEBAR_MIN_WIDTH, type SidebarLayout } from './useSidebar';
 import styles from './Sidebar.module.css';
@@ -20,6 +20,7 @@ interface ModuleMeta {
 const MODULES: readonly ModuleMeta[] = [
   { id: 'today', label: '今日', icon: '📋' },
   { id: 'planner', label: '规划师', icon: '🗓️' },
+  { id: 'journal', label: '情绪记录', icon: '📖' },
   { id: 'focus', label: '专注', icon: '⏳' },
   { id: 'settings', label: '设置', icon: '⚙️' },
 ];
@@ -150,6 +151,7 @@ export default function Sidebar({
           />
         ) : null}
         {activePanel === 'planner' ? <PlannerPanel /> : null}
+        {activePanel === 'journal' ? <JournalPanel /> : null}
         {activePanel === 'focus' ? (
           <FocusPanel sessions={focusSessions} onComplete={onRecordFocusSession} />
         ) : null}

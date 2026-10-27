@@ -3,7 +3,7 @@ import type { RefObject } from 'react';
 import { closeOverlay, getActiveOverlay, openOverlay, subscribeOverlay } from '../lib/overlay';
 import type { SidebarLayout } from './useSidebar';
 
-export type SidebarPanelId = 'today' | 'planner' | 'focus' | 'settings';
+export type SidebarPanelId = 'today' | 'planner' | 'journal' | 'focus' | 'settings';
 
 interface UseSidebarPanelsResult {
   activePanel: SidebarPanelId;
@@ -31,6 +31,7 @@ export function useSidebarPanels(
   const navRefs = useRef<Record<SidebarPanelId, HTMLButtonElement | null>>({
     today: null,
     planner: null,
+    journal: null,
     focus: null,
     settings: null,
   });
