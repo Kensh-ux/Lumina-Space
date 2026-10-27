@@ -54,6 +54,8 @@ function App() {
     clearCompletedTasks,
     recordFocusSession,
     createMoodNote,
+    updateMoodNote,
+    deleteMoodNote,
     exportData,
     clearAppData,
     storageError,
@@ -120,7 +122,12 @@ function App() {
             onCreateTask={createTask}
           />
         ) : journalActive ? (
-          <JournalView notes={moodNotes} onCreateNote={createMoodNote} />
+          <JournalView
+            notes={moodNotes}
+            onCreateNote={createMoodNote}
+            onUpdateNote={updateMoodNote}
+            onDeleteNote={deleteMoodNote}
+          />
         ) : (
           <>
             <Stage mood={mood} tasks={tasks} focusSessions={focusSessions} orbOpen={orbOpen} />

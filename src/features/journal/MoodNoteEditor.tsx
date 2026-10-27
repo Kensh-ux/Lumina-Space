@@ -2,34 +2,39 @@ import { useEffect, useId, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import { useModalFocus } from '../../lib/useModalFocus';
+import type { MoodNote } from '../../lib/types';
 import EmotionPicker from './EmotionPicker';
+import MoodScoreField from './MoodScoreField';
 import {
-  clampMoodScore,
-  formatMoodScore,
+  MOOD_EMOTIONS,
   MOOD_NOTE_CONTENT_MAX_LENGTH,
-  MOOD_NOTE_SCORE_MAX,
-  MOOD_NOTE_SCORE_MIN,
   parseMoodScore,
   type MoodNoteInput,
 } from './journal';
 import styles from './MoodNoteEditor.module.css';
 
 interface MoodNoteEditorProps {
+  note?: MoodNote;
   onSubmit: (input: MoodNoteInput) => void;
   onCancel: () => void;
 }
 
-export default function MoodNoteEditor({ onSubmit, onCancel }: MoodNoteEditorProps) {
+// note 存在时进入编辑模式：预填情绪（内置词选中、自定义词进「自己写」）、描述与分数。
+export default function MoodNoteEditor({ note, onSubmit, onCancel }: MoodNoteEditorProps) {
   const headingId = useId();
   const errorId = `${headingId}-error`;
   const contentRef = useRef<HTMLTextAreaElement>(null);
-  const [emotion, setEmotion] = useState<string | null>(null);
-  const [custom, setCustom] = useState('');
-  const [content, setContent] = useState('');
-  const [scoreText, setScoreText] = useState('0');
+  const initialEmotion = note?.emotion ?? '';
+  const [emotion, setEmotion] = useState<string | null>(
+    MOOD_EMOTIONS.includes(initialEmotion) ? initialEmotion : null,
+  );
+  const [custom, setCustom] = useState(
+    initialEmotion.length > 0 && !MOOD_EMOTIONS.includes(initialEmotion) ? initialEmotion : '',
+  );
+  const [content, setContent] = useState(note?.content ?? '');
+  const [scoreText, setScoreText] = useState(note ? String(note.score) : '0');
   const [error, setError] = useState('');
   const { dialogRef, handleKeyDown } = useModalFocus();
-  const score = parseMoodScore(scoreText);
 
   // 捕获阶段先处理 Esc，避免侧栏 / 移动 sheet 的 document 监听同时收起。
   useEffect(() => {
@@ -44,20 +49,6 @@ export default function MoodNoteEditor({ onSubmit, onCancel }: MoodNoteEditorPro
     document.addEventListener('keydown', handleKeyDownDocument, true);
     return () => document.removeEventListener('keydown', handleKeyDownDocument, true);
   }, [onCancel]);
-
-  const handleScoreText = (raw: string) => {
-    if (raw.trim().length === 0) {
-      setScoreText(raw);
-      return;
-    }
-    const parsed = Number(raw);
-    if (!Number.isFinite(parsed)) {
-      setScoreText('0');
-      return;
-    }
-    const clamped = clampMoodScore(parsed);
-    setScoreText(clamped === parsed ? raw : String(clamped));
-  };
 
   const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -94,7 +85,7 @@ export default function MoodNoteEditor({ onSubmit, onCancel }: MoodNoteEditorPro
         <form className={styles.form} onSubmit={handleSubmit} noValidate>
           <header className={styles.header}>
             <h2 id={headingId} className={styles.heading}>
-              写一条情绪记录
+              {note ? '编辑情绪记录' : '写一条情绪记录'}
             </h2>
           </header>
 
@@ -140,38 +131,11 @@ export default function MoodNoteEditor({ onSubmit, onCancel }: MoodNoteEditorPro
               />
             </div>
 
-            <div className={styles.field}>
-              <label className={styles.label} htmlFor={`${headingId}-score`}>
-                事件好感值 · {formatMoodScore(score)}
-              </label>
-              <div className={styles.scoreRow}>
-                <input
-                  id={`${headingId}-score-range`}
-                  className={styles.range}
-                  type="range"
-                  min={MOOD_NOTE_SCORE_MIN}
-                  max={MOOD_NOTE_SCORE_MAX}
-                  step={1}
-                  value={score}
-                  aria-label="事件好感值滑块"
-                  onChange={(event) => setScoreText(event.target.value)}
-                />
-                <input
-                  id={`${headingId}-score`}
-                  className={styles.scoreInput}
-                  type="number"
-                  min={MOOD_NOTE_SCORE_MIN}
-                  max={MOOD_NOTE_SCORE_MAX}
-                  step={1}
-                  value={scoreText}
-                  onChange={(event) => handleScoreText(event.target.value)}
-                  onBlur={() => setScoreText(String(parseMoodScore(scoreText)))}
-                />
-              </div>
-              <p className={styles.hint}>
-                范围 {MOOD_NOTE_SCORE_MIN} ~ {MOOD_NOTE_SCORE_MAX}，超出会自动钳制。
-              </p>
-            </div>
+            <MoodScoreField
+              inputId={`${headingId}-score`}
+              scoreText={scoreText}
+              onChange={setScoreText}
+            />
 
             {error ? (
               <p id={errorId} className={styles.error} role="alert">
@@ -185,7 +149,7 @@ export default function MoodNoteEditor({ onSubmit, onCancel }: MoodNoteEditorPro
               取消
             </button>
             <button type="submit" className={styles.saveButton}>
-              保存记录
+              {note ? '保存修改' : '保存记录'}
             </button>
           </footer>
         </form>

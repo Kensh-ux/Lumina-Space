@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  arrangeMoodNotes,
+  buildMoodNoteDeleteMessage,
   clampMoodScore,
   createMoodNote,
+  deleteMoodNote,
+  filterMoodNotes,
   formatMoodNoteDate,
   formatMoodScore,
   isMoodNote,
@@ -12,6 +16,7 @@ import {
   MOOD_NOTE_SCORE_MIN,
   parseMoodScore,
   sortMoodNotes,
+  updateMoodNote,
 } from '../src/features/journal/journal';
 import type { MoodNote } from '../src/lib/types';
 
@@ -129,6 +134,176 @@ describe('sortMoodNotes', () => {
     expect(sorted.map((note) => note.id)).toEqual(['first', 'second']);
     expect(sorted).not.toBe(notes);
     expect(notes.map((note) => note.id)).toEqual(['first', 'second']);
+  });
+});
+
+describe('updateMoodNote', () => {
+  it('只改目标记录，保留 id 与 createdAt，并 trim / 钳制', () => {
+    const note = makeNote({
+      id: 'target',
+      emotion: '期待',
+      content: '旧描述',
+      score: 10,
+      createdAt: '2026-10-12T08:00:00.000Z',
+    });
+    const other = makeNote({ id: 'other', content: '别的' });
+
+    const next = updateMoodNote([note, other], 'target', {
+      emotion: '  喜悦  ',
+      content: '  新描述  ',
+      score: 999,
+    });
+
+    expect(next[0]).toEqual({
+      id: 'target',
+      emotion: '喜悦',
+      content: '新描述',
+      score: 597,
+      createdAt: '2026-10-12T08:00:00.000Z',
+    });
+    expect(next[1]).toBe(other);
+    expect(note.emotion).toBe('期待');
+    expect(note.content).toBe('旧描述');
+  });
+
+  it('空情绪 / 空描述忽略，返回原数组副本', () => {
+    const notes = [makeNote()];
+
+    const next = updateMoodNote(notes, 'note-1', { emotion: '   ', content: '有事', score: 0 });
+
+    expect(next).toEqual(notes);
+    expect(next).not.toBe(notes);
+  });
+
+  it('未知 id 原样保留', () => {
+    const notes = [makeNote()];
+
+    expect(
+      updateMoodNote(notes, 'missing', { emotion: '喜悦', content: '事', score: 0 }),
+    ).toEqual(notes);
+  });
+});
+
+describe('deleteMoodNote', () => {
+  it('只删除目标记录，不修改原数组', () => {
+    const keep = makeNote({ id: 'keep' });
+    const remove = makeNote({ id: 'remove' });
+    const notes = [keep, remove];
+
+    const next = deleteMoodNote(notes, 'remove');
+
+    expect(next.map((note) => note.id)).toEqual(['keep']);
+    expect(next).not.toBe(notes);
+    expect(notes).toHaveLength(2);
+  });
+});
+
+describe('filterMoodNotes', () => {
+  const notes = [
+    makeNote({ id: 'english', emotion: 'Happy', content: 'Review Math' }),
+    makeNote({ id: 'chinese', emotion: '焦虑', content: '明天考试' }),
+  ];
+
+  it('空查询返回全部（新数组）', () => {
+    const next = filterMoodNotes(notes, '   ');
+
+    expect(next).toHaveLength(2);
+    expect(next).not.toBe(notes);
+  });
+
+  it('trim 且大小写不敏感，情绪与描述都能命中', () => {
+    expect(filterMoodNotes(notes, '  happy ').map((note) => note.id)).toEqual(['english']);
+    expect(filterMoodNotes(notes, ' REVIEW ').map((note) => note.id)).toEqual(['english']);
+    expect(filterMoodNotes(notes, '考试').map((note) => note.id)).toEqual(['chinese']);
+  });
+
+  it('无匹配返回空数组', () => {
+    expect(filterMoodNotes(notes, '不存在')).toEqual([]);
+  });
+});
+
+describe('arrangeMoodNotes', () => {
+  const earlier = makeNote({
+    id: '12-am',
+    createdAt: new Date(2026, 9, 12, 9).toISOString(),
+  });
+  const later = makeNote({
+    id: '12-pm',
+    createdAt: new Date(2026, 9, 12, 21).toISOString(),
+  });
+  const nextDay = makeNote({
+    id: '13',
+    createdAt: new Date(2026, 9, 13, 9).toISOString(),
+  });
+  const prevDay = makeNote({
+    id: '11',
+    createdAt: new Date(2026, 9, 11, 9).toISOString(),
+  });
+  const notes = [earlier, later, nextDay, prevDay];
+
+  it('无置顶时按最新在前', () => {
+    expect(arrangeMoodNotes(notes).map((note) => note.id)).toEqual([
+      '13',
+      '12-pm',
+      '12-am',
+      '11',
+    ]);
+    expect(arrangeMoodNotes(notes, '').map((note) => note.id)).toEqual([
+      '13',
+      '12-pm',
+      '12-am',
+      '11',
+    ]);
+  });
+
+  it('置顶日整体提前，同一天仍最新在前，其余保持相对顺序', () => {
+    expect(arrangeMoodNotes(notes, '2026-10-12').map((note) => note.id)).toEqual([
+      '12-pm',
+      '12-am',
+      '13',
+      '11',
+    ]);
+  });
+
+  it('置顶日没有记录时顺序完全不变', () => {
+    expect(arrangeMoodNotes(notes, '2026-10-10').map((note) => note.id)).toEqual([
+      '13',
+      '12-pm',
+      '12-am',
+      '11',
+    ]);
+  });
+
+  it('不修改原数组', () => {
+    const ids = notes.map((note) => note.id);
+
+    arrangeMoodNotes(notes, '2026-10-12');
+
+    expect(notes.map((note) => note.id)).toEqual(ids);
+  });
+});
+
+describe('buildMoodNoteDeleteMessage', () => {
+  it('短内容不加省略号', () => {
+    const note = makeNote({ emotion: '喜悦', content: '考完试' });
+
+    expect(buildMoodNoteDeleteMessage(note)).toBe('「喜悦 · 考完试」删除后无法恢复。');
+  });
+
+  it('超过 20 字截断并加省略号', () => {
+    const note = makeNote({ emotion: '焦虑', content: '一'.repeat(21) });
+
+    expect(buildMoodNoteDeleteMessage(note)).toBe(
+      `「焦虑 · ${'一'.repeat(20)}…」删除后无法恢复。`,
+    );
+  });
+
+  it('正好 20 字不加省略号', () => {
+    const note = makeNote({ emotion: '焦虑', content: '一'.repeat(20) });
+
+    expect(buildMoodNoteDeleteMessage(note)).toBe(
+      `「焦虑 · ${'一'.repeat(20)}」删除后无法恢复。`,
+    );
   });
 });
 
