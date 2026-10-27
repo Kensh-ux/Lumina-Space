@@ -3,7 +3,7 @@ import type { FormEvent } from 'react';
 import { createPortal } from 'react-dom';
 import type { Task, TaskPriority } from '../../lib/types';
 import { TASK_DESCRIPTION_MAX_LENGTH, TASK_TITLE_MAX_LENGTH, type TaskDraft } from './task';
-import { useModalFocus } from './useModalFocus';
+import { useModalFocus } from '../../lib/useModalFocus';
 import styles from './TaskEditor.module.css';
 
 const PRIORITY_OPTIONS: readonly { value: TaskPriority; label: string }[] = [
