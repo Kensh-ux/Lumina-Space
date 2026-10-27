@@ -35,9 +35,22 @@ export interface FocusSession {
   completedAt: string;
 }
 
+export interface MoodNote {
+  id: string;
+  emotion: string;
+  content: string;
+  score: number;
+  createdAt: string;
+}
+
 export const MOOD_LOG_LIMIT = 365;
 export const FOCUS_SESSION_LIMIT = 500;
 export const MIN_FOCUS_SESSION_SECONDS = 60;
+export const MOOD_NOTE_LIMIT = 500;
+export const MOOD_NOTE_SCORE_MIN = -724;
+export const MOOD_NOTE_SCORE_MAX = 597;
+export const MOOD_NOTE_EMOTION_MAX_LENGTH = 16;
+export const MOOD_NOTE_CONTENT_MAX_LENGTH = 500;
 
 export function isValidPriority(value: unknown): value is TaskPriority {
   return value === 1 || value === 2 || value === 3;
@@ -109,6 +122,49 @@ export function normalizeTask(value: unknown): Task | null {
   return normalized;
 }
 
+export function clampMoodScore(value: number): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  return Math.min(MOOD_NOTE_SCORE_MAX, Math.max(MOOD_NOTE_SCORE_MIN, Math.round(value)));
+}
+
+// 核心字段坏 → null（逐条丢弃）；emotion/content 去空白并截断，score 钳到范围内。
+export function normalizeMoodNote(value: unknown): MoodNote | null {
+  if (typeof value !== 'object' || value === null) {
+    return null;
+  }
+  const note = value as Record<string, unknown>;
+  if (typeof note.id !== 'string' || note.id.length === 0) {
+    return null;
+  }
+  if (typeof note.emotion !== 'string' || typeof note.content !== 'string') {
+    return null;
+  }
+  const emotion = Array.from(note.emotion.trim())
+    .slice(0, MOOD_NOTE_EMOTION_MAX_LENGTH)
+    .join('');
+  const content = Array.from(note.content.trim())
+    .slice(0, MOOD_NOTE_CONTENT_MAX_LENGTH)
+    .join('');
+  if (emotion.length === 0 || content.length === 0) {
+    return null;
+  }
+  if (typeof note.score !== 'number' || !Number.isFinite(note.score)) {
+    return null;
+  }
+  if (typeof note.createdAt !== 'string' || Number.isNaN(Date.parse(note.createdAt))) {
+    return null;
+  }
+  return {
+    id: note.id,
+    emotion,
+    content,
+    score: clampMoodScore(note.score),
+    createdAt: note.createdAt,
+  };
+}
+
 export interface AppDataV1 {
   schemaVersion: 1;
   tasks: Task[];
@@ -118,4 +174,5 @@ export interface AppDataV1 {
   };
   moodLog?: MoodEntry[];
   focusSessions?: FocusSession[];
+  moodNotes?: MoodNote[];
 }

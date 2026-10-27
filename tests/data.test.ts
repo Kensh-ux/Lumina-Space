@@ -7,7 +7,7 @@ import {
   getTodayFocusStats,
   getWeekFocusStats,
 } from '../src/lib/data';
-import type { AppDataV1, FocusSession, MoodEntry } from '../src/lib/types';
+import type { AppDataV1, FocusSession, MoodEntry, MoodNote } from '../src/lib/types';
 
 const NOW = new Date(2026, 9, 24, 15, 30);
 
@@ -17,6 +17,16 @@ function moodEntry(mood: MoodEntry['mood'], at: Date, id = `mood-${at.getTime()}
 
 function focusSession(durationSec: number, at: Date, id = `focus-${at.getTime()}`): FocusSession {
   return { id, durationSec, completedAt: at.toISOString() };
+}
+
+function moodNote(content: string, at: Date): MoodNote {
+  return {
+    id: `note-${at.getTime()}`,
+    emotion: '期待',
+    content,
+    score: 12,
+    createdAt: at.toISOString(),
+  };
 }
 
 function at(year: number, month: number, day: number, hour = 10): Date {
@@ -131,6 +141,7 @@ describe('exportData', () => {
       mood: { current: 'negative', updatedAt: NOW.toISOString() },
       moodLog: [moodEntry('negative', NOW)],
       focusSessions: [focusSession(60, NOW)],
+      moodNotes: [moodNote('记一笔', NOW)],
     };
 
     const { filename, json } = exportData(data, NOW);
@@ -141,10 +152,12 @@ describe('exportData', () => {
     expect(parsed.mood.current).toBe('negative');
     expect(parsed.moodLog).toHaveLength(1);
     expect(parsed.focusSessions).toHaveLength(1);
+    expect(parsed.moodNotes).toHaveLength(1);
+    expect(parsed.moodNotes[0].content).toBe('记一笔');
     expect(parsed.backup).toBeUndefined();
   });
 
-  it('缺少 moodLog / focusSessions 时导出空数组', () => {
+  it('缺少 moodLog / focusSessions / moodNotes 时导出空数组', () => {
     const data: AppDataV1 = {
       schemaVersion: 1,
       tasks: [],
@@ -155,5 +168,6 @@ describe('exportData', () => {
 
     expect(parsed.moodLog).toEqual([]);
     expect(parsed.focusSessions).toEqual([]);
+    expect(parsed.moodNotes).toEqual([]);
   });
 });
