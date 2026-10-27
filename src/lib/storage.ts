@@ -2,12 +2,14 @@ import {
   FOCUS_SESSION_LIMIT,
   MIN_FOCUS_SESSION_SECONDS,
   MOOD_LOG_LIMIT,
+  MOOD_NOTE_LIMIT,
   MOOD_IDS,
+  normalizeMoodNote,
   normalizeTask,
   STORAGE_KEY,
   THEME_KEY,
 } from './types';
-import type { AppDataV1, FocusSession, MoodEntry, MoodId, Task } from './types';
+import type { AppDataV1, FocusSession, MoodEntry, MoodId, MoodNote, Task } from './types';
 
 const BACKUP_KEY = `${STORAGE_KEY}:backup`;
 const SCHEMA_VERSION = 1;
@@ -89,6 +91,21 @@ function normalizeFocusSessions(value: unknown): FocusSession[] {
   return sessions.slice(-FOCUS_SESSION_LIMIT);
 }
 
+// 旧数据缺 moodNotes / 字段不对 → []；坏条目逐条丢弃，保留好条目。
+function normalizeMoodNotes(value: unknown): MoodNote[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  const notes: MoodNote[] = [];
+  for (const item of value) {
+    const note = normalizeMoodNote(item);
+    if (note) {
+      notes.push(note);
+    }
+  }
+  return notes.slice(-MOOD_NOTE_LIMIT);
+}
+
 // 核心字段坏 → null（走 backup+默认）；可选字段坏 → normalize 后保留 mood 与其它任务。
 function normalizeData(value: unknown): AppDataV1 | null {
   if (typeof value !== 'object' || value === null) {
@@ -122,6 +139,7 @@ function normalizeData(value: unknown): AppDataV1 | null {
     },
     moodLog: normalizeMoodLog(data.moodLog),
     focusSessions: normalizeFocusSessions(data.focusSessions),
+    moodNotes: normalizeMoodNotes(data.moodNotes),
   };
 }
 
@@ -150,6 +168,7 @@ function migrateMissingTasks(value: unknown): AppDataV1 | null {
     },
     moodLog: [],
     focusSessions: [],
+    moodNotes: [],
   };
 }
 
@@ -171,6 +190,7 @@ export function createDefaultData(): AppDataV1 {
     },
     moodLog: [],
     focusSessions: [],
+    moodNotes: [],
   };
 }
 

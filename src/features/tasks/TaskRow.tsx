@@ -5,12 +5,17 @@ import styles from './tasks.module.css';
 
 interface TaskRowProps {
   task: Task;
-  onToggle: (id: string) => void;
-  onDelete: (id: string) => void;
+  onRequestToggle: (task: Task) => void;
+  onRequestDelete: (task: Task) => void;
   onEdit: () => void;
 }
 
-export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowProps) {
+export default function TaskRow({
+  task,
+  onRequestToggle,
+  onRequestDelete,
+  onEdit,
+}: TaskRowProps) {
   const overdue = isTaskOverdue(task);
   const { playHover, playClick } = useAudio();
   const priorityLabel = task.priority
@@ -30,10 +35,10 @@ export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowPro
           className={styles.checkbox}
           type="checkbox"
           checked={task.done}
-          aria-label={`完成：${task.title}`}
+          aria-label={`${task.done ? '取消完成' : '完成'}：${task.title}`}
           onChange={() => {
             playClick();
-            onToggle(task.id);
+            onRequestToggle(task);
           }}
         />
       </label>
@@ -79,7 +84,7 @@ export default function TaskRow({ task, onToggle, onDelete, onEdit }: TaskRowPro
           aria-label={`删除：${task.title}`}
           onClick={() => {
             playClick();
-            onDelete(task.id);
+            onRequestDelete(task);
           }}
         >
           ×

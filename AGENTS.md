@@ -11,6 +11,9 @@ Guidance for AI agents working on **Lumina-Space** — a mood-aware todo and foc
 - **v1.0 (2026-10-24)**: particle hero, floating today orb, 7-day planner, focus timer tuning, generated hover/click/white-noise audio, mute.
 - **v1.1 (2026-10-24)**: Qoder-generated mood scenes (positive/neutral/negative, no central orb), global white noise in settings, per-mood soundscapes.
 - **v1.2 (2026-10-26)**: neutral theme re-done as a dusk palette; soundscapes replaced with real recordings (birdsong / dusk lo-fi / rain) streamed from GitHub Releases; scene draw cost cut by removing the full-screen aurora blur and caching full-screen gradients. **This is the "simple mode"** — pure Canvas 2D + CSS, light first paint, runs anywhere.
+- **v1.2.1 (2026-10-27)**: soundscape loading state (fade in only when the element is actually audible), stopped old-track downloads, engine-level enable/mute authority, stale-fade race fixes; 153 tests.
+- **v1.3 (2026-10-27)**: planner reworked — selectable start date (that day becomes the first column), 365 days instead of 7, `YYYY年，M月` title that follows horizontal scrolling; task list sorted by priority 60% + days-to-due 40%; complete / uncomplete / delete confirmations everywhere; Today panel shows open tasks only plus a collapsible completed-tasks stats card (default filter `open`); new **mood journal** view (`features/journal/`) with 22 built-in emotion words plus a custom word, event description and a -724..597 score; focus cap 487 → 486; settings version `v1.3.0`; 193 tests.
+- **v1.3.1 (2026-10-27)**: mood journal now supports editing (keeps `id` / `createdAt`), deletion with the shared `ConfirmDialog` (moved to `src/lib/`), a top date-pin control (notes from the selected local date move to the top, the rest keep their relative order; no-op when that date is empty) and keyword search across emotion + content; settings `v1.3.1`; README screenshots refreshed; 208 tests.
 - **Next: v2.0 "3D mode"** — a code-generated stylized cottage (`three` + R3F). It is an *alternative* to simple mode, not a replacement. Do not start 3D before the v2.0 card.
 
 > Soundscape note: the three looping mp3s are **not** in this repo; they live in GitHub Release `audio-v1.2`
@@ -29,10 +32,13 @@ Guidance for AI agents working on **Lumina-Space** — a mood-aware todo and foc
 
 ```
 src/
-  app/              App, Sidebar, Stage
+  app/              App, Sidebar, Stage, PlannerView, PlannerDayColumn
   features/mood/    MoodDial, mood.ts, useMood
-  features/tasks/   task CRUD, editor (v0.4)
-  lib/              shared types, storage adapter
+  features/tasks/   task CRUD, editor, CompletedTasks
+  features/journal/ mood journal (MoodNoteEditor, EmotionPicker, JournalView)
+  features/focus/   focus timer + stats
+  features/settings/SettingsPanel
+  lib/              shared types, storage adapter, planner helpers, audio, ConfirmDialog
   styles/           tokens.css, global.css
 tests/              mirror of src
 docs/
@@ -105,8 +111,9 @@ If code is copied or adapted: record source, commit, license, and changes in the
 11. **Never run delete commands** (`cmd.exe`, `del`, `rd`, `Remove-Item`). Move anything disposable to the
     workspace quarantine folder (`06_待删\<project>\`) and let the user delete it. A past shell mistake
     wiped an entire drive; this rule exists because of it.
-12. **Do not trust `D:\...` paths.** The working drive was lost; all workspace paths are under
-    `C:\记事本\workplace\` now. Copies of old docs may still show `D:\` — verify before running them.
+12. **Workspace paths are under `D:\记事本\workplace\`** (moved back from C: on 2026-10-27). Old docs may
+    still show `C:\记事本\...` — treat those as stale and verify before running. The WSL mount is
+    `/mnt/d/记事本/workplace/`.
 13. **The staging folder must mirror this repo.** `05_暂存\01_Lumina-Space\` is not a scratch area —
     whatever gets pushed is its content. Edit staging first, copy into WSL, then commit. Never edit repo
     files without writing the same change back to staging. Run `node _tools/check_mirror.mjs <stage> .`

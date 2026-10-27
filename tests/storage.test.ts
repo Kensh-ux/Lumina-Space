@@ -343,6 +343,123 @@ describe('loadData', () => {
     expect(storage.getItem(BACKUP_KEY)).toBeNull();
   });
 
+  it('旧数据缺 moodNotes 时读取为空数组，不备份', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [],
+      mood: { current: 'negative', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    const data = loadData(storage);
+
+    expect(data.moodNotes).toEqual([]);
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+    expect(storage.getItem(KEY)).toBe(raw);
+  });
+
+  it('保留合法的 moodNotes，trim 并钳制分数', () => {
+    storage.setItem(
+      KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        tasks: [],
+        mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+        moodNotes: [
+          {
+            id: 'note-1',
+            emotion: '  期待  ',
+            content: '  明天去图书馆  ',
+            score: 999,
+            createdAt: '2026-10-23T08:00:00.000Z',
+          },
+          {
+            id: 'note-2',
+            emotion: '焦虑',
+            content: '考试',
+            score: -999,
+            createdAt: '2026-10-24T08:00:00.000Z',
+          },
+        ],
+      }),
+    );
+
+    const data = loadData(storage);
+
+    expect(data.moodNotes).toEqual([
+      {
+        id: 'note-1',
+        emotion: '期待',
+        content: '明天去图书馆',
+        score: 597,
+        createdAt: '2026-10-23T08:00:00.000Z',
+      },
+      {
+        id: 'note-2',
+        emotion: '焦虑',
+        content: '考试',
+        score: -724,
+        createdAt: '2026-10-24T08:00:00.000Z',
+      },
+    ]);
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+  });
+
+  it('坏 moodNotes 条目逐条丢弃，好条目保留，不备份', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [],
+      mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+      moodNotes: [
+        {
+          id: 'good',
+          emotion: '喜悦',
+          content: '好记录',
+          score: 1,
+          createdAt: '2026-10-23T08:00:00.000Z',
+        },
+        { id: '', emotion: '喜悦', content: '坏 id', score: 1, createdAt: '2026-10-23T08:00:00.000Z' },
+        { id: 'bad-emotion', emotion: '  ', content: '空情绪', score: 1, createdAt: '2026-10-23T08:00:00.000Z' },
+        { id: 'bad-content', emotion: '喜悦', content: '  ', score: 1, createdAt: '2026-10-23T08:00:00.000Z' },
+        { id: 'bad-score', emotion: '喜悦', content: '坏分数', score: 'x', createdAt: '2026-10-23T08:00:00.000Z' },
+        { id: 'bad-date', emotion: '喜悦', content: '坏日期', score: 1, createdAt: 'nope' },
+        'not-an-object',
+      ],
+    });
+    storage.setItem(KEY, raw);
+
+    const data = loadData(storage);
+
+    expect(data.moodNotes?.map((note) => note.id)).toEqual(['good']);
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+    expect(storage.getItem(KEY)).toBe(raw);
+  });
+
+  it('moodNotes 超过 500 条时只保留最新的 500 条', () => {
+    const notes = Array.from({ length: 505 }, (_, index) => ({
+      id: `note-${index}`,
+      emotion: '期待',
+      content: `记录 ${index}`,
+      score: index,
+      createdAt: new Date(2026, 9, 1, 0, index).toISOString(),
+    }));
+    storage.setItem(
+      KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        tasks: [],
+        mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+        moodNotes: notes,
+      }),
+    );
+
+    const data = loadData(storage);
+
+    expect(data.moodNotes).toHaveLength(500);
+    expect(data.moodNotes?.[0].id).toBe('note-5');
+    expect(data.moodNotes?.[499].id).toBe('note-504');
+  });
+
   it('保留合法的 moodLog / focusSessions 条目', () => {
     storage.setItem(
       KEY,

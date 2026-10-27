@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { AppDataV1, FocusSession, MoodId, Task } from '../lib/types';
+import type { AppDataV1, FocusSession, MoodId, MoodNote, Task } from '../lib/types';
+import { MOOD_NOTE_LIMIT } from '../lib/types';
 import { clearData, createDefaultData, loadData, saveData } from '../lib/storage';
 import {
   addFocusSession,
@@ -17,11 +18,18 @@ import {
   type TaskPatch,
 } from '../features/tasks/task';
 import { isMoodId } from '../features/mood/mood';
+import {
+  createMoodNote as buildMoodNote,
+  deleteMoodNote as deleteMoodNoteFromNotes,
+  updateMoodNote as updateMoodNoteInNotes,
+  type MoodNoteInput,
+} from '../features/journal/journal';
 
 export interface UseAppDataResult {
   mood: MoodId;
   tasks: Task[];
   focusSessions: FocusSession[];
+  moodNotes: MoodNote[];
   setMood: (next: MoodId) => void;
   createTask: (draft: TaskDraft) => void;
   toggleTask: (id: string) => void;
@@ -29,6 +37,9 @@ export interface UseAppDataResult {
   updateTask: (id: string, patch: TaskPatch) => void;
   clearCompletedTasks: () => void;
   recordFocusSession: (durationSec: number) => void;
+  createMoodNote: (input: MoodNoteInput) => MoodNote | null;
+  updateMoodNote: (id: string, input: MoodNoteInput) => void;
+  deleteMoodNote: (id: string) => void;
   exportData: () => ExportResult;
   clearAppData: () => void;
   storageError: boolean;
@@ -106,6 +117,32 @@ export function useAppData(): UseAppDataResult {
     }));
   }, []);
 
+  const createMoodNote = useCallback((input: MoodNoteInput) => {
+    const note = buildMoodNote(input);
+    if (!note) {
+      return null;
+    }
+    setData((prev) => ({
+      ...prev,
+      moodNotes: [...(prev.moodNotes ?? []), note].slice(-MOOD_NOTE_LIMIT),
+    }));
+    return note;
+  }, []);
+
+  const updateMoodNote = useCallback((id: string, input: MoodNoteInput) => {
+    setData((prev) => ({
+      ...prev,
+      moodNotes: updateMoodNoteInNotes(prev.moodNotes ?? [], id, input),
+    }));
+  }, []);
+
+  const deleteMoodNote = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      moodNotes: deleteMoodNoteFromNotes(prev.moodNotes ?? [], id),
+    }));
+  }, []);
+
   const exportData = useCallback(() => buildExportData(data), [data]);
 
   // 真正清掉 lumina:data / lumina:theme，再以默认数据重新起一份（不会把旧数据写回）。
@@ -119,6 +156,7 @@ export function useAppData(): UseAppDataResult {
     mood,
     tasks: data.tasks,
     focusSessions: data.focusSessions ?? [],
+    moodNotes: data.moodNotes ?? [],
     setMood,
     createTask,
     toggleTask,
@@ -126,6 +164,9 @@ export function useAppData(): UseAppDataResult {
     updateTask,
     clearCompletedTasks,
     recordFocusSession,
+    createMoodNote,
+    updateMoodNote,
+    deleteMoodNote,
     exportData,
     clearAppData,
     storageError,

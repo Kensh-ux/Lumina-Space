@@ -125,6 +125,7 @@ export function exportData(data: AppDataV1, now: Date = new Date()): ExportResul
     mood: data.mood,
     moodLog: data.moodLog ?? [],
     focusSessions: data.focusSessions ?? [],
+    moodNotes: data.moodNotes ?? [],
   };
   return {
     filename: `lumina-space-${toLocalDateString(now)}.json`,

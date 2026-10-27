@@ -4,7 +4,8 @@ import type { KeyboardEvent as ReactKeyboardEvent } from 'react';
 const FOCUSABLE_SELECTOR =
   'button:not([disabled]), input:not([disabled]), textarea:not([disabled]), select:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])';
 
-// 编辑器用 portal 挂在 body：把 #root 设为 inert，Tab 在 dialog 内循环。
+// 弹窗用 portal 挂在 body：把 #root 设为 inert，Tab 在 dialog 内循环。
+// 任务编辑器、确认弹窗、情绪记录编辑器共用这一份。
 export function useModalFocus() {
   const dialogRef = useRef<HTMLDivElement>(null);
 

@@ -1,9 +1,12 @@
-import { useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Task } from '../lib/types';
-import { TASK_PRIORITY_META, type TaskDraft, type TaskPatch } from '../features/tasks/task';
-import { getNextDays, tasksForDate } from '../lib/planner';
+import type { TaskDraft, TaskPatch } from '../features/tasks/task';
+import { formatMonthTitle, getPlannerDays, getPlannerStartDate, tasksForDate } from '../lib/planner';
+import ConfirmDialog from '../lib/ConfirmDialog';
+import { getConfirmSpec, toggleConfirmKind, type ConfirmKind } from '../features/tasks/confirm';
 import TaskEditor from '../features/tasks/TaskEditor';
 import { useAudio } from '../lib/AudioProvider';
+import PlannerDayColumn from './PlannerDayColumn';
 import styles from './PlannerView.module.css';
 
 interface PlannerViewProps {
@@ -15,6 +18,7 @@ interface PlannerViewProps {
 }
 
 type EditorState = { mode: 'create'; date: string } | { mode: 'edit'; task: Task } | null;
+type PendingConfirm = { kind: ConfirmKind; task: Task } | null;
 
 export default function PlannerView({
   tasks,
@@ -23,11 +27,45 @@ export default function PlannerView({
   onUpdateTask,
   onCreateTask,
 }: PlannerViewProps) {
+  const [startDate, setStartDate] = useState(getPlannerStartDate);
   const [editor, setEditor] = useState<EditorState>(null);
+  const [pending, setPending] = useState<PendingConfirm>(null);
+  const [visibleMonth, setVisibleMonth] = useState(() => formatMonthTitle(startDate));
   const triggerRef = useRef<HTMLElement | null>(null);
-  const { playClick, playHover, playOpen, playClose } = useAudio();
-  const days = getNextDays();
+  const daysRef = useRef<HTMLDivElement>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
+  const { playOpen, playClose } = useAudio();
+  const today = getPlannerStartDate();
+  const days = useMemo(() => getPlannerDays(startDate), [startDate]);
   const unscheduled = tasks.filter((task) => !task.dueDate).length;
+  const confirmSpec = pending ? getConfirmSpec(pending.kind, pending.task.title) : null;
+
+  useEffect(() => {
+    if (daysRef.current) {
+      daysRef.current.scrollLeft = 0;
+    }
+    setVisibleMonth(formatMonthTitle(startDate));
+  }, [startDate]);
+
+  // 视口最左侧那一列决定标题月份；跨月滚动时同步更新。
+  const updateVisibleMonth = () => {
+    const container = daysRef.current;
+    const first = container?.firstElementChild as HTMLElement | null;
+    if (!container || !first) {
+      return;
+    }
+    const base = first.offsetLeft;
+    const left = container.scrollLeft + 1;
+    for (const child of Array.from(container.children) as HTMLElement[]) {
+      if (child.offsetLeft - base + child.offsetWidth > left) {
+        const date = child.dataset.date;
+        if (date) {
+          setVisibleMonth(formatMonthTitle(date));
+        }
+        return;
+      }
+    }
+  };
 
   const openEditor = (next: EditorState, trigger: HTMLElement) => {
     triggerRef.current = trigger;
@@ -55,114 +93,78 @@ export default function PlannerView({
     closeEditor();
   };
 
+  const requestToggle = useCallback((task: Task) => {
+    setPending({ kind: toggleConfirmKind(task.done), task });
+  }, []);
+
+  const requestDelete = useCallback((task: Task) => {
+    setPending({ kind: 'delete', task });
+  }, []);
+
+  const handleConfirm = () => {
+    if (!pending) {
+      return;
+    }
+    if (pending.kind === 'delete') {
+      onDeleteTask(pending.task.id);
+    } else {
+      onToggleTask(pending.task.id);
+    }
+    setPending(null);
+  };
+
   return (
-    <section className={styles.planner} aria-label="未来 7 天规划">
+    <section className={styles.planner} aria-label="任务规划">
       <header className={styles.header}>
-        <div>
-          <h2 className={styles.title}>未来 7 天</h2>
-          <p className={styles.subtitle}>从今天开始，按截止日期排布 · 横向滚动看完整 7 天</p>
+        <div className={styles.heading}>
+          <h2 className={styles.title}>{visibleMonth}</h2>
+          <p className={styles.subtitle}>
+            从所选的起始日期开始，按截止日期自动分列 · 左右滑动查看更多天
+          </p>
         </div>
-        <p className={styles.unscheduled}>
-          {unscheduled > 0 ? `未排期 ${unscheduled} 件` : '按天安排任务'}
-        </p>
+        <div className={styles.controls}>
+          <label className={styles.dateLabel}>
+            <span className={styles.dateLabelText}>起始日期</span>
+            <input
+              ref={dateInputRef}
+              type="date"
+              className={styles.dateInput}
+              value={startDate}
+              onChange={(event) => {
+                const value = event.target.value;
+                if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                  setStartDate(value);
+                }
+              }}
+            />
+          </label>
+          {startDate !== today ? (
+            <button
+              type="button"
+              className={styles.todayButton}
+              onClick={() => setStartDate(today)}
+            >
+              回到今天
+            </button>
+          ) : null}
+          <p className={styles.unscheduled}>
+            {unscheduled > 0 ? `未排期 ${unscheduled} 件` : '按天安排任务'}
+          </p>
+        </div>
       </header>
 
-      <div className={styles.days}>
-        {days.map((day) => {
-          const dayTasks = tasksForDate(tasks, day.date);
-          return (
-            <section
-              key={day.date}
-              className={styles.day}
-              data-date={day.date}
-              data-today={day.isToday}
-              aria-label={`${day.label} ${day.dateLabel}`}
-            >
-              <header className={styles.dayHeader}>
-                <span className={styles.dayLabel}>{day.label}</span>
-                <span className={styles.dayDate}>{day.dateLabel}</span>
-              </header>
-
-              <div className={styles.dayBody}>
-                {dayTasks.length === 0 ? (
-                  <p className={styles.empty}>暂无任务</p>
-                ) : (
-                  <ul className={styles.taskList}>
-                    {dayTasks.map((task) => {
-                      const priority = task.priority;
-                      const priorityLabel = priority
-                        ? TASK_PRIORITY_META.find((item) => item.value === priority)?.label ?? null
-                        : null;
-                      return (
-                        <li key={task.id} className={styles.task} data-done={task.done}>
-                          <label className={styles.check}>
-                            <input
-                              type="checkbox"
-                              checked={task.done}
-                              aria-label={`完成：${task.title}`}
-                              onChange={() => {
-                                playClick();
-                                onToggleTask(task.id);
-                              }}
-                            />
-                          </label>
-                          <div className={styles.taskMain}>
-                            <button
-                              type="button"
-                              className={styles.taskTitle}
-                              title="编辑任务"
-                              onPointerEnter={playHover}
-                              onClick={(event) => {
-                                openEditor({ mode: 'edit', task }, event.currentTarget);
-                              }}
-                            >
-                              {task.title}
-                            </button>
-                            {priorityLabel || task.dueTime ? (
-                              <div className={styles.taskMeta}>
-                                {priorityLabel && priority ? (
-                                  <span className={styles.priority} data-priority={priority}>
-                                    <span className={styles.priorityDot} aria-hidden="true" />
-                                    {priorityLabel}
-                                  </span>
-                                ) : null}
-                                {task.dueTime ? (
-                                  <span className={styles.time}>{task.dueTime}</span>
-                                ) : null}
-                              </div>
-                            ) : null}
-                          </div>
-                          <button
-                            type="button"
-                            className={styles.delete}
-                            aria-label={`删除：${task.title}`}
-                            onClick={() => {
-                              playClick();
-                              onDeleteTask(task.id);
-                            }}
-                          >
-                            ×
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-              </div>
-
-              <button
-                type="button"
-                className={styles.addButton}
-                aria-label={`添加任务：${day.label} ${day.dateLabel}`}
-                onClick={(event) => {
-                  openEditor({ mode: 'create', date: day.date }, event.currentTarget);
-                }}
-              >
-                ＋ 添加
-              </button>
-            </section>
-          );
-        })}
+      <div ref={daysRef} className={styles.days} onScroll={updateVisibleMonth}>
+        {days.map((day) => (
+          <PlannerDayColumn
+            key={day.date}
+            day={day}
+            tasks={tasksForDate(tasks, day.date)}
+            onRequestToggle={requestToggle}
+            onRequestDelete={requestDelete}
+            onEdit={(task, trigger) => openEditor({ mode: 'edit', task }, trigger)}
+            onCreate={(date, trigger) => openEditor({ mode: 'create', date }, trigger)}
+          />
+        ))}
       </div>
 
       {editor ? (
@@ -172,6 +174,18 @@ export default function PlannerView({
           initialDueDate={editor.mode === 'create' ? editor.date : undefined}
           onSubmit={handleSave}
           onCancel={closeEditor}
+        />
+      ) : null}
+
+      {pending && confirmSpec ? (
+        <ConfirmDialog
+          title={confirmSpec.title}
+          message={confirmSpec.message}
+          confirmLabel={confirmSpec.confirmLabel}
+          danger={confirmSpec.danger}
+          onConfirm={handleConfirm}
+          onCancel={() => setPending(null)}
+          fallbackFocusRef={dateInputRef}
         />
       ) : null}
     </section>

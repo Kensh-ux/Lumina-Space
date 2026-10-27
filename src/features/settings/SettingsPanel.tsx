@@ -110,8 +110,10 @@ export default function SettingsPanel({
           背景音乐 {whiteNoiseEnabled ? '开启' : '关闭'}
         </button>
         <p className={styles.note} role="status">
-          当前声景：{getNoiseProfile(mood).label} ·{' '}
-          {describeNoiseStatus(noiseStatus)}（随情绪切换，约 20 分钟无缝循环）
+          当前声景：{getNoiseProfile(mood).label} · {describeNoiseStatus(noiseStatus)}
+          {noiseStatus === 'loading' || noiseStatus === 'slow'
+            ? ' 由于网络原因，请耐心等待(*￣︶￣*)'
+            : ''}
         </p>
         {muted ? <p className={styles.note}>当前已静音，取消静音后恢复。</p> : null}
       </section>
@@ -171,7 +173,7 @@ export default function SettingsPanel({
         <p className={styles.storageError}>浏览器存储不可用，本次改动不会被记住。</p>
       ) : null}
 
-      <p className={styles.version}>Lumina-Space v1.1.0</p>
+      <p className={styles.version}>Lumina-Space v1.3.1</p>
     </div>
   );
 }

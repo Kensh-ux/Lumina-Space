@@ -1,0 +1,261 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-color: color-mix(in srgb, var(--color-text) 48%, transparent);
+}
+
+.dialog {
+  display: flex;
+  width: min(620px, 92vw);
+  max-height: min(90dvh, 780px);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: 22px;
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text);
+}
+
+.form {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  min-height: 0;
+}
+
+.header {
+  padding: 22px 26px 0;
+}
+
+.heading {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+  padding: 18px 26px 20px;
+  overflow-y: auto;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  min-width: 0;
+}
+
+.label {
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.required {
+  color: var(--color-danger);
+}
+
+.emotionRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 200px;
+  gap: 12px;
+}
+
+.customField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.customLabel {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+
+.customInput,
+.textarea,
+.scoreInput {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background-color: var(--color-surface);
+  color: var(--color-text);
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme);
+}
+
+.customInput,
+.scoreInput {
+  min-height: 46px;
+  padding: 8px 12px;
+  font-size: 0.9375rem;
+}
+
+.textarea {
+  min-height: 120px;
+  padding: 12px 14px;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  resize: vertical;
+}
+
+.customInput::placeholder,
+.textarea::placeholder {
+  color: var(--color-muted);
+}
+
+.customInput:focus-visible,
+.textarea:focus-visible,
+.scoreInput:focus-visible,
+.emotionButton:focus-visible,
+.range:focus-visible,
+.cancelButton:focus-visible,
+.saveButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.hint {
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.emotionScroll {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-content: flex-start;
+  max-height: 156px;
+  padding: 8px;
+  overflow-y: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background-color: color-mix(in srgb, var(--color-border) 14%, transparent);
+}
+
+.emotionButton {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  background-color: var(--color-surface);
+  color: var(--color-muted);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme),
+    color var(--transition-theme);
+}
+
+.emotionButton:hover {
+  color: var(--color-text);
+  border-color: color-mix(in srgb, var(--color-accent) 55%, var(--color-border));
+}
+
+.emotionButton[aria-pressed='true'] {
+  border-color: var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 16%, var(--color-surface));
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.scoreRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.range {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--color-accent);
+}
+
+.scoreInput {
+  flex: none;
+  width: 104px;
+}
+
+.error {
+  color: var(--color-danger);
+  font-size: 0.8125rem;
+}
+
+.footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 26px 20px;
+  border-top: 1px solid var(--color-border);
+}
+
+.cancelButton,
+.saveButton {
+  min-height: 46px;
+  padding: 0 18px;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  cursor: pointer;
+}
+
+.cancelButton {
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+.saveButton {
+  border: 1px solid var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 20%, var(--color-surface));
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.cancelButton:hover,
+.saveButton:hover {
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+@media (max-width: 719px) {
+  .emotionRow {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1119px) {
+  .overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .dialog {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92dvh;
+    border-radius: 20px 20px 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .customInput,
+  .textarea,
+  .scoreInput,
+  .emotionButton,
+  .cancelButton,
+  .saveButton {
+    transition: none;
+  }
+}

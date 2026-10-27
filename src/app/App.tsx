@@ -4,6 +4,7 @@ import MoodDial from '../features/mood/MoodDial';
 import { useAudio } from '../lib/AudioProvider';
 import Sidebar, { type SidebarPanelId } from './Sidebar';
 import PlannerView from './PlannerView';
+import JournalView from '../features/journal/JournalView';
 import Stage from './Stage';
 import TodayOrb from './TodayOrb';
 import { useAppData } from './useAppData';
@@ -20,7 +21,11 @@ function readDevParam(name: string): string | null {
 
 function readInitialPanel(): SidebarPanelId | null {
   const value = readDevParam('panel');
-  return value === 'today' || value === 'planner' || value === 'focus' || value === 'settings'
+  return value === 'today' ||
+    value === 'planner' ||
+    value === 'journal' ||
+    value === 'focus' ||
+    value === 'settings'
     ? value
     : null;
 }
@@ -40,6 +45,7 @@ function App() {
     mood,
     tasks,
     focusSessions,
+    moodNotes,
     setMood,
     createTask,
     toggleTask,
@@ -47,6 +53,9 @@ function App() {
     updateTask,
     clearCompletedTasks,
     recordFocusSession,
+    createMoodNote,
+    updateMoodNote,
+    deleteMoodNote,
     exportData,
     clearAppData,
     storageError,
@@ -62,9 +71,11 @@ function App() {
   const [orbOpen, setOrbOpen] = useState(false);
   const sidebarWidth = sidebar.expanded ? sidebar.width : SIDEBAR_COLLAPSED_WIDTH;
   const plannerActive = activeView === 'planner';
+  const journalActive = activeView === 'journal';
+  const mainView = plannerActive ? 'planner' : journalActive ? 'journal' : 'scene';
   const handlePanelChange = (panel: SidebarPanelId) => {
     setActiveView(panel);
-    if (panel === 'planner') {
+    if (panel === 'planner' || panel === 'journal') {
       setOrbOpen(false);
     }
   };
@@ -75,7 +86,7 @@ function App() {
       data-mood={mood}
       data-dragging={sidebar.dragging}
       data-orb-open={orbOpen}
-      data-view={plannerActive ? 'planner' : 'scene'}
+      data-view={mainView}
       style={{ '--sidebar-width': `${sidebarWidth}px` } as CSSProperties}
     >
       <Sidebar
@@ -109,6 +120,13 @@ function App() {
             onDeleteTask={deleteTask}
             onUpdateTask={updateTask}
             onCreateTask={createTask}
+          />
+        ) : journalActive ? (
+          <JournalView
+            notes={moodNotes}
+            onCreateNote={createMoodNote}
+            onUpdateNote={updateMoodNote}
+            onDeleteNote={deleteMoodNote}
           />
         ) : (
           <>

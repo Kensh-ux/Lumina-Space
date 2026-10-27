@@ -200,14 +200,90 @@ export function searchTasks(tasks: readonly Task[], query: string): Task[] {
   return tasks.filter((task) => task.title.toLocaleLowerCase().includes(needle));
 }
 
-// 未完成在前；同组内按创建时间降序（新的在上面）。
-export function sortTasks(tasks: readonly Task[]): Task[] {
+// 未完成在前；未完成按「优先级 60% + 距今天数 40%」打分降序，
+// 同分看截止日期（近的在前，无日期最后），仍相同保持原顺序；已完成按创建时间降序。
+const DAY_MS = 86_400_000;
+const PRIORITY_SCORE: Record<TaskPriority, number> = { 1: 0, 2: 0.5, 3: 1 };
+
+function dayNumber(date: string): number | null {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!match) {
+    return null;
+  }
+  return Math.floor(
+    Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])) / DAY_MS,
+  );
+}
+
+function todayNumber(now: Date): number {
+  return Math.floor(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()) / DAY_MS);
+}
+
+function taskScore(task: Task, today: number): number {
+  const priority = PRIORITY_SCORE[task.priority ?? 2];
+  let dateScore = 0;
+  if (task.dueDate) {
+    const day = dayNumber(task.dueDate);
+    if (day !== null) {
+      const offset = day - today;
+      dateScore = offset <= 0 ? 1 : Math.max(0, 1 - offset / 30);
+    }
+  }
+  return 0.6 * priority + 0.4 * dateScore;
+}
+
+export function sortTasks(tasks: readonly Task[], now: Date = new Date()): Task[] {
+  const today = todayNumber(now);
   return [...tasks].sort((a, b) => {
     if (a.done !== b.done) {
       return a.done ? 1 : -1;
     }
-    return b.createdAt.localeCompare(a.createdAt);
+    if (a.done) {
+      return b.createdAt.localeCompare(a.createdAt);
+    }
+    const scoreDiff = taskScore(b, today) - taskScore(a, today);
+    if (scoreDiff !== 0) {
+      return scoreDiff;
+    }
+    const aDueDate = a.dueDate ?? '';
+    const bDueDate = b.dueDate ?? '';
+    if (aDueDate !== bDueDate) {
+      if (!aDueDate) {
+        return 1;
+      }
+      if (!bDueDate) {
+        return -1;
+      }
+      // 按截止日期升序：过期任务自然排在前（任务卡口径），不是按「距今绝对距离」。
+      return aDueDate.localeCompare(bDueDate);
+    }
+    return 0;
   });
+}
+
+// 已完成任务按完成时间倒序（最新完成的在前）；旧任务没有 completedAt 时退回创建时间。
+export function sortCompletedTasks(tasks: readonly Task[]): Task[] {
+  return tasks
+    .filter((task) => task.done)
+    .sort((a, b) => {
+      const aTime = a.completedAt ?? a.createdAt;
+      const bTime = b.completedAt ?? b.createdAt;
+      if (aTime !== bTime) {
+        return bTime.localeCompare(aTime);
+      }
+      return b.createdAt.localeCompare(a.createdAt);
+    });
+}
+
+export function formatCompletedDate(task: Task): string {
+  const value = task.completedAt ?? task.createdAt;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '';
+  }
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${month}/${day}`;
 }
 
 export function formatDueDate(dueDate: string): string {

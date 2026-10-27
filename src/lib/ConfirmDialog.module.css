@@ -1,0 +1,118 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background-color: color-mix(in srgb, var(--color-text) 48%, transparent);
+}
+
+.dialog {
+  display: flex;
+  width: min(420px, 92vw);
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px 24px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 18px;
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-card);
+  color: var(--color-text);
+}
+
+.title {
+  font-size: 1.125rem;
+  font-weight: 700;
+}
+
+.message {
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 6px;
+}
+
+.cancelButton,
+.confirmButton,
+.dangerButton {
+  min-height: 44px;
+  padding: 0 16px;
+  border-radius: 10px;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme),
+    color var(--transition-theme);
+}
+
+.cancelButton {
+  border: 1px solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text);
+}
+
+.confirmButton {
+  border: 1px solid var(--color-accent);
+  background-color: color-mix(in srgb, var(--color-accent) 20%, var(--color-surface));
+  color: var(--color-text);
+  font-weight: 600;
+}
+
+.dangerButton {
+  border: 1px solid var(--color-danger);
+  background-color: color-mix(in srgb, var(--color-danger) 16%, var(--color-surface));
+  color: var(--color-danger);
+  font-weight: 600;
+}
+
+.cancelButton:hover,
+.confirmButton:hover {
+  background-color: color-mix(in srgb, var(--color-accent) 12%, transparent);
+}
+
+.dangerButton:hover {
+  background-color: color-mix(in srgb, var(--color-danger) 24%, transparent);
+}
+
+.cancelButton:focus-visible,
+.confirmButton:focus-visible,
+.dangerButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.dangerButton:focus-visible {
+  outline-color: var(--color-danger);
+}
+
+@media (max-width: 1119px) {
+  .overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+
+  .dialog {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 18px 18px 0 0;
+    padding-bottom: 24px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cancelButton,
+  .confirmButton,
+  .dangerButton {
+    transition: none;
+  }
+}
