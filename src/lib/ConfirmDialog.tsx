@@ -1,7 +1,7 @@
 import { useEffect, useId, useRef } from 'react';
 import type { RefObject } from 'react';
 import { createPortal } from 'react-dom';
-import { useModalFocus } from '../../lib/useModalFocus';
+import { useModalFocus } from './useModalFocus';
 import styles from './ConfirmDialog.module.css';
 
 interface ConfirmDialogProps {

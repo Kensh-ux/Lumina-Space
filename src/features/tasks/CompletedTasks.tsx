@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import type { Task } from '../../lib/types';
-import ConfirmDialog from './ConfirmDialog';
+import ConfirmDialog from '../../lib/ConfirmDialog';
 import { getConfirmSpec, type ConfirmKind } from './confirm';
 import {
   countTasks,

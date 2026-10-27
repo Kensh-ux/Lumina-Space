@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import type { Task } from '../../lib/types';
 import { useAudio } from '../../lib/AudioProvider';
-import ConfirmDialog from './ConfirmDialog';
+import ConfirmDialog from '../../lib/ConfirmDialog';
 import { getConfirmSpec, toggleConfirmKind, type ConfirmKind } from './confirm';
 import TaskEditor from './TaskEditor';
 import TaskFilters from './TaskFilters';

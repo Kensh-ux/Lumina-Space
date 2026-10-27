@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import type { Task } from '../lib/types';
 import type { TaskDraft, TaskPatch } from '../features/tasks/task';
 import { formatMonthTitle, getPlannerDays, getPlannerStartDate, tasksForDate } from '../lib/planner';
-import ConfirmDialog from '../features/tasks/ConfirmDialog';
+import ConfirmDialog from '../lib/ConfirmDialog';
 import { getConfirmSpec, toggleConfirmKind, type ConfirmKind } from '../features/tasks/confirm';
 import TaskEditor from '../features/tasks/TaskEditor';
 import { useAudio } from '../lib/AudioProvider';
