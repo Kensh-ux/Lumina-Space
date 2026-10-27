@@ -12,7 +12,7 @@ export interface MoodMeta {
 export const MOODS: readonly MoodMeta[] = [
   { id: 'positive', label: '积极', emoji: '☀️', description: '明亮、温暖' },
   { id: 'neutral', label: '中性', emoji: '🌤️', description: '平稳、安静' },
-  { id: 'negative', label: '消极', emoji: '🌧️', description: '低饱和、安静' },
+  { id: 'negative', label: '消极', emoji: '🌧️', description: '清冷、潮湿' },
 ] as const;
 
 export const DEFAULT_MOOD: MoodId = 'neutral';

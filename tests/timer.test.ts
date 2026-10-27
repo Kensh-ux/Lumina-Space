@@ -24,16 +24,17 @@ describe('focus timer', () => {
     });
   });
 
-  it('setDuration clamp 到 1–487 分钟', () => {
+  it('setDuration clamp 到 1–486 分钟', () => {
     const idle = createTimer();
     expect(setDuration(idle, 0).durationSec).toBe(60);
-    expect(setDuration(idle, 488).durationSec).toBe(487 * 60);
-    expect(setDuration(idle, 487).durationSec).toBe(487 * 60);
+    expect(setDuration(idle, 487).durationSec).toBe(486 * 60);
+    expect(setDuration(idle, 488).durationSec).toBe(486 * 60);
+    expect(setDuration(idle, 486).durationSec).toBe(486 * 60);
     expect(setDuration(idle, 1).remainingSec).toBe(60);
   });
 
   it('常用预设为 15/30/60/120', () => {
-    expect(FOCUS_MAX_MINUTES).toBe(487);
+    expect(FOCUS_MAX_MINUTES).toBe(486);
     expect(RECOMMENDED_MINUTES).toEqual([15, 30, 60, 120]);
   });
 
