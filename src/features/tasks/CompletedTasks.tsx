@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import type { Task } from '../../lib/types';
 import ConfirmDialog from './ConfirmDialog';
 import { getConfirmSpec, type ConfirmKind } from './confirm';
@@ -21,6 +21,7 @@ type PendingConfirm = { kind: ConfirmKind; task: Task } | null;
 export default function CompletedTasks({ tasks, onToggle, onDelete }: CompletedTasksProps) {
   const [expanded, setExpanded] = useState(false);
   const [pending, setPending] = useState<PendingConfirm>(null);
+  const toggleButtonRef = useRef<HTMLButtonElement>(null);
   const counts = countTasks(tasks);
   const completed = sortCompletedTasks(tasks);
   const confirmSpec = pending ? getConfirmSpec(pending.kind, pending.task.title) : null;
@@ -44,6 +45,7 @@ export default function CompletedTasks({ tasks, onToggle, onDelete }: CompletedT
         未完成 {counts.open} · 已完成 {counts.done}
       </p>
       <button
+        ref={toggleButtonRef}
         type="button"
         className={styles.toggleButton}
         aria-expanded={expanded}
@@ -104,6 +106,7 @@ export default function CompletedTasks({ tasks, onToggle, onDelete }: CompletedT
           danger={confirmSpec.danger}
           onConfirm={handleConfirm}
           onCancel={() => setPending(null)}
+          fallbackFocusRef={toggleButtonRef}
         />
       ) : null}
     </section>

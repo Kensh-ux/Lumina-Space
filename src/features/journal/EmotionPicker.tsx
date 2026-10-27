@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
 import { MOOD_EMOTIONS, MOOD_NOTE_EMOTION_MAX_LENGTH } from './journal';
 import styles from './MoodNoteEditor.module.css';
 
@@ -17,6 +17,7 @@ export default function EmotionPicker({
   onCustomChange,
 }: EmotionPickerProps) {
   const firstOptionRef = useRef<HTMLButtonElement>(null);
+  const customInputId = useId();
 
   useEffect(() => {
     firstOptionRef.current?.focus();
@@ -29,11 +30,11 @@ export default function EmotionPicker({
       </span>
       <div className={styles.emotionRow}>
         <div className={styles.customField}>
-          <label className={styles.customLabel} htmlFor="mood-note-custom">
+          <label className={styles.customLabel} htmlFor={customInputId}>
             自己写
           </label>
           <input
-            id="mood-note-custom"
+            id={customInputId}
             className={styles.customInput}
             value={custom}
             maxLength={MOOD_NOTE_EMOTION_MAX_LENGTH}

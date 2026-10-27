@@ -109,7 +109,9 @@ export default function TaskList({
       ? '没有匹配的任务'
       : filter === 'open'
         ? '当前没有未完成任务'
-        : '没有匹配的任务';
+        : filter === 'done'
+          ? '还没有已完成任务'
+          : '没有匹配的任务';
   const listClass = compact ? `${styles.listBlock} ${styles.listBlockCompact}` : styles.listBlock;
   const confirmSpec = pending ? getConfirmSpec(pending.kind, pending.task.title) : null;
 
@@ -176,6 +178,7 @@ export default function TaskList({
           danger={confirmSpec.danger}
           onConfirm={handleConfirm}
           onCancel={() => setPending(null)}
+          fallbackFocusRef={createButtonRef}
         />
       ) : null}
     </div>

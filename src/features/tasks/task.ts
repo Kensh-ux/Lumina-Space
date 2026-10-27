@@ -245,14 +245,17 @@ export function sortTasks(tasks: readonly Task[], now: Date = new Date()): Task[
     if (scoreDiff !== 0) {
       return scoreDiff;
     }
-    if (a.dueDate !== b.dueDate) {
-      if (!a.dueDate) {
+    const aDueDate = a.dueDate ?? '';
+    const bDueDate = b.dueDate ?? '';
+    if (aDueDate !== bDueDate) {
+      if (!aDueDate) {
         return 1;
       }
-      if (!b.dueDate) {
+      if (!bDueDate) {
         return -1;
       }
-      return a.dueDate.localeCompare(b.dueDate);
+      // 按截止日期升序：过期任务自然排在前（任务卡口径），不是按「距今绝对距离」。
+      return aDueDate.localeCompare(bDueDate);
     }
     return 0;
   });

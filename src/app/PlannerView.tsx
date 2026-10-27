@@ -33,6 +33,7 @@ export default function PlannerView({
   const [visibleMonth, setVisibleMonth] = useState(() => formatMonthTitle(startDate));
   const triggerRef = useRef<HTMLElement | null>(null);
   const daysRef = useRef<HTMLDivElement>(null);
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const { playOpen, playClose } = useAudio();
   const today = getPlannerStartDate();
   const days = useMemo(() => getPlannerDays(startDate), [startDate]);
@@ -125,6 +126,7 @@ export default function PlannerView({
           <label className={styles.dateLabel}>
             <span className={styles.dateLabelText}>起始日期</span>
             <input
+              ref={dateInputRef}
               type="date"
               className={styles.dateInput}
               value={startDate}
@@ -183,6 +185,7 @@ export default function PlannerView({
           danger={confirmSpec.danger}
           onConfirm={handleConfirm}
           onCancel={() => setPending(null)}
+          fallbackFocusRef={dateInputRef}
         />
       ) : null}
     </section>

@@ -211,6 +211,14 @@ describe('sortTasks', () => {
     expect(sortIds([olderDone, newerDone])).toEqual(['newer-done', 'older-done']);
   });
 
+  it('截止日期 null 与缺字段同档，保持原顺序（正反两个输入）', () => {
+    const nullDue = makeTask({ id: 'null-due', priority: 2, dueDate: null });
+    const missingDue = makeTask({ id: 'missing-due', priority: 2 });
+
+    expect(sortIds([nullDue, missingDue])).toEqual(['null-due', 'missing-due']);
+    expect(sortIds([missingDue, nullDue])).toEqual(['missing-due', 'null-due']);
+  });
+
   it('不修改原数组', () => {
     const older = makeTask({ id: 'older', priority: 1 });
     const newer = makeTask({ id: 'newer', priority: 3 });

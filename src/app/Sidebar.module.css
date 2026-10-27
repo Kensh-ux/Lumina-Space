@@ -136,12 +136,6 @@
   display: none;
 }
 
-.counts {
-  margin-bottom: 6px;
-  color: var(--color-muted);
-  font-size: 0.8125rem;
-}
-
 .plannerPanel {
   display: flex;
   flex-direction: column;
