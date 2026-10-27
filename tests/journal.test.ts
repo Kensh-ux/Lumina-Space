@@ -274,6 +274,28 @@ describe('arrangeMoodNotes', () => {
     ]);
   });
 
+  it('按本地日期置顶：UTC 日期与本地日期不同时命中正确的一天', () => {
+    // 上海本地 2026-10-13 01:30，而 UTC 日期仍是 10-12。
+    const afterMidnightLocal = makeNote({
+      id: 'local-13',
+      createdAt: '2026-10-12T17:30:00.000Z',
+    });
+    // 上海本地 2026-10-14 01:30，而 UTC 日期是 10-13。
+    const nextLocalDay = makeNote({
+      id: 'local-14',
+      createdAt: '2026-10-13T17:30:00.000Z',
+    });
+    const pair = [afterMidnightLocal, nextLocalDay];
+
+    // 普通排序按 createdAt：local-14 更新，排前面。
+    expect(arrangeMoodNotes(pair).map((note) => note.id)).toEqual(['local-14', 'local-13']);
+    // 置顶本地 10-13：local-13 必须被分到 pinned 组并排到最前（误用 UTC 日期会失败）。
+    expect(arrangeMoodNotes(pair, '2026-10-13').map((note) => note.id)).toEqual([
+      'local-13',
+      'local-14',
+    ]);
+  });
+
   it('不修改原数组', () => {
     const ids = notes.map((note) => note.id);
 
