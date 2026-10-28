@@ -28,6 +28,7 @@ export default function Stage({
   const counts = countTasks(tasks);
   const focusMinutes = Math.floor(getTodayFocusStats(focusSessions).seconds / 60);
   const stageRef = useRef<HTMLElement>(null);
+  const hideButtonRef = useRef<HTMLButtonElement>(null);
   const [heroHidden, setHeroHidden] = useState(false);
   const [confirmingHide, setConfirmingHide] = useState(false);
   // 只在「有自定义背景」时才需要隐藏欢迎语；背景被清除后欢迎语重新出现，
@@ -67,6 +68,7 @@ export default function Stage({
         <div className={styles.hero} data-on-image={background ? 'true' : undefined}>
           {background ? (
             <button
+              ref={hideButtonRef}
               type="button"
               className={styles.hideHeroButton}
               aria-label="隐藏欢迎语"
@@ -95,7 +97,11 @@ export default function Stage({
             setConfirmingHide(false);
             setHeroHidden(true);
           }}
-          onCancel={() => setConfirmingHide(false)}
+          onCancel={() => {
+            setConfirmingHide(false);
+            // Safari / Firefox-macOS 点按钮不聚焦，显式把焦点还给 ×。
+            requestAnimationFrame(() => hideButtonRef.current?.focus());
+          }}
           // 确认后 × 随欢迎语一起移除，焦点退到主界面容器。
           fallbackFocusRef={stageRef}
         />
