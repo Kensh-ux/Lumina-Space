@@ -148,11 +148,17 @@ describe('updateMoodNote', () => {
     });
     const other = makeNote({ id: 'other', content: '别的' });
 
-    const next = updateMoodNote([note, other], 'target', {
-      emotion: '  喜悦  ',
-      content: '  新描述  ',
-      score: 999,
-    });
+    const firstEdit = new Date(2026, 9, 27, 20, 30);
+    const next = updateMoodNote(
+      [note, other],
+      'target',
+      {
+        emotion: '  喜悦  ',
+        content: '  新描述  ',
+        score: 999,
+      },
+      firstEdit,
+    );
 
     expect(next[0]).toEqual({
       id: 'target',
@@ -160,6 +166,7 @@ describe('updateMoodNote', () => {
       content: '新描述',
       score: 597,
       createdAt: '2026-10-12T08:00:00.000Z',
+      updatedAt: firstEdit.toISOString(),
     });
     expect(next[1]).toBe(other);
     expect(note.emotion).toBe('期待');
@@ -181,6 +188,55 @@ describe('updateMoodNote', () => {
     expect(
       updateMoodNote(notes, 'missing', { emotion: '喜悦', content: '事', score: 0 }),
     ).toEqual(notes);
+  });
+
+  it('首次编辑写入 updatedAt，保留原 id / createdAt', () => {
+    const original = makeNote({ id: 'first', createdAt: '2026-10-01T08:00:00.000Z' });
+
+    const next = updateMoodNote(
+      [original],
+      'first',
+      { emotion: '喜悦', content: '改好了', score: 5 },
+      new Date(2026, 9, 27, 21, 0),
+    );
+
+    expect(next[0].id).toBe('first');
+    expect(next[0].createdAt).toBe('2026-10-01T08:00:00.000Z');
+    expect(next[0].updatedAt).toBe(new Date(2026, 9, 27, 21, 0).toISOString());
+    expect(original.updatedAt).toBeUndefined();
+  });
+
+  it('再次编辑更新时间，createdAt 仍不变', () => {
+    const firstEdit = new Date(2026, 9, 27, 20, 0);
+    const secondEdit = new Date(2026, 9, 28, 9, 15);
+    const first = updateMoodNote(
+      [makeNote({ createdAt: '2026-10-01T08:00:00.000Z' })],
+      'note-1',
+      { emotion: '期待', content: '第一次编辑', score: 1 },
+      firstEdit,
+    );
+
+    const second = updateMoodNote(
+      first,
+      'note-1',
+      { emotion: '期待', content: '第二次编辑', score: 2 },
+      secondEdit,
+    );
+
+    expect(second[0].updatedAt).toBe(secondEdit.toISOString());
+    expect(second[0].createdAt).toBe('2026-10-01T08:00:00.000Z');
+  });
+
+  it('输入无效时不写 updatedAt', () => {
+    const original = makeNote();
+    const next = updateMoodNote(
+      [original],
+      'note-1',
+      { emotion: '  ', content: '无效', score: 0 },
+      new Date(2026, 9, 27, 22, 0),
+    );
+
+    expect(next[0].updatedAt).toBeUndefined();
   });
 });
 

@@ -1,4 +1,4 @@
-import type { FocusSession, MoodId, Task } from '../lib/types';
+import type { CustomBackgrounds, FocusSession, MoodId, Task } from '../lib/types';
 import type { ExportResult } from '../lib/data';
 import type { TaskDraft, TaskPatch } from '../features/tasks/task';
 import SettingsPanel from '../features/settings/SettingsPanel';
@@ -36,13 +36,16 @@ interface SidebarProps {
   onDeleteTask: (id: string) => void;
   onUpdateTask: (id: string, patch: TaskPatch) => void;
   onRecordFocusSession: (durationSec: number) => void;
+  onClearFocusSessions: () => void;
+  customBackgrounds: CustomBackgrounds;
+  onSetCustomBackground: (mood: MoodId, dataUrl: string) => void;
+  onClearCustomBackground: (mood: MoodId) => void;
   onExportData: () => ExportResult;
   onClearData: () => void;
   storageError: boolean;
   onPanelChange?: (panel: SidebarPanelId) => void;
   initialPanel?: SidebarPanelId | null;
 }
-
 export default function Sidebar({
   layout,
   mood,
@@ -54,6 +57,10 @@ export default function Sidebar({
   onDeleteTask,
   onUpdateTask,
   onRecordFocusSession,
+  onClearFocusSessions,
+  customBackgrounds,
+  onSetCustomBackground,
+  onClearCustomBackground,
   onExportData,
   onClearData,
   storageError,
@@ -64,7 +71,6 @@ export default function Sidebar({
     useSidebarPanels(initialPanel, layout, onPanelChange);
   const activeLabel = MODULES.find((module) => module.id === activePanel)?.label ?? '今日';
   const { playHover, playClick, playOpen, playClose } = useAudio();
-
   return (
     <aside
       className={styles.sidebar}
@@ -123,7 +129,6 @@ export default function Sidebar({
           </button>
         ))}
       </nav>
-
       <div className={styles.panelContent}>
         <div className={styles.sheetHeader}>
           <span className={styles.sheetTitle}>{activeLabel}</span>
@@ -140,7 +145,6 @@ export default function Sidebar({
             ×
           </button>
         </div>
-
         {activePanel === 'today' ? (
           <TodayPanel
             tasks={tasks}
@@ -153,7 +157,7 @@ export default function Sidebar({
         {activePanel === 'planner' ? <PlannerPanel /> : null}
         {activePanel === 'journal' ? <JournalPanel /> : null}
         {activePanel === 'focus' ? (
-          <FocusPanel sessions={focusSessions} onComplete={onRecordFocusSession} />
+          <FocusPanel sessions={focusSessions} onComplete={onRecordFocusSession} onClearSessions={onClearFocusSessions} />
         ) : null}
         {activePanel === 'settings' ? (
           <>
@@ -165,6 +169,9 @@ export default function Sidebar({
                 tasks: tasks.length,
                 focusSessions: focusSessions.length,
               }}
+              customBackgrounds={customBackgrounds}
+              onSetCustomBackground={onSetCustomBackground}
+              onClearCustomBackground={onClearCustomBackground}
               onExportData={onExportData}
               onClearData={onClearData}
             />
@@ -178,7 +185,6 @@ export default function Sidebar({
           </>
         ) : null}
       </div>
-
       {!isMobile && layout.expanded ? (
         <SidebarResizeHandle
           width={layout.width}

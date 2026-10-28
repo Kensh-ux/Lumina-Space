@@ -26,6 +26,24 @@
   transition: opacity 400ms ease;
 }
 
+.customImage {
+  position: absolute;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+}
+
+.customShade {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-bg) 6%, transparent) 0%,
+    color-mix(in srgb, var(--color-bg) 26%, transparent) 58%,
+    color-mix(in srgb, var(--color-bg) 48%, transparent) 100%
+  );
+}
+
 .layerPositive {
   background: radial-gradient(115% 105% at 80% 2%, #fff7e4 0%, #ffedc8 28%, #fff7e9 62%, #fffdf9 100%);
 }
@@ -97,6 +115,14 @@
 .stage[data-orb-open='true'] .hero {
   transform: translateX(-160px);
   opacity: 0.62;
+}
+
+.hero[data-on-image='true'] {
+  padding: 34px 28px;
+  border-radius: 28px;
+  background-color: color-mix(in srgb, var(--color-surface) 58%, transparent);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(10px);
 }
 
 .greeting {

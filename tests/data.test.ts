@@ -5,7 +5,7 @@ import {
   exportData,
   formatMinutes,
   getTodayFocusStats,
-  getWeekFocusStats,
+  getTotalFocusStats,
 } from '../src/lib/data';
 import type { AppDataV1, FocusSession, MoodEntry, MoodNote } from '../src/lib/types';
 
@@ -106,19 +106,19 @@ describe('专注统计', () => {
     expect(getTodayFocusStats(sessions, NOW)).toEqual({ count: 2, seconds: 180 });
   });
 
-  it('getWeekFocusStats 从本地周一算起', () => {
+  it('getTotalFocusStats 累计全部专注记录，不受日期限制', () => {
     const sessions = [
       focusSession(60, at(2026, 10, 19, 8)),
       focusSession(120, at(2026, 10, 24, 9)),
-      focusSession(300, at(2026, 10, 18, 23)),
+      focusSession(300, at(2025, 1, 1, 23)),
     ];
 
-    expect(getWeekFocusStats(sessions, NOW)).toEqual({ count: 2, seconds: 180 });
+    expect(getTotalFocusStats(sessions)).toEqual({ count: 3, seconds: 480 });
   });
 
   it('空数组返回 0', () => {
     expect(getTodayFocusStats([], NOW)).toEqual({ count: 0, seconds: 0 });
-    expect(getWeekFocusStats([], NOW)).toEqual({ count: 0, seconds: 0 });
+    expect(getTotalFocusStats([])).toEqual({ count: 0, seconds: 0 });
   });
 });
 
@@ -141,7 +141,8 @@ describe('exportData', () => {
       mood: { current: 'negative', updatedAt: NOW.toISOString() },
       moodLog: [moodEntry('negative', NOW)],
       focusSessions: [focusSession(60, NOW)],
-      moodNotes: [moodNote('记一笔', NOW)],
+      moodNotes: [{ ...moodNote('记一笔', NOW), updatedAt: NOW.toISOString() }],
+      customBackgrounds: { positive: 'data:image/jpeg;base64,AAAA' },
     };
 
     const { filename, json } = exportData(data, NOW);
@@ -154,6 +155,8 @@ describe('exportData', () => {
     expect(parsed.focusSessions).toHaveLength(1);
     expect(parsed.moodNotes).toHaveLength(1);
     expect(parsed.moodNotes[0].content).toBe('记一笔');
+    expect(parsed.moodNotes[0].updatedAt).toBe(NOW.toISOString());
+    expect(parsed.customBackgrounds).toEqual({ positive: 'data:image/jpeg;base64,AAAA' });
     expect(parsed.backup).toBeUndefined();
   });
 
@@ -169,5 +172,6 @@ describe('exportData', () => {
     expect(parsed.moodLog).toEqual([]);
     expect(parsed.focusSessions).toEqual([]);
     expect(parsed.moodNotes).toEqual([]);
+    expect(parsed.customBackgrounds).toEqual({});
   });
 });

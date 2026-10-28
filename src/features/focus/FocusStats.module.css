@@ -20,7 +20,7 @@
   line-height: 1.45;
 }
 
-.week {
+.total {
   color: var(--color-muted);
   font-size: 0.8125rem;
   line-height: 1.45;
@@ -30,4 +30,39 @@
   color: var(--color-muted);
   font-size: 0.8125rem;
   line-height: 1.55;
+}
+
+.clearButton {
+  align-self: flex-start;
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 0 14px;
+  border: 1px solid color-mix(in srgb, var(--color-danger) 55%, var(--color-border));
+  border-radius: 10px;
+  background-color: color-mix(in srgb, var(--color-danger) 8%, transparent);
+  color: var(--color-danger);
+  font-size: 0.8125rem;
+  cursor: pointer;
+  transition:
+    background-color var(--transition-theme),
+    border-color var(--transition-theme),
+    color var(--transition-theme);
+}
+
+.clearButton:hover {
+  background-color: color-mix(in srgb, var(--color-danger) 16%, transparent);
+}
+
+.clearButton[aria-disabled='true'] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.clearButton[aria-disabled='true']:hover {
+  background-color: color-mix(in srgb, var(--color-danger) 8%, transparent);
+}
+
+.clearButton:focus-visible {
+  outline: 2px solid var(--color-danger);
+  outline-offset: 2px;
 }

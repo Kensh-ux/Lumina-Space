@@ -10,6 +10,7 @@ import {
   THEME_KEY,
 } from './types';
 import type { AppDataV1, FocusSession, MoodEntry, MoodId, MoodNote, Task } from './types';
+import { normalizeCustomBackgrounds } from './customBackground';
 
 const BACKUP_KEY = `${STORAGE_KEY}:backup`;
 const SCHEMA_VERSION = 1;
@@ -140,6 +141,7 @@ function normalizeData(value: unknown): AppDataV1 | null {
     moodLog: normalizeMoodLog(data.moodLog),
     focusSessions: normalizeFocusSessions(data.focusSessions),
     moodNotes: normalizeMoodNotes(data.moodNotes),
+    customBackgrounds: normalizeCustomBackgrounds(data.customBackgrounds),
   };
 }
 
@@ -169,6 +171,7 @@ function migrateMissingTasks(value: unknown): AppDataV1 | null {
     moodLog: [],
     focusSessions: [],
     moodNotes: [],
+    customBackgrounds: {},
   };
 }
 
@@ -191,6 +194,7 @@ export function createDefaultData(): AppDataV1 {
     moodLog: [],
     focusSessions: [],
     moodNotes: [],
+    customBackgrounds: {},
   };
 }
 

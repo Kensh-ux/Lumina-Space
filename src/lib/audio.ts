@@ -3,7 +3,20 @@ import type { MoodId } from './types';
 export const SOUND_KEY = 'lumina:sound';
 export const NOISE_KEY = 'lumina:noise';
 
-export type SoundCue = 'hover' | 'click' | 'open' | 'close';
+export type SoundCue = 'hover' | 'click' | 'open' | 'close' | 'done';
+
+export interface DoneCueTone {
+  frequency: number;
+  durationSec: number;
+  /** 相对第一次发声的延迟（秒）。 */
+  delaySec: number;
+}
+
+/** 专注完成提示音：两声短促高音，第二声比第一声更高、紧跟着响。 */
+export const DONE_CUE_TONES: readonly DoneCueTone[] = [
+  { frequency: 880, durationSec: 0.12, delaySec: 0 },
+  { frequency: 1174, durationSec: 0.12, delaySec: 0.25 },
+];
 
 /** 交叉淡化时长（ms）：切情绪时旧声景淡出、新声景淡入。 */
 export const NOISE_CROSSFADE_MS = 600;
@@ -707,12 +720,13 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
     type: OscillatorType,
     duration: number,
     peak: number,
+    delay = 0,
   ): void => {
     const context = canCue();
     if (!context || !cueMaster) {
       return;
     }
-    const at = context.currentTime;
+    const at = context.currentTime + delay;
     const oscillator = context.createOscillator();
     const gain = context.createGain();
     oscillator.type = type;
@@ -763,6 +777,10 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
       playTone(640, 'sine', 0.05, 0.02);
     } else if (cue === 'click') {
       playTone(190, 'triangle', 0.04, 0.028);
+    } else if (cue === 'done') {
+      for (const tone of DONE_CUE_TONES) {
+        playTone(tone.frequency, 'sine', tone.durationSec, 0.05, tone.delaySec);
+      }
     } else {
       playWhoosh(cue === 'open');
     }

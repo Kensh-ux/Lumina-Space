@@ -121,7 +121,6 @@ export default function JournalView({
           </button>
         ) : null}
       </div>
-
       {notes.length === 0 ? (
         <p className={styles.empty}>当前还没有情绪记录</p>
       ) : visibleNotes.length === 0 ? (
@@ -140,9 +139,10 @@ export default function JournalView({
                   >
                     好感 {formatMoodScore(note.score)}
                   </span>
-                  <time className={styles.date} dateTime={note.createdAt}>
-                    {dateLabel}
-                  </time>
+                  <div className={styles.dateGroup}>
+                    <time className={styles.date} dateTime={note.createdAt}>{dateLabel}</time>
+                    {note.updatedAt ? <span className={styles.edited}>再次编辑于 {formatMoodNoteDate(note.updatedAt)}</span> : null}
+                  </div>
                   <div className={styles.itemActions}>
                     <button
                       type="button"

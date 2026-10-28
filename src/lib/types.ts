@@ -2,6 +2,9 @@ export type MoodId = 'positive' | 'neutral' | 'negative';
 
 export const MOOD_IDS: readonly MoodId[] = ['positive', 'neutral', 'negative'];
 
+/** 按场景保存的自定义背景（data URL）；缺少某个场景表示仍用原场景。 */
+export type CustomBackgrounds = Partial<Record<MoodId, string>>;
+
 export const STORAGE_KEY = 'lumina:data';
 export const THEME_KEY = 'lumina:theme';
 
@@ -41,6 +44,8 @@ export interface MoodNote {
   content: string;
   score: number;
   createdAt: string;
+  /** 最近一次编辑保存的时间；创建时不写。 */
+  updatedAt?: string;
 }
 
 export const MOOD_LOG_LIMIT = 365;
@@ -156,13 +161,21 @@ export function normalizeMoodNote(value: unknown): MoodNote | null {
   if (typeof note.createdAt !== 'string' || Number.isNaN(Date.parse(note.createdAt))) {
     return null;
   }
-  return {
+  const normalized: MoodNote = {
     id: note.id,
     emotion,
     content,
     score: clampMoodScore(note.score),
     createdAt: note.createdAt,
   };
+  // 旧数据没有 updatedAt；非法值直接丢弃，不影响其余字段。
+  if (
+    typeof note.updatedAt === 'string' &&
+    !Number.isNaN(Date.parse(note.updatedAt))
+  ) {
+    normalized.updatedAt = note.updatedAt;
+  }
+  return normalized;
 }
 
 export interface AppDataV1 {
@@ -175,4 +188,5 @@ export interface AppDataV1 {
   moodLog?: MoodEntry[];
   focusSessions?: FocusSession[];
   moodNotes?: MoodNote[];
+  customBackgrounds?: CustomBackgrounds;
 }

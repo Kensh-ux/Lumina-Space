@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   createSoundEngine,
   describeNoiseStatus,
+  DONE_CUE_TONES,
   getNoiseProfile,
   isNoiseAudible,
   NOISE_CROSSFADE_MS,
@@ -104,6 +105,25 @@ describe('白噪音偏好持久化', () => {
 
     expect(writeWhiteNoiseEnabled(true, new BlockedStorage())).toBe(false);
     expect(readWhiteNoiseEnabled(null)).toBe(false);
+  });
+});
+
+describe('专注完成提示音', () => {
+  it('两声短促高音：第二声更高，第一声结束后约 0.13s 再响', () => {
+    expect(DONE_CUE_TONES).toHaveLength(2);
+    const [first, second] = DONE_CUE_TONES;
+
+    expect(first.frequency).toBeGreaterThan(800);
+    expect(second.frequency).toBeGreaterThan(first.frequency);
+    expect(first.durationSec).toBeCloseTo(0.12, 2);
+    expect(second.durationSec).toBeCloseTo(0.12, 2);
+    expect(second.delaySec - first.delaySec - first.durationSec).toBeCloseTo(0.13, 2);
+  });
+
+  it('引擎可以播放 done cue（没有 AudioContext 时静默降级）', () => {
+    const engine = createSoundEngine();
+
+    expect(() => engine.play('done')).not.toThrow();
   });
 });
 
