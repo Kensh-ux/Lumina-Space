@@ -216,7 +216,7 @@
   }
 }
 
-@media (max-width: 719px) {
+@media (max-width: 1119px) {
   .toast {
     right: 16px;
     /* 底部导航 56px + 16px 间距：常驻 toast 不能压住导航。 */

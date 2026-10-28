@@ -97,12 +97,9 @@ export default function Stage({
             setConfirmingHide(false);
             setHeroHidden(true);
           }}
-          onCancel={() => {
-            setConfirmingHide(false);
-            // Safari / Firefox-macOS 点按钮不聚焦，显式把焦点还给 ×。
-            requestAnimationFrame(() => hideButtonRef.current?.focus());
-          }}
-          // 确认后 × 随欢迎语一起移除，焦点退到主界面容器。
+          onCancel={() => setConfirmingHide(false)}
+          // 取消时回到 ×；确认后 × 已随欢迎语移除，焦点退到主界面容器。
+          returnFocusRef={hideButtonRef}
           fallbackFocusRef={stageRef}
         />
       ) : null}

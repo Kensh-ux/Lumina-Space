@@ -11,12 +11,15 @@ interface ConfirmDialogProps {
   danger?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  /** 关闭后优先回焦的控件；传入后不再使用「打开弹窗时的触发控件」。 */
+  returnFocusRef?: RefObject<HTMLElement | null>;
   /** 触发控件被移除时的兜底焦点（例如删除成功后原来的 × 已不存在）。 */
   fallbackFocusRef?: RefObject<HTMLElement | null>;
 }
 
 // 通用二次确认：Esc / 点遮罩取消，Tab 焦点循环，默认焦点在「取消」上。
-// 关闭后把焦点还给打开弹窗的触发控件；触发控件已被移除时退到 fallbackFocusRef。
+// 关闭后把焦点还给 returnFocusRef（未传时用打开弹窗的触发控件）；
+// 目标已被移除时退到 fallbackFocusRef。
 export default function ConfirmDialog({
   title,
   message,
@@ -24,6 +27,7 @@ export default function ConfirmDialog({
   danger = false,
   onConfirm,
   onCancel,
+  returnFocusRef,
   fallbackFocusRef,
 }: ConfirmDialogProps) {
   const headingId = useId();
@@ -40,17 +44,29 @@ export default function ConfirmDialog({
 
   useEffect(() => {
     const trigger = triggerRef.current;
-    return () => {
-      if (trigger && trigger.isConnected) {
-        trigger.focus();
-        return;
-      }
+    const focusFallback = () => {
       const fallback = fallbackFocusRef?.current;
       if (fallback && fallback.isConnected) {
         fallback.focus();
       }
     };
-  }, [fallbackFocusRef]);
+    return () => {
+      if (returnFocusRef) {
+        const target = returnFocusRef.current;
+        if (target && target.isConnected) {
+          target.focus();
+        } else {
+          focusFallback();
+        }
+        return;
+      }
+      if (trigger && trigger.isConnected) {
+        trigger.focus();
+        return;
+      }
+      focusFallback();
+    };
+  }, [fallbackFocusRef, returnFocusRef]);
 
   // 捕获阶段先处理 Esc，避免侧栏 / 移动 sheet 的 document 监听同时收起。
   useEffect(() => {
