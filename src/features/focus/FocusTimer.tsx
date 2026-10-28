@@ -47,6 +47,9 @@ export default function FocusTimer({
       onCompleteRef.current?.(state.durationSec);
       playDone();
       setToastVisible(true);
+    } else if (state.status !== 'done') {
+      // 重新开始 / 重置 / 离开完成态：收起提示卡（卸载即清掉重复提醒定时器）。
+      setToastVisible(false);
     }
     previousStatusRef.current = state.status;
   }, [state.status, state.durationSec, playDone]);
@@ -188,7 +191,7 @@ export default function FocusTimer({
           </button>
         ))}
       </div>
-      {toastVisible ? <FocusDoneToast onDismiss={dismissToast} /> : null}
+      {toastVisible ? <FocusDoneToast onDismiss={dismissToast} onChime={playDone} /> : null}
     </div>
   );
 }
