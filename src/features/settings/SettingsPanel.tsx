@@ -1,8 +1,10 @@
 import { useRef, useState } from 'react';
 import type { ExportResult } from '../../lib/data';
+import type { CustomBackgrounds } from '../../lib/types';
 import { useAudio } from '../../lib/AudioProvider';
 import { describeNoiseStatus, getNoiseProfile } from '../../lib/audio';
 import { MOODS, type MoodId } from '../mood/mood';
+import BackgroundSettings from './BackgroundSettings';
 import styles from './SettingsPanel.module.css';
 
 export interface DataCounts {
@@ -15,6 +17,9 @@ interface SettingsPanelProps {
   onChangeMood: (mood: MoodId) => void;
   storageError: boolean;
   counts: DataCounts;
+  customBackgrounds: CustomBackgrounds;
+  onSetCustomBackground: (mood: MoodId, dataUrl: string) => void;
+  onClearCustomBackground: (mood: MoodId) => void;
   onExportData: () => ExportResult;
   onClearData: () => void;
 }
@@ -24,6 +29,9 @@ export default function SettingsPanel({
   onChangeMood,
   storageError,
   counts,
+  customBackgrounds,
+  onSetCustomBackground,
+  onClearCustomBackground,
   onExportData,
   onClearData,
 }: SettingsPanelProps) {
@@ -79,6 +87,13 @@ export default function SettingsPanel({
           ))}
         </div>
       </section>
+
+      <BackgroundSettings
+        mood={mood}
+        backgrounds={customBackgrounds}
+        onChange={onSetCustomBackground}
+        onClear={onClearCustomBackground}
+      />
 
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>声音</h3>
@@ -173,7 +188,7 @@ export default function SettingsPanel({
         <p className={styles.storageError}>浏览器存储不可用，本次改动不会被记住。</p>
       ) : null}
 
-      <p className={styles.version}>Lumina-Space v1.3.1</p>
+      <p className={styles.version}>Lumina-Space v1.3.2</p>
     </div>
   );
 }

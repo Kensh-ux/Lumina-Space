@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { clearData, createDefaultData, loadData, saveData } from '../src/lib/storage';
+import { MAX_BACKGROUND_DATA_URL_LENGTH } from '../src/lib/customBackground';
 
 const KEY = 'lumina:data';
 const BACKUP_KEY = 'lumina:data:backup';
@@ -458,6 +459,79 @@ describe('loadData', () => {
     expect(data.moodNotes).toHaveLength(500);
     expect(data.moodNotes?.[0].id).toBe('note-5');
     expect(data.moodNotes?.[499].id).toBe('note-504');
+  });
+
+  it('moodNotes.updatedAt 往返保留，非法值丢弃且记录保留', () => {
+    storage.setItem(
+      KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        tasks: [],
+        mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+        moodNotes: [
+          {
+            id: 'with-updated',
+            emotion: '喜悦',
+            content: '编辑过',
+            score: 1,
+            createdAt: '2026-10-23T08:00:00.000Z',
+            updatedAt: '2026-10-24T09:30:00.000Z',
+          },
+          {
+            id: 'bad-updated',
+            emotion: '焦虑',
+            content: '坏编辑时间',
+            score: 1,
+            createdAt: '2026-10-23T08:00:00.000Z',
+            updatedAt: 'not-a-date',
+          },
+        ],
+      }),
+    );
+
+    const data = loadData(storage);
+
+    expect(data.moodNotes?.[0].updatedAt).toBe('2026-10-24T09:30:00.000Z');
+    expect(data.moodNotes?.[1].id).toBe('bad-updated');
+    expect(data.moodNotes?.[1].updatedAt).toBeUndefined();
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+  });
+
+  it('旧数据缺 customBackgrounds 时读取为 {}，不备份', () => {
+    const raw = JSON.stringify({
+      schemaVersion: 1,
+      tasks: [],
+      mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+    });
+    storage.setItem(KEY, raw);
+
+    const data = loadData(storage);
+
+    expect(data.customBackgrounds).toEqual({});
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
+    expect(storage.getItem(KEY)).toBe(raw);
+  });
+
+  it('保留合法 customBackgrounds，非法 / 超长逐场景丢弃', () => {
+    const tooLong = `data:image/jpeg;base64,${'A'.repeat(MAX_BACKGROUND_DATA_URL_LENGTH)}`;
+    storage.setItem(
+      KEY,
+      JSON.stringify({
+        schemaVersion: 1,
+        tasks: [],
+        mood: { current: 'neutral', updatedAt: '2026-10-23T00:00:00.000Z' },
+        customBackgrounds: {
+          positive: 'data:image/jpeg;base64,AAAA',
+          neutral: 'https://example.com/not-a-data-url.jpg',
+          negative: tooLong,
+        },
+      }),
+    );
+
+    const data = loadData(storage);
+
+    expect(data.customBackgrounds).toEqual({ positive: 'data:image/jpeg;base64,AAAA' });
+    expect(storage.getItem(BACKUP_KEY)).toBeNull();
   });
 
   it('保留合法的 moodLog / focusSessions 条目', () => {

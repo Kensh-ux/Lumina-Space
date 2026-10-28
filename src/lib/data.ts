@@ -80,26 +80,10 @@ export function getTodayFocusStats(
   return { count, seconds };
 }
 
-function startOfWeekDate(now: Date): string {
-  const date = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const offset = (date.getDay() + 6) % 7;
-  date.setDate(date.getDate() - offset);
-  return toLocalDateString(date);
-}
-
-export function getWeekFocusStats(
-  sessions: readonly FocusSession[],
-  now: Date = new Date(),
-): FocusStats {
-  const start = startOfWeekDate(now);
-  const today = toLocalDateString(now);
+export function getTotalFocusStats(sessions: readonly FocusSession[]): FocusStats {
   let count = 0;
   let seconds = 0;
   for (const session of sessions) {
-    const date = localDateOf(session.completedAt);
-    if (date < start || date > today) {
-      continue;
-    }
     count += 1;
     seconds += session.durationSec;
   }
@@ -126,6 +110,7 @@ export function exportData(data: AppDataV1, now: Date = new Date()): ExportResul
     moodLog: data.moodLog ?? [],
     focusSessions: data.focusSessions ?? [],
     moodNotes: data.moodNotes ?? [],
+    customBackgrounds: data.customBackgrounds ?? {},
   };
   return {
     filename: `lumina-space-${toLocalDateString(now)}.json`,

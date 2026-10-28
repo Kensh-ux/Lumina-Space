@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import type { FocusSession, Task } from '../lib/types';
 import type { TaskDraft, TaskPatch } from '../features/tasks/task';
 import TaskList from '../features/tasks/TaskList';
 import CompletedTasks from '../features/tasks/CompletedTasks';
 import FocusTimer from '../features/focus/FocusTimer';
 import FocusStats from '../features/focus/FocusStats';
+import ConfirmDialog from '../lib/ConfirmDialog';
 import styles from './Sidebar.module.css';
 
 interface TodayPanelProps {
@@ -40,13 +42,29 @@ export function TodayPanel({
 interface FocusPanelProps {
   sessions: readonly FocusSession[];
   onComplete: (durationSec: number) => void;
+  onClearSessions: () => void;
 }
 
-export function FocusPanel({ sessions, onComplete }: FocusPanelProps) {
+export function FocusPanel({ sessions, onComplete, onClearSessions }: FocusPanelProps) {
+  const [confirming, setConfirming] = useState(false);
+
   return (
     <>
       <FocusTimer onComplete={onComplete} />
-      <FocusStats sessions={sessions} />
+      <FocusStats sessions={sessions} onClear={() => setConfirming(true)} />
+      {confirming ? (
+        <ConfirmDialog
+          title="是否确认清除专注数据？"
+          message="只会清空专注记录，不影响任务、情绪记录与背景设置。"
+          confirmLabel="确认清除"
+          danger
+          onConfirm={() => {
+            onClearSessions();
+            setConfirming(false);
+          }}
+          onCancel={() => setConfirming(false)}
+        />
+      ) : null}
     </>
   );
 }

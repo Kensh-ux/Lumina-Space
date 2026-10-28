@@ -41,6 +41,7 @@ interface AudioContextValue {
   playClick: () => void;
   playOpen: () => void;
   playClose: () => void;
+  playDone: () => void;
 }
 
 const AudioCtx = createContext<AudioContextValue | null>(null);
@@ -163,6 +164,7 @@ export function AudioProvider({ children }: { children: ReactNode }) {
       playClick: () => play('click'),
       playOpen: () => play('open'),
       playClose: () => play('close'),
+      playDone: () => play('done'),
     }),
     [muted, toggleMuted, whiteNoiseEnabled, toggleWhiteNoise, noiseStatus, syncMood, play],
   );

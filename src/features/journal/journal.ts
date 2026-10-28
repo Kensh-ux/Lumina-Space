@@ -85,17 +85,22 @@ export function createMoodNote(input: MoodNoteInput, now: Date = new Date()): Mo
   };
 }
 
-// 只改 emotion / content / score，保留原 id 与 createdAt；输入无效时返回原数组副本。
+// 只改 emotion / content / score，保留原 id 与 createdAt，写入本次编辑时间；
+// 输入无效时返回原数组副本，不动 updatedAt。
 export function updateMoodNote(
   notes: readonly MoodNote[],
   id: string,
   input: MoodNoteInput,
+  now: Date = new Date(),
 ): MoodNote[] {
   const normalized = normalizeInput(input);
   if (!normalized) {
     return [...notes];
   }
-  return notes.map((note) => (note.id === id ? { ...note, ...normalized } : note));
+  const updatedAt = now.toISOString();
+  return notes.map((note) =>
+    note.id === id ? { ...note, ...normalized, updatedAt } : note,
+  );
 }
 
 export function deleteMoodNote(notes: readonly MoodNote[], id: string): MoodNote[] {

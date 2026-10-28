@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useRef, useState } from 'react';
 import {
   clampMinutes,
   formatDuration,
@@ -9,6 +9,7 @@ import {
 } from './timer';
 import { useFocusTimer } from './useFocusTimer';
 import { useAudio } from '../../lib/AudioProvider';
+import FocusDoneToast from './FocusDoneToast';
 import styles from './focus.module.css';
 
 const STATUS_LABELS: Record<TimerStatus, string> = {
@@ -25,10 +26,11 @@ export default function FocusTimer({
 }) {
   const { state, setMinutes, startTimer, pauseTimer, resumeTimer, resetTimer, restartTimer } =
     useFocusTimer();
-  const { playClick } = useAudio();
+  const { playClick, playDone } = useAudio();
   const inputId = useId();
   const currentMinutes = Math.round(state.durationSec / 60);
   const [minutesInput, setMinutesInput] = useState(String(currentMinutes));
+  const [toastVisible, setToastVisible] = useState(false);
   const previousStatusRef = useRef(state.status);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
@@ -37,13 +39,17 @@ export default function FocusTimer({
     setMinutesInput(String(currentMinutes));
   }, [currentMinutes]);
 
+  const dismissToast = useCallback(() => setToastVisible(false), []);
+
   // 只在 running → done 的那次记录；重启后下一次 done 会再次记录。
   useEffect(() => {
-    if (previousStatusRef.current !== 'done' && state.status === 'done') {
+    if (previousStatusRef.current === 'running' && state.status === 'done') {
       onCompleteRef.current?.(state.durationSec);
+      playDone();
+      setToastVisible(true);
     }
     previousStatusRef.current = state.status;
-  }, [state.status, state.durationSec]);
+  }, [state.status, state.durationSec, playDone]);
 
   const commitMinutes = (): number => {
     const parsed = Number.parseInt(minutesInput, 10);
@@ -182,6 +188,7 @@ export default function FocusTimer({
           </button>
         ))}
       </div>
+      {toastVisible ? <FocusDoneToast onDismiss={dismissToast} /> : null}
     </div>
   );
 }

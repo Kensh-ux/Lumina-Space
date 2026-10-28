@@ -46,6 +46,7 @@ function App() {
     tasks,
     focusSessions,
     moodNotes,
+    customBackgrounds,
     setMood,
     createTask,
     toggleTask,
@@ -53,6 +54,9 @@ function App() {
     updateTask,
     clearCompletedTasks,
     recordFocusSession,
+    clearFocusSessions,
+    setCustomBackground,
+    clearCustomBackground,
     createMoodNote,
     updateMoodNote,
     deleteMoodNote,
@@ -100,6 +104,10 @@ function App() {
         onDeleteTask={deleteTask}
         onUpdateTask={updateTask}
         onRecordFocusSession={recordFocusSession}
+        onClearFocusSessions={clearFocusSessions}
+        customBackgrounds={customBackgrounds}
+        onSetCustomBackground={setCustomBackground}
+        onClearCustomBackground={clearCustomBackground}
         onExportData={exportData}
         onClearData={clearAppData}
         storageError={storageError}
@@ -130,7 +138,13 @@ function App() {
           />
         ) : (
           <>
-            <Stage mood={mood} tasks={tasks} focusSessions={focusSessions} orbOpen={orbOpen} />
+            <Stage
+              mood={mood}
+              background={customBackgrounds[mood]}
+              tasks={tasks}
+              focusSessions={focusSessions}
+              orbOpen={orbOpen}
+            />
 
             <MoodDial current={mood} onChange={setMood} defaultOpen={dialOpen} />
 

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { AppDataV1, FocusSession, MoodId, MoodNote, Task } from '../lib/types';
-import { MOOD_NOTE_LIMIT } from '../lib/types';
+import { MOOD_NOTE_LIMIT, type AppDataV1, type CustomBackgrounds } from '../lib/types';
+import type { FocusSession, MoodId, MoodNote, Task } from '../lib/types';
 import { clearData, createDefaultData, loadData, saveData } from '../lib/storage';
 import {
   addFocusSession,
@@ -30,6 +30,7 @@ export interface UseAppDataResult {
   tasks: Task[];
   focusSessions: FocusSession[];
   moodNotes: MoodNote[];
+  customBackgrounds: CustomBackgrounds;
   setMood: (next: MoodId) => void;
   createTask: (draft: TaskDraft) => void;
   toggleTask: (id: string) => void;
@@ -37,6 +38,9 @@ export interface UseAppDataResult {
   updateTask: (id: string, patch: TaskPatch) => void;
   clearCompletedTasks: () => void;
   recordFocusSession: (durationSec: number) => void;
+  clearFocusSessions: () => void;
+  setCustomBackground: (mood: MoodId, dataUrl: string) => void;
+  clearCustomBackground: (mood: MoodId) => void;
   createMoodNote: (input: MoodNoteInput) => MoodNote | null;
   updateMoodNote: (id: string, input: MoodNoteInput) => void;
   deleteMoodNote: (id: string) => void;
@@ -117,6 +121,22 @@ export function useAppData(): UseAppDataResult {
     }));
   }, []);
 
+  const clearFocusSessions = useCallback(() => {
+    setData((prev) => ({ ...prev, focusSessions: [] }));
+  }, []);
+
+  const setCustomBackground = useCallback((mood: MoodId, dataUrl: string) => {
+    setData((prev) => ({ ...prev, customBackgrounds: { ...prev.customBackgrounds, [mood]: dataUrl } }));
+  }, []);
+
+  const clearCustomBackground = useCallback((mood: MoodId) => {
+    setData((prev) => {
+      const next = { ...(prev.customBackgrounds ?? {}) };
+      delete next[mood];
+      return { ...prev, customBackgrounds: next };
+    });
+  }, []);
+
   const createMoodNote = useCallback((input: MoodNoteInput) => {
     const note = buildMoodNote(input);
     if (!note) {
@@ -157,6 +177,7 @@ export function useAppData(): UseAppDataResult {
     tasks: data.tasks,
     focusSessions: data.focusSessions ?? [],
     moodNotes: data.moodNotes ?? [],
+    customBackgrounds: data.customBackgrounds ?? {},
     setMood,
     createTask,
     toggleTask,
@@ -164,6 +185,9 @@ export function useAppData(): UseAppDataResult {
     updateTask,
     clearCompletedTasks,
     recordFocusSession,
+    clearFocusSessions,
+    setCustomBackground,
+    clearCustomBackground,
     createMoodNote,
     updateMoodNote,
     deleteMoodNote,
