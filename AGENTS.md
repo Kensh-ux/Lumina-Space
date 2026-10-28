@@ -14,6 +14,7 @@ Guidance for AI agents working on **Lumina-Space** — a mood-aware todo and foc
 - **v1.2.1 (2026-10-27)**: soundscape loading state (fade in only when the element is actually audible), stopped old-track downloads, engine-level enable/mute authority, stale-fade race fixes; 153 tests.
 - **v1.3 (2026-10-27)**: planner reworked — selectable start date (that day becomes the first column), 365 days instead of 7, `YYYY年，M月` title that follows horizontal scrolling; task list sorted by priority 60% + days-to-due 40%; complete / uncomplete / delete confirmations everywhere; Today panel shows open tasks only plus a collapsible completed-tasks stats card (default filter `open`); new **mood journal** view (`features/journal/`) with 22 built-in emotion words plus a custom word, event description and a -724..597 score; focus cap 487 → 486; settings version `v1.3.0`; 193 tests.
 - **v1.3.1 (2026-10-27)**: mood journal now supports editing (keeps `id` / `createdAt`), deletion with the shared `ConfirmDialog` (moved to `src/lib/`), a top date-pin control (notes from the selected local date move to the top, the rest keep their relative order; no-op when that date is empty) and keyword search across emotion + content; settings `v1.3.1`; README screenshots refreshed; 208 tests.
+- **v1.3.2 (2026-10-28)**: per-mood custom backgrounds in settings (upload / replace / restore, 1920×1080 recommendation, client-side JPEG compression stored as data URLs in `customBackgrounds`; the Stage swaps the canvas scene for the image), focus completion toast + two-tone chime, focus stats "total" instead of "this week" with a separate clear-focus-data action, and mood-journal `updatedAt` shown as "再次编辑于"; settings `v1.3.2`; README version table trimmed to current simple mode + planned v2.0; 231 tests.
 - **Next: v2.0 "3D mode"** — a code-generated stylized cottage (`three` + R3F). It is an *alternative* to simple mode, not a replacement. Do not start 3D before the v2.0 card.
 
 > Soundscape note: the three looping mp3s are **not** in this repo; they live in GitHub Release `audio-v1.2`
@@ -36,9 +37,9 @@ src/
   features/mood/    MoodDial, mood.ts, useMood
   features/tasks/   task CRUD, editor, CompletedTasks
   features/journal/ mood journal (MoodNoteEditor, EmotionPicker, JournalView)
-  features/focus/   focus timer + stats
-  features/settings/SettingsPanel
-  lib/              shared types, storage adapter, planner helpers, audio, ConfirmDialog
+  features/focus/   focus timer + stats + completion toast
+  features/settings/SettingsPanel, BackgroundSettings
+  lib/              shared types, storage adapter, planner helpers, audio, ConfirmDialog, customBackground
   styles/           tokens.css, global.css
 tests/              mirror of src
 docs/
