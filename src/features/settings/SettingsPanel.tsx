@@ -88,13 +88,6 @@ export default function SettingsPanel({
         </div>
       </section>
 
-      <BackgroundSettings
-        mood={mood}
-        backgrounds={customBackgrounds}
-        onChange={onSetCustomBackground}
-        onClear={onClearCustomBackground}
-      />
-
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>声音</h3>
         <button
@@ -132,6 +125,13 @@ export default function SettingsPanel({
         </p>
         {muted ? <p className={styles.note}>当前已静音，取消静音后恢复。</p> : null}
       </section>
+
+      <BackgroundSettings
+        mood={mood}
+        backgrounds={customBackgrounds}
+        onChange={onSetCustomBackground}
+        onClear={onClearCustomBackground}
+      />
 
       <section className={styles.section}>
         <h3 className={styles.sectionTitle}>数据</h3>
