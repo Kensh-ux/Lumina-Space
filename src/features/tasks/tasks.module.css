@@ -50,6 +50,8 @@
 
 .item {
   display: flex;
+  /* 不参与纵向收缩：任务多时让 .list 滚动，而不是把卡片压到 meta 行溢出。 */
+  flex: none;
   gap: 10px;
   align-items: flex-start;
   min-height: 76px;

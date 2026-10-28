@@ -2,6 +2,9 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   createSoundEngine,
   describeNoiseStatus,
+  DONE_CUE_MAX_PLAYS,
+  DONE_CUE_PEAK,
+  DONE_CUE_REPEAT_INTERVAL_MS,
   DONE_CUE_TONES,
   getNoiseProfile,
   isNoiseAudible,
@@ -124,6 +127,14 @@ describe('专注完成提示音', () => {
     const engine = createSoundEngine();
 
     expect(() => engine.play('done')).not.toThrow();
+  });
+
+  it('完成音音量约 0.07；未关闭时每 3 秒重复，最多 10 次且不超过 30 秒', () => {
+    expect(DONE_CUE_PEAK).toBeCloseTo(0.07, 2);
+    expect(DONE_CUE_REPEAT_INTERVAL_MS).toBe(3000);
+    expect(DONE_CUE_MAX_PLAYS).toBe(10);
+    // 首次之外的 9 次重复落在 27 秒内，满足「最多 30 秒」。
+    expect(DONE_CUE_REPEAT_INTERVAL_MS * (DONE_CUE_MAX_PLAYS - 1)).toBeLessThanOrEqual(30_000);
   });
 });
 

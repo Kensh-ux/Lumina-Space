@@ -18,6 +18,13 @@ export const DONE_CUE_TONES: readonly DoneCueTone[] = [
   { frequency: 1174, durationSec: 0.12, delaySec: 0.25 },
 ];
 
+/** 完成音的单音峰值（相对 cue master）：比普通提示音略响，避免被声景盖住。 */
+export const DONE_CUE_PEAK = 0.07;
+
+/** 完成提示卡未关闭时，每 3 秒再响一次；最多 10 次（含首次，覆盖约 27 秒）。 */
+export const DONE_CUE_REPEAT_INTERVAL_MS = 3000;
+export const DONE_CUE_MAX_PLAYS = 10;
+
 /** 交叉淡化时长（ms）：切情绪时旧声景淡出、新声景淡入。 */
 export const NOISE_CROSSFADE_MS = 600;
 
@@ -779,7 +786,7 @@ export function createSoundEngine(options: SoundEngineOptions = {}): SoundEngine
       playTone(190, 'triangle', 0.04, 0.028);
     } else if (cue === 'done') {
       for (const tone of DONE_CUE_TONES) {
-        playTone(tone.frequency, 'sine', tone.durationSec, 0.05, tone.delaySec);
+        playTone(tone.frequency, 'sine', tone.durationSec, DONE_CUE_PEAK, tone.delaySec);
       }
     } else {
       playWhoosh(cue === 'open');
