@@ -1,0 +1,477 @@
+/* 窗畔 · 三界之门
+   一层盖住整个房间的薄幕：先选一扇门，再让那个世界在整块画面里醒来。
+   颜色、字体、间距都沿用窗畔的变量，让门看起来像房间自己长出来的。 */
+
+.wbw {
+  position: fixed;
+  inset: 0;
+  z-index: 78;
+  font-family: var(--serif);
+  color: var(--paper);
+  opacity: 1;
+}
+.wbw[hidden] { display: none !important; }
+.wbw [hidden] { display: none !important; }
+.wbw button { font-family: inherit; cursor: pointer; }
+.wbw svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.wbw ::selection { background: rgba(216, 175, 120, 0.3); }
+
+/* ———————————————————— 选择世界 ———————————————————— */
+.wbw-chooser {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 28px;
+  overflow: auto;
+}
+
+.wbw-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 95% at 50% 42%, rgba(28, 22, 16, 0.35) 0%, rgba(8, 6, 5, 0.9) 62%, rgba(5, 4, 3, 0.96) 100%),
+    linear-gradient(200deg, rgba(50, 40, 28, 0.22), rgba(8, 7, 6, 0.4));
+  backdrop-filter: blur(14px) saturate(80%);
+  -webkit-backdrop-filter: blur(14px) saturate(80%);
+  opacity: 0;
+  transition: opacity 0.5s var(--ease);
+}
+.wbw.is-open .wbw-scrim { opacity: 1; }
+.wbw.is-open .wbw-card { opacity: 1; transform: none; }
+
+.wbw-card {
+  position: relative;
+  width: min(1000px, 94vw);
+  max-height: calc(100vh - 56px);
+  overflow: auto;
+  padding: 40px 44px 24px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background:
+    radial-gradient(130% 70% at 50% -10%, rgba(216, 175, 120, 0.09) 0%, rgba(216, 175, 120, 0) 55%),
+    linear-gradient(166deg, rgba(28, 23, 17, 0.97) 0%, rgba(17, 14, 11, 0.985) 58%, rgba(12, 10, 8, 0.99) 100%);
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.68),
+    0 0 0 1px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 238, 205, 0.06);
+  opacity: 0;
+  transform: translateY(16px) scale(0.988);
+  transition: opacity 0.55s var(--ease), transform 0.65s var(--ease);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(220, 186, 132, 0.22) transparent;
+}
+.wbw-card::-webkit-scrollbar { width: 6px; }
+.wbw-card::-webkit-scrollbar-thumb { background: rgba(220, 186, 132, 0.22); border-radius: 4px; }
+.wbw-card::before {
+  content: '';
+  position: absolute;
+  left: 44px;
+  right: 44px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(216, 175, 120, 0.55), transparent);
+}
+
+.wbw-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 26px;
+}
+.wbw-head > div { min-width: 0; }
+.wbw-kicker {
+  margin: 0 0 12px;
+  font-family: var(--mono);
+  font-size: 8.5px;
+  letter-spacing: 0.34em;
+  text-transform: uppercase;
+  color: var(--gold-soft);
+}
+.wbw-head h2 {
+  margin: 0 0 12px;
+  font-family: var(--serif);
+  font-size: clamp(24px, 2.6vw, 31px);
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  line-height: 1.25;
+  color: var(--paper);
+}
+.wbw-lede {
+  margin: 0;
+  max-width: 54ch;
+  font-size: 11.5px;
+  line-height: 2;
+  letter-spacing: 0.07em;
+  color: var(--muted);
+}
+
+.wbw-close {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin-top: 2px;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: rgba(15, 12, 9, 0.5);
+  color: #a4977f;
+  transition: all 0.3s var(--ease);
+}
+.wbw-close:hover {
+  color: var(--paper);
+  border-color: rgba(226, 196, 150, 0.5);
+  transform: rotate(90deg);
+}
+.wbw-close svg { width: 14px; height: 14px; }
+
+/* 三扇门 */
+.wbw-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+.wbw-world {
+  --accent: var(--gold);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  text-align: left;
+  color: inherit;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  background: rgba(10, 8, 7, 0.5);
+  overflow: hidden;
+  transition: border-color 0.45s var(--ease), transform 0.45s var(--ease), box-shadow 0.45s var(--ease);
+}
+.wbw-world:hover,
+.wbw-world:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  transform: translateY(-4px);
+  box-shadow: 0 22px 46px rgba(0, 0, 0, 0.5), 0 0 26px -12px var(--accent);
+}
+
+.wbw-thumb {
+  position: relative;
+  display: block;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #0a0806;
+}
+.wbw-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  filter: saturate(0.86) brightness(0.88);
+  transform: scale(1.015);
+  transition: transform 0.9s var(--ease), filter 0.6s var(--ease);
+}
+.wbw-world:hover .wbw-thumb img,
+.wbw-world:focus-visible .wbw-thumb img {
+  transform: scale(1.055);
+  filter: saturate(1) brightness(1);
+}
+.wbw-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(6, 5, 4, 0.26) 0%, rgba(6, 5, 4, 0) 34%, rgba(6, 5, 4, 0.76) 100%);
+  transition: opacity 0.5s var(--ease);
+}
+.wbw-no {
+  position: absolute;
+  top: 10px;
+  left: 11px;
+  font-family: var(--mono);
+  font-size: 9px;
+  letter-spacing: 0.22em;
+  color: rgba(241, 230, 209, 0.72);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+.wbw-enter {
+  position: absolute;
+  right: 12px;
+  bottom: 11px;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  background: rgba(9, 7, 6, 0.55);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: #f6e9d2;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.4s var(--ease), transform 0.4s var(--ease);
+}
+.wbw-enter svg { width: 12px; height: 12px; }
+.wbw-world:hover .wbw-enter,
+.wbw-world:focus-visible .wbw-enter {
+  opacity: 1;
+  transform: none;
+}
+
+.wbw-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 13px 15px 15px;
+  border-top: 1px solid var(--line-soft);
+}
+.wbw-names {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+.wbw-names b {
+  font-size: 14.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  color: var(--paper);
+}
+.wbw-names em {
+  font-family: var(--mono);
+  font-style: normal;
+  font-size: 7.5px;
+  letter-spacing: 0.18em;
+  color: var(--faint);
+  white-space: nowrap;
+}
+.wbw-sub {
+  font-size: 10.5px;
+  line-height: 1.7;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+}
+
+.wbw-foot {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px 24px;
+  margin-top: 22px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line-soft);
+  font-size: 9.5px;
+  line-height: 1.75;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+.wbw-protocol {
+  flex-basis: 100%;
+  padding: 9px 12px;
+  border: 1px solid rgba(200, 140, 100, 0.28);
+  border-radius: 2px;
+  background: rgba(88, 48, 32, 0.18);
+  color: #d9b08f;
+}
+
+/* ———————————————————— 世界本体 ———————————————————— */
+.wbw-stage {
+  position: absolute;
+  inset: 0;
+  background: #060505;
+}
+.wbw-frame-wrap {
+  position: absolute;
+  inset: 0;
+}
+.wbw-frame {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+  background: #060505;
+  opacity: 0;
+  animation: wbw-frame-in 0.7s var(--ease) 0.06s forwards;
+}
+@keyframes wbw-frame-in {
+  to { opacity: 1; }
+}
+
+.wbw-loading {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 30px;
+  background: #070605;
+  text-align: center;
+}
+.wbw-spinner {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(216, 175, 120, 0.18);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: wbw-spin 1.15s linear infinite;
+}
+@keyframes wbw-spin { to { transform: rotate(360deg); } }
+.wbw-loading-text {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 10.5px;
+  line-height: 2;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+}
+.wbw-loading.is-failed .wbw-spinner { animation: none; border-top-color: rgba(216, 175, 120, 0.2); }
+.wbw-loading.is-failed .wbw-loading-text { color: #d9b08f; }
+
+.wbw-bar {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  max-width: calc(100vw - 36px);
+  padding: 7px 9px 7px 8px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: rgba(12, 10, 8, 0.62);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(14px) saturate(115%);
+  -webkit-backdrop-filter: blur(14px) saturate(115%);
+  transform: translateX(-50%);
+  opacity: 0.92;
+  transition: opacity 0.35s var(--ease), background 0.35s var(--ease);
+}
+.wbw-bar:hover { opacity: 1; background: rgba(12, 10, 8, 0.76); }
+
+.wbw-back,
+.wbw-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  border-radius: 999px;
+  white-space: nowrap;
+  transition: all 0.3s var(--ease);
+}
+.wbw-back {
+  padding: 0 13px 0 9px;
+  border: 1px solid var(--line);
+  background: rgba(255, 236, 200, 0.03);
+  color: var(--paper-dim);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+}
+.wbw-back:hover { border-color: rgba(226, 196, 150, 0.5); color: var(--paper); background: rgba(255, 236, 200, 0.07); }
+.wbw-back svg { width: 14px; height: 14px; }
+.wbw-switch {
+  padding: 0 14px;
+  border: 1px solid transparent;
+  color: var(--muted);
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+}
+.wbw-switch:hover { color: var(--paper); border-color: var(--line); }
+
+.wbw-now {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
+  margin: 0;
+}
+.wbw-now b {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.2em;
+  color: var(--paper);
+  white-space: nowrap;
+}
+.wbw-now span {
+  font-family: var(--mono);
+  font-size: 7.5px;
+  letter-spacing: 0.22em;
+  color: var(--faint);
+  white-space: nowrap;
+}
+
+/* ———————————————————— 响应式 ———————————————————— */
+@media (max-width: 900px) {
+  .wbw-chooser { padding: 14px; align-items: flex-start; }
+  .wbw-card {
+    width: 100%;
+    max-height: calc(100vh - 28px);
+    padding: 26px 20px 18px;
+    border-radius: 12px;
+  }
+  .wbw-card::before { left: 20px; right: 20px; }
+  .wbw-head { gap: 14px; margin-bottom: 18px; }
+  .wbw-kicker { letter-spacing: 0.24em; margin-bottom: 9px; }
+  .wbw-head h2 { letter-spacing: 0.1em; margin-bottom: 9px; }
+  .wbw-lede { font-size: 10.5px; line-height: 1.85; }
+  .wbw-close { width: 30px; height: 30px; }
+  .wbw-grid { grid-template-columns: 1fr; gap: 12px; }
+  .wbw-world { flex-direction: row; align-items: stretch; }
+  .wbw-thumb { flex: 0 0 42%; aspect-ratio: auto; min-height: 92px; }
+  .wbw-enter { display: none; }
+  .wbw-meta { flex: 1 1 auto; justify-content: center; padding: 10px 12px; border-top: 0; }
+  .wbw-names { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .wbw-names b { font-size: 13px; }
+  .wbw-sub { font-size: 9.5px; }
+  .wbw-foot { margin-top: 14px; padding-top: 12px; font-size: 9px; }
+  .wbw-bar { top: 10px; gap: 8px; padding: 5px 6px 5px 5px; }
+  .wbw-back { padding: 0 10px 0 7px; height: 28px; }
+  .wbw-back span { display: none; }
+  .wbw-now b { font-size: 11px; }
+  .wbw-now span { display: none; }
+  .wbw-switch { padding: 0 10px; height: 28px; }
+}
+
+@media (max-width: 560px) {
+  .wbw-card { padding: 22px 15px 15px; }
+  .wbw-card::before { left: 15px; right: 15px; }
+  .wbw-lede { display: none; }
+  .wbw-thumb { flex-basis: 38%; min-height: 80px; }
+  .wbw-names em { display: none; }
+  .wbw-foot > span:first-child { display: none; }
+}
+
+@media (max-height: 620px) and (min-width: 901px) {
+  .wbw-chooser { align-items: flex-start; }
+  .wbw-card { padding: 26px 32px 18px; max-height: calc(100vh - 32px); }
+  .wbw-head { margin-bottom: 18px; }
+  .wbw-lede { display: none; }
+  .wbw-foot { margin-top: 14px; padding-top: 12px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wbw-card,
+  .wbw-scrim,
+  .wbw-world,
+  .wbw-thumb img,
+  .wbw-enter,
+  .wbw-frame,
+  .wbw-spinner,
+  .wbw-close {
+    transition: none !important;
+    animation-duration: 0.01s !important;
+  }
+}

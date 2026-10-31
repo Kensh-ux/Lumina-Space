@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>余晖 AFTERGLOW · 一份关于最后一束光的交互档案</title>
+<meta name="description" content="宇宙正在关灯。你是最后一位保管员，手边只剩五件还会发光的东西。一份可交互的宇宙告别档案。">
+<meta name="theme-color" content="#05070b">
+<link rel="icon" href="__FAVICON__">
+<style>
+__CSS__
+</style>
+</head>
+<body>
+<canvas id="stage" aria-label="余晖：可交互的宇宙三维场景"></canvas>
+<div id="app">
+  <div class="frame" id="frame">
+    <header class="topbar" id="topbar">
+      <button class="brand" id="brandBtn" aria-label="回到序章">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 34 34" fill="none">
+            <circle cx="17" cy="17" r="15.2" stroke="currentColor" stroke-opacity=".35"/>
+            <ellipse cx="17" cy="17" rx="15.2" ry="6.1" stroke="currentColor" stroke-opacity=".55" transform="rotate(-28 17 17)"/>
+            <circle cx="17" cy="17" r="2.1" fill="currentColor"/>
+            <circle cx="30.1" cy="12.2" r="1.1" fill="currentColor"/>
+          </svg>
+        </span>
+        <span class="brand-name">
+          <span class="brand-zh">余晖</span>
+          <span class="brand-en">AFTERGLOW</span>
+        </span>
+      </button>
+      <div class="top-right">
+        <div class="chapter-count" aria-hidden="true">
+          <span id="chapterIndex">01</span><i>/</i><span>05</span>
+        </div>
+        <button class="icon-btn" id="soundBtn" aria-label="声音开关" title="声音">
+          <svg class="ico ico-sound" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+            <path d="M4 10v4h3.2L12 18V6L7.2 10H4z"/>
+            <path class="wave w1" d="M15.2 9.2a4 4 0 0 1 0 5.6"/>
+            <path class="wave w2" d="M17.8 7a7.6 7.6 0 0 1 0 10"/>
+            <path class="mute-slash" d="M4.5 4.5l15 15"/>
+          </svg>
+        </button>
+        <button class="icon-btn" id="fsBtn" aria-label="全屏" title="全屏">
+          <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round">
+            <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>
+          </svg>
+        </button>
+        <button class="menu-btn" id="menuBtn" aria-expanded="false">
+          <span class="menu-dot"></span><span id="menuBtnText">目录</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="ambient-bar" id="ambientBar" aria-label="星夜模式操作" aria-hidden="true">
+      <button class="ambient-btn ambient-save" id="ambientSaveBtn" type="button">
+        <span class="ambient-save-label">保存星图</span>
+        <span class="ambient-save-en">PNG</span>
+      </button>
+      <span class="ambient-sep" aria-hidden="true"></span>
+      <button class="ambient-btn ambient-replay" id="ambientRestartBtn" type="button">
+        <span class="ambient-replay-mark" aria-hidden="true">↻</span>
+        <span>再来一次</span>
+      </button>
+    </div>
+
+    <div id="railBackdrop" class="rail-backdrop"></div>
+    <aside id="rail" class="rail" aria-label="档案索引">
+      <div class="rail-head">
+        <span class="rail-eyebrow" id="railHead">档案室</span>
+        <span class="rail-head-en" id="railHeadEn">THE ARCHIVE</span>
+      </div>
+      <nav class="rail-nav" id="chapterRail"></nav>
+      <div class="rail-foot">
+        <span class="rail-foot-line"></span>
+        <span id="railFoot">五件藏品 · 一人保管</span>
+      </div>
+    </aside>
+
+    <section class="copy" id="copy" aria-live="polite">
+      <div class="copy-inner">
+        <div class="kicker">
+          <span class="kicker-no" id="copyNo">01</span>
+          <span class="kicker-line"></span>
+          <span class="kicker-text" id="copyKicker">藏品一 · 光</span>
+        </div>
+        <h1 class="title" id="copyTitle">初光</h1>
+        <div class="title-en" id="copyEn">THE FIRST LIGHT</div>
+        <div class="body" id="copyBody"></div>
+        <div class="action" id="copyAction"></div>
+        <div class="detail" id="copyDetail"></div>
+        <div class="data" id="copyData"></div>
+      </div>
+    </section>
+
+    <div class="hint" id="hint">
+      <span class="hint-glyph" aria-hidden="true">
+        <span class="hint-dot"></span>
+      </span>
+      <span class="hint-text" id="hintText"></span>
+    </div>
+
+    <div class="labels" id="labels"></div>
+
+    <div class="frame-marks" aria-hidden="true">
+      <span class="fm fm-tl"></span><span class="fm fm-tr"></span>
+      <span class="fm fm-bl"></span><span class="fm fm-br"></span>
+    </div>
+
+    <div class="bottom-meta meta-left" aria-hidden="true">
+      <span>N 31°14′</span><span class="dot"></span><span>E 121°29′</span>
+    </div>
+    <div class="bottom-meta meta-right" aria-hidden="true">
+      <span>10¹⁰⁰ CE</span><span class="dot"></span><span>THE LAST NIGHT</span>
+    </div>
+  </div>
+
+  <section class="intro" id="intro" aria-label="序章">
+    <div class="intro-vignette"></div>
+    <header class="intro-top">
+      <div class="intro-brand">
+        <svg viewBox="0 0 34 34" fill="none" aria-hidden="true">
+          <circle cx="17" cy="17" r="15.2" stroke="currentColor" stroke-opacity=".35"/>
+          <ellipse cx="17" cy="17" rx="15.2" ry="6.1" stroke="currentColor" stroke-opacity=".55" transform="rotate(-28 17 17)"/>
+          <circle cx="17" cy="17" r="2.1" fill="currentColor"/>
+        </svg>
+        <span>THE FINAL ARCHIVE</span>
+      </div>
+      <div class="intro-top-right">
+        <span>VOL. 05</span><span class="dot"></span><span>ONE NIGHT ONLY</span>
+      </div>
+    </header>
+    <div class="intro-main">
+      <div class="intro-copy">
+        <div class="intro-eyebrow"><span class="eyebrow-line"></span>AN INTERACTIVE ARCHIVE OF LAST LIGHT</div>
+        <div class="intro-title-wrap">
+          <div class="intro-en">AFTERGLOW</div>
+          <h1 class="intro-title">余晖</h1>
+          <div class="intro-title-glow" aria-hidden="true">余晖</div>
+        </div>
+        <div class="intro-lede">
+          <p>宇宙正在关灯。</p>
+          <p>在最后一点光熄灭之前，</p>
+          <p>你被留下，保管五样东西。</p>
+        </div>
+        <div class="intro-actions">
+          <button class="enter-btn" id="enterBtn">
+            <span class="enter-label">推开档案室的门</span>
+            <span class="enter-arrow" aria-hidden="true"><span></span></span>
+          </button>
+          <div class="intro-meta">交互档案 · 五件藏品 · 约 8 分钟</div>
+        </div>
+      </div>
+      <div class="intro-side">
+        <div class="intro-index" id="introIndex"></div>
+        <div class="intro-quote">“在最后一束光熄灭之前，<br>我在这里。”</div>
+      </div>
+    </div>
+    <footer class="intro-foot">
+      <div class="intro-note">
+        <span class="note-icon" aria-hidden="true"></span>
+        建议佩戴耳机。声音由浏览器实时生成，不加载任何音频文件。
+      </div>
+      <div class="intro-foot-meta">
+        <span>宇宙纪年 10¹⁰⁰ · 最后一夜</span>
+        <span class="intro-copyright">© AFTERGLOW / 余晖</span>
+      </div>
+    </footer>
+    <div class="intro-grain"></div>
+  </section>
+
+  <div class="ambient-veil" id="ambientVeil" aria-hidden="true"></div>
+
+  <div class="transition-card" id="transitionCard" aria-hidden="true">
+    <div class="tc-line"></div>
+    <div class="tc-no" id="tcNo">01</div>
+    <div class="tc-title" id="tcTitle">初光</div>
+    <div class="tc-en" id="tcEn">THE FIRST LIGHT</div>
+  </div>
+
+  <div class="toast" id="toast" role="status"></div>
+
+  <div class="loader" id="loader" aria-label="加载中">
+    <div class="loader-inner">
+      <div class="loader-mark" aria-hidden="true">
+        <span class="loader-ring r1"></span>
+        <span class="loader-ring r2"></span>
+        <span class="loader-dot"></span>
+      </div>
+      <div class="loader-brand">余晖 <span>AFTERGLOW</span></div>
+      <div class="loader-progress"><span id="loaderBar"></span></div>
+      <div class="loader-label" id="loaderLabel">正在点亮最后一束光</div>
+      <div class="loader-pct" id="loaderPct">0</div>
+    </div>
+  </div>
+
+  <div class="cursor" id="cursor" aria-hidden="true">
+    <span class="cursor-ring"></span>
+    <span class="cursor-dot"></span>
+    <span class="cursor-label" id="cursorLabel"></span>
+  </div>
+
+  <div class="grain" aria-hidden="true"></div>
+</div>
+<script>
+__JS__
+</script>
+</body>
+</html>

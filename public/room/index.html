@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#14110e" />
+  <meta name="description" content="窗畔 · 一间临街的房间。透过窗，看十八种光景；在屋内，点亮或收起三十一件陈设。黑胶能放歌，风铃会响，窗台还藏着只属于当前幻境的小物。" />
+  <title>窗畔 · By the Window</title>
+  <link rel="icon" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+PHJlY3Qgd2lkdGg9IjY0IiBoZWlnaHQ9IjY0IiByeD0iMTIiIGZpbGw9IiMxNzEzMTAiLz48cmVjdCB4PSIxMi41IiB5PSIxMi41IiB3aWR0aD0iMzkiIGhlaWdodD0iMzkiIHJ4PSIxIiBmaWxsPSJub25lIiBzdHJva2U9IiNkOGI5OGEiIHN0cm9rZS13aWR0aD0iMiIvPjxwYXRoIGQ9Ik0zMiAxM3YzOE0xMyAzMmgzOCIgc3Ryb2tlPSIjZDhiOThhIiBzdHJva2Utd2lkdGg9IjEuMiIgb3BhY2l0eT0iLjUiLz48Y2lyY2xlIGN4PSIzNyIgY3k9IjI1IiByPSI0LjIiIGZpbGw9IiNmZmI4NzciLz48L3N2Zz4=" />
+  <link rel="stylesheet" href="assets/style.css" />
+  <link rel="stylesheet" href="workbench/workbench.css" />
+  <link rel="stylesheet" href="workbench/worlds.css" />
+</head>
+<body>
+  <div id="app">
+    <div id="scene" aria-hidden="true"></div>
+    <div class="scrim" aria-hidden="true"></div>
+
+    <!-- 侧边栏 -->
+    <aside id="panel" class="panel" aria-label="窗畔控制台">
+      <div class="panel-glow" aria-hidden="true"></div>
+      <div class="panel-inner">
+        <header class="brand">
+          <div class="brand-mark" aria-hidden="true">
+            <i></i><i></i><i></i><i></i>
+          </div>
+          <div class="brand-text">
+            <h1>窗畔</h1>
+            <p>BY THE WINDOW</p>
+          </div>
+          <button id="collapseBtn" class="icon-btn collapse-btn" type="button" aria-label="收起侧边栏" title="收起 (C)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 6 9 12l5.5 6" /></svg>
+          </button>
+        </header>
+
+        <div class="clockrow">
+          <div class="clock-main">
+            <span id="clockTime">22:06</span><span id="clockSec">:00</span>
+          </div>
+          <div class="clock-side">
+            <div id="clockDate">十月三十日 · 周四</div>
+            <div class="weather"><span class="weather-dot" id="weatherDot"></span><span id="weatherText">15° · 微风</span></div>
+          </div>
+        </div>
+
+        <section class="moods" aria-label="窗外光景">
+          <div class="sec-head">
+            <span class="sec-cn">窗外光景</span>
+            <span class="sec-en">WINDOW ATLAS · 18</span>
+          </div>
+          <div class="mood-sets" id="moodGrid" role="group" aria-label="切换窗外光景"></div>
+          <div class="mood-meter" aria-hidden="true">
+            <span class="mood-meter-label">LIGHT</span>
+            <span class="mood-meter-track"><i id="moodMeterFill"></i></span>
+            <span class="mood-meter-no"><b id="moodMeterNo">01</b> / 18</span>
+          </div>
+          <p class="mood-quote" id="moodQuote">把街灯一盏盏点亮，等一壶水慢慢烧开。</p>
+          <p class="relic-hint" id="relicHint" role="status">
+            <span class="relic-dot" aria-hidden="true"></span>
+            <span id="relicHintText">茶几上多了一件信物 · 点一下</span>
+          </p>
+        </section>
+
+        <section class="objects" aria-label="屋内陈设">
+          <div class="sec-head">
+            <span class="sec-cn">屋内陈设</span>
+            <span class="sec-en" id="objCount">— / 31</span>
+          </div>
+          <div class="obj-scroll" id="objScroll">
+            <div class="obj-list" id="objList"></div>
+            <p class="obj-hint">点开一组再挑选。琴、黑胶、风铃、小火车与靠垫都能点。幻境里，茶几上会多出一件当夜的信物。</p>
+            <p class="relic-hint is-on portal-hint">
+              <span class="relic-dot" aria-hidden="true"></span>
+              <span>茶几右侧立着一枚黄铜浑天仪 · 点它，选择另一个世界</span>
+            </p>
+          </div>
+        </section>
+
+        <!-- 唱片柜：常驻的小型播放器 -->
+        <div class="music-dock" id="musicDock" aria-label="唱片机">
+          <button id="musicDockOpen" class="music-cover" type="button" title="打开唱片柜" aria-label="打开唱片柜">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.4"/><circle cx="12" cy="12" r="2.1"/><path d="M18.1 5.8 8.7 15.2"/></svg>
+          </button>
+          <div class="music-meta">
+            <span class="music-title" id="musicTitle">Sea of Cloud</span>
+            <span class="music-artist" id="musicArtist">Nujabes · 唱片柜</span>
+            <span class="music-progress" id="musicProgress" role="slider" aria-label="播放进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="musicProgressFill"></i></span>
+          </div>
+          <button id="musicToggle" class="music-toggle" type="button" aria-label="播放" title="播放 / 暂停">
+            <svg class="ico-play" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 5.8 18 12l-9.5 6.2z"/></svg>
+            <svg class="ico-pause" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 5.5v13M15 5.5v13"/></svg>
+          </button>
+          <button id="musicNext" class="music-skip" type="button" aria-label="下一首" title="下一首">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 6.2 15 12l-8.5 5.8z"/><path d="M17.5 6v12"/></svg>
+          </button>
+        </div>
+
+        <footer class="panel-foot">
+          <button id="soundBtn" class="foot-btn" type="button" aria-pressed="false" title="环境声 (M)">
+            <span class="sound-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+            <span class="foot-label">环境声</span>
+            <span class="foot-state" id="soundState">关</span>
+          </button>
+          <button id="immerseBtn" class="foot-btn" type="button" title="沉浸模式 (H)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4" /></svg>
+            <span class="foot-label">沉浸</span>
+          </button>
+          <button id="aboutBtn" class="foot-btn" type="button" title="关于 (?)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5M12 7.6v.1" /></svg>
+            <span class="foot-label">关于</span>
+          </button>
+        </footer>
+      </div>
+    </aside>
+
+    <!-- 移动端 / 收起后的入口 -->
+    <button id="panelToggle" class="panel-toggle" type="button" aria-label="打开陈设面板">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="1.4" /><path d="M12 4v16M4 12h16" /></svg>
+      <span>陈设</span>
+    </button>
+
+    <!-- 右上角极简控制 -->
+    <div class="hud" aria-label="快捷控制">
+      <button id="hudSound" class="hud-btn" type="button" aria-label="环境声" title="环境声 (M)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 10v4h3l4 3V7l-4 3H5z" /><path d="M16 9.5c1.2 1.4 1.2 3.6 0 5" /></svg>
+      </button>
+      <button id="hudImmerse" class="hud-btn" type="button" aria-label="沉浸模式" title="沉浸模式 (H)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V5a1 1 0 0 1 1-1h4M20 9V5a1 1 0 0 0-1-1h-4M4 15v4a1 1 0 0 0 1 1h4M20 15v4a1 1 0 0 1-1 1h-4" /></svg>
+      </button>
+      <button id="hudAbout" class="hud-btn" type="button" aria-label="关于" title="关于 (?)">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5.5M12 7.6v.1" /></svg>
+      </button>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <div id="tooltip" class="tooltip" aria-hidden="true"></div>
+    <button id="immersionHint" class="immersion-hint" type="button" aria-label="退出沉浸模式，快捷键 Esc 或 H">
+      <span class="immersion-hint-text">退出沉浸</span>
+      <span class="immersion-hint-keys">Esc / H</span>
+    </button>
+
+    <!-- 关于 -->
+    <div id="about" class="modal" role="dialog" aria-modal="true" aria-labelledby="aboutTitle" aria-hidden="true">
+      <div class="modal-scrim" data-close="about"></div>
+      <div class="modal-card">
+        <div class="modal-mark" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <p class="kicker">KEYS TO THE ROOM</p>
+        <h2 id="aboutTitle">快捷键</h2>
+        <p class="lede">窗子有十八种开法。街景与幻境分开放着，点一下组名就能展开。唱片柜里的歌只留在你自己的浏览器里。</p>
+        <div class="shortcuts key-list">
+          <span><kbd>[</kbd> <kbd>]</kbd> 上一景 / 下一景</span>
+          <span><kbd>1</kbd>–<kbd>9</kbd> · <kbd>0</kbd> 前十种光景</span>
+          <span><kbd>M</kbd> 环境声</span>
+          <span><kbd>P</kbd> 播放 / 暂停唱片</span>
+          <span><kbd>H</kbd> 沉浸</span>
+          <span><kbd>C</kbd> 收起面板</span>
+          <span><kbd>?</kbd> 关于</span>
+          <span><kbd>Esc</kbd> 退出</span>
+        </div>
+        <p class="colophon">窗畔街 07 号 · 在窗边坐一会儿</p>
+        <button class="modal-close" type="button" data-close="about">回到窗边</button>
+      </div>
+    </div>
+
+    <!-- 唱片柜 -->
+    <div id="musicModal" class="modal music-modal" role="dialog" aria-modal="true" aria-labelledby="musicModalTitle" aria-hidden="true">
+      <div class="modal-scrim" data-close="music"></div>
+      <div class="modal-card music-card">
+        <p class="kicker">RECORD CABINET · LOCAL ONLY</p>
+        <h2 id="musicModalTitle">唱片柜</h2>
+        <p class="lede">选一张放上唱针。也可以把电脑里的歌带进来，或者把不想要的唱片从柜子里拿走。所有文件只保存在这台设备上。</p>
+        <div class="music-disclaimer" id="musicDisclaimer" role="note" aria-label="音乐版权免责声明">
+          <p lang="zh-CN"><strong>免责声明：</strong>本页所有单曲仅供个人分享与试听，不得用于任何商业用途。曲目下载自网易云音乐，版权归原作者及相应权利人所有。若权利人认为本页使用方式不妥，请通过邮件联系，我们将在收到通知后 24 小时内删除相关曲目。</p>
+          <p lang="en"><strong>Disclaimer:</strong> All tracks on this page are provided for personal sharing and listening only and may not be used for any commercial purpose. The tracks were downloaded from NetEase Cloud Music; all rights belong to the original artists and respective rights holders. If any rights holder considers this use inappropriate, please contact us by email and we will remove the track within 24 hours of notice.</p>
+          <p lang="ja"><strong>免責事項：</strong>本ページの楽曲はすべて個人的な共有・視聴のみを目的としており、商用利用は一切できません。楽曲は NetEase Cloud Music（網易雲音楽）からダウンロードしたもので、著作権は原作者および各権利者に帰属します。権利者の方が本ページでの使用を不適切と判断された場合は、メールにてご連絡ください。通知を受領後 24 時間以内に対象楽曲を削除いたします。</p>
+          <p class="music-disclaimer-contact">联系 / Contact / お問い合わせ：<a href="mailto:ssrszzk-life@outlook.com">ssrszzk-life@outlook.com</a></p>
+        </div>
+        <div class="music-toolbar">
+          <span class="music-count" id="musicCount">1 张唱片</span>
+          <label class="music-import" for="musicFile">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V4M7.6 8.4 12 4l4.4 4.4"/><path d="M5 15v3.4A1.6 1.6 0 0 0 6.6 20h10.8a1.6 1.6 0 0 0 1.6-1.6V15"/></svg>
+            导入音乐
+            <input id="musicFile" type="file" accept="audio/*,.mp3,.m4a,.wav,.ogg,.flac,.aac" multiple hidden />
+          </label>
+        </div>
+        <div class="music-list" id="musicList" role="listbox" aria-label="唱片列表"></div>
+        <div class="music-empty" id="musicEmpty">柜子里暂时是空的，放一张进来吧。</div>
+        <div class="music-tip" id="musicTip">支持 mp3 / m4a / wav / ogg / flac，单曲建议不超过 60 MB。</div>
+        <div class="music-restore-row">
+          <button id="musicRestore" class="music-restore" type="button">恢复内置曲库</button>
+          <p class="colophon">内置曲库：assets/music · 从文件夹读取<br />删掉也没关系，随时可以放回来。</p>
+        </div>
+        <button class="modal-close" type="button" data-close="music">合上柜门</button>
+      </div>
+    </div>
+
+    <!-- 载入 -->
+    <div id="loading" class="loading" aria-live="polite">
+      <div class="loading-frame" aria-hidden="true">
+        <span class="pane p1"></span><span class="pane p2"></span><span class="pane p3"></span>
+        <span class="pane p4"></span><span class="pane p5"></span><span class="pane p6"></span>
+      </div>
+      <div class="loading-inner">
+        <p class="loading-kicker">NO. 07 · WINDOWLIGHT STREET</p>
+        <h1 class="loading-title">窗畔</h1>
+        <p class="loading-en">BY THE WINDOW</p>
+        <div class="loading-bar"><i id="loadingBar"></i></div>
+        <p class="loading-label" id="loadingLabel">正在把窗推开 · 十八种光景在排队</p>
+        <p class="loading-pct" id="loadingPct">00</p>
+      </div>
+      <p class="loading-foot">建模 · 材质 · 声音，全部由代码生成</p>
+    </div>
+  </div>
+
+  <script src="vendor/three.min.js"></script>
+  <!-- EffectComposer 需先定义 THREE.Pass / FullScreenQuad，其余后期脚本才能继承 -->
+  <script src="vendor/post/EffectComposer.js"></script>
+  <script src="vendor/post/CopyShader.js"></script>
+  <script src="vendor/post/LuminosityHighPassShader.js"></script>
+  <script src="vendor/post/ShaderPass.js"></script>
+  <script src="vendor/post/MaskPass.js"></script>
+  <script src="vendor/post/RenderPass.js"></script>
+  <script src="vendor/post/UnrealBloomPass.js"></script>
+  <script src="vendor/post/FXAAShader.js"></script>
+  <script src="src/utils.js"></script>
+  <script src="src/textures.js"></script>
+  <script src="src/room.js"></script>
+  <script src="src/furniture.js"></script>
+  <script src="src/furniture-extra.js"></script>
+  <script src="src/street.js"></script>
+  <script src="src/street-buildings.js"></script>
+  <script src="src/street-life.js"></script>
+  <script src="src/dreams.js"></script>
+  <script src="src/dreams-extra.js"></script>
+  <script src="src/wonders.js"></script>
+  <script src="src/audio.js"></script>
+  <script src="src/music.js"></script>
+  <script src="src/ui.js"></script>
+  <script src="src/main.js"></script>
+  <script src="src/bridge.js"></script>
+  <script src="workbench/core.js"></script>
+  <script src="workbench/workbench.js"></script>
+  <script src="workbench/worlds.js"></script>
+  <script src="src/portal.js"></script>
+</body>
+</html>
