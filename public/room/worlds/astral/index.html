@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#030509" />
+  <meta name="description" content="星潮 · 一场可以亲手唤醒的东方星象仪式。夜海之上，四幕潮汐，一座会呼吸的星盘。" />
+  <title>星潮 · ASTRAL TIDE</title>
+  <link rel="stylesheet" href="./styles.css" />
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "./vendor/three.module.js"
+      }
+    }
+  </script>
+</head>
+<body>
+  <div id="app">
+    <canvas id="stage" aria-label="星潮三维场景：夜海之上的星盘"></canvas>
+
+    <div class="atmosphere" aria-hidden="true">
+      <div class="vignette"></div>
+      <div class="grain"></div>
+    </div>
+
+    <!-- 入场仪式 -->
+    <div id="intro" class="intro">
+      <div class="intro-sky" aria-hidden="true"></div>
+      <div class="intro-astrolabe" aria-hidden="true">
+        <svg viewBox="0 0 600 600" fill="none">
+          <g class="intro-rings">
+            <circle cx="300" cy="300" r="255" stroke="currentColor" stroke-width=".6" stroke-dasharray="1 7" opacity=".55"/>
+            <circle cx="300" cy="300" r="228" stroke="currentColor" stroke-width=".8" opacity=".32"/>
+            <circle cx="300" cy="300" r="196" stroke="currentColor" stroke-width=".55" stroke-dasharray="40 8 2 8" opacity=".48"/>
+            <circle cx="300" cy="300" r="144" stroke="currentColor" stroke-width=".5" opacity=".28"/>
+            <circle cx="300" cy="300" r="62" stroke="currentColor" stroke-width=".5" opacity=".4"/>
+          </g>
+          <g class="intro-rings intro-rings--reverse">
+            <ellipse cx="300" cy="300" rx="258" ry="96" stroke="currentColor" stroke-width=".55" opacity=".3" transform="rotate(-24 300 300)"/>
+            <ellipse cx="300" cy="300" rx="258" ry="94" stroke="currentColor" stroke-width=".5" opacity=".18" transform="rotate(32 300 300)"/>
+          </g>
+          <g opacity=".42" stroke="currentColor" stroke-width=".7">
+            <path d="M300 64v18M300 518v18M64 300h18M518 300h18"/>
+            <circle cx="300" cy="300" r="3" fill="currentColor" stroke="none"/>
+          </g>
+        </svg>
+      </div>
+
+      <div class="intro-content">
+        <div class="intro-topline">
+          <span></span>
+          <p>A CELESTIAL RITUAL IN FOUR TIDES</p>
+          <span></span>
+        </div>
+        <h1 class="intro-title" aria-label="星潮">
+          <span>星</span><span>潮</span>
+        </h1>
+        <p class="intro-latin">ASTRAL TIDE</p>
+        <p class="intro-desc">夜海之上，一座沉睡的星盘。<br />四幕潮汐，等你亲手唤醒。</p>
+        <button id="enter" class="enter" type="button">
+          <span class="enter-num">01</span>
+          <span class="enter-label">进入此夜</span>
+          <span class="enter-mark"><i></i></span>
+        </button>
+        <p class="intro-note">建议佩戴耳机 · 声景由浏览器实时生成</p>
+      </div>
+
+      <div class="intro-footer">
+        <span>N 31°14′ · E 121°29′</span>
+        <span class="intro-footer-mid">星盘 · 夜海 · 四幕潮汐</span>
+        <span>VOL. I — IV</span>
+      </div>
+    </div>
+
+    <!-- 主界面 -->
+    <div id="ui" class="ui" aria-hidden="true">
+      <header class="topbar">
+        <div class="brand">
+          <div class="sigil" aria-hidden="true">
+            <svg viewBox="0 0 64 64" fill="none">
+              <circle cx="32" cy="32" r="21.5" stroke="currentColor" stroke-width="1" opacity=".72"/>
+              <circle cx="32" cy="32" r="14" stroke="currentColor" stroke-width=".7" stroke-dasharray="1 5" opacity=".55"/>
+              <ellipse cx="32" cy="32" rx="21.5" ry="7.5" stroke="currentColor" stroke-width=".75" opacity=".38" transform="rotate(-28 32 32)"/>
+              <path d="M32 3v9M32 52v9M3 32h9M52 32h9" stroke="currentColor" stroke-width=".9" opacity=".55"/>
+              <circle cx="32" cy="32" r="2.4" fill="currentColor"/>
+            </svg>
+          </div>
+          <div class="brand-text">
+            <h1>星潮</h1>
+            <p>ASTRAL TIDE</p>
+          </div>
+        </div>
+
+        <div class="top-meta">
+          <div class="meta-row">
+            <span>观测坐标</span>
+            <b>N 31°14′ / E 121°29′</b>
+          </div>
+          <div class="meta-row">
+            <span>此刻</span>
+            <b id="clock">— — : — —</b>
+          </div>
+        </div>
+      </header>
+
+      <aside class="act-rail" aria-label="四幕潮汐">
+        <div class="rail-line" aria-hidden="true"></div>
+        <!-- 由 ui.js 注入 -->
+      </aside>
+
+      <section class="poem-wrap" aria-live="polite">
+        <div class="act-caption">
+          <span id="act-caption">LOW TIDE · THE SEA REMEMBERS</span>
+          <i></i>
+        </div>
+        <h2 class="act-name">
+          <span id="act-cn">静海</span>
+          <em id="act-en">STILL SEA</em>
+        </h2>
+        <div class="poem" id="poem">
+          <p><span>海把星群轻轻托起，</span></p>
+          <p><span>像托起一枚尚未醒来的梦。</span></p>
+        </div>
+        <p class="hint">
+          <span class="hint-key">拖动</span>环视
+          <i></i>
+          <span class="hint-key">滚轮</span>远近
+          <i></i>
+          <span class="hint-key">轻触</span>海面
+        </p>
+      </section>
+
+      <div class="hud-controls">
+        <button id="whaleBtn" class="round-btn" type="button" aria-label="显示或隐藏鲸落星座" aria-pressed="true" data-label="鲸落">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M3.4 12.6c2.3-3.9 5.9-5.7 9.6-4.5 2.2.7 3.5 2.4 3.6 4.4.1 1.8-1.1 3.2-2.8 3.2-1.8 0-2.8-1-3.2-2.3" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/>
+            <path d="M16.4 8.3c1-.8 2.3-.5 3.1.4-.3 1.1-1.2 1.9-2.3 2M3.4 12.6c-.6.6-1.2.8-2.1.7.2-.9.7-1.5 1.4-1.9" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/>
+            <circle cx="8.4" cy="10.7" r=".8" fill="currentColor"/>
+          </svg>
+        </button>
+        <button id="soundBtn" class="round-btn" type="button" aria-label="开启或关闭声景" aria-pressed="true" data-label="声景">
+          <svg class="icon-sound-on" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 9.5h3.2L12 6v12L7.2 14.5H4z" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/>
+            <path d="M15.2 9.2a4 4 0 0 1 0 5.6M17.8 6.8a7.2 7.2 0 0 1 0 10.4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          </svg>
+          <svg class="icon-sound-off" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 9.5h3.2L12 6v12L7.2 14.5H4z" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/>
+            <path d="M15.5 9.5l4 4M19.5 9.5l-4 4" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <button id="fullBtn" class="round-btn" type="button" aria-label="全屏" data-label="全屏">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </button>
+      </div>
+
+      <button id="resonance" class="resonance" type="button" aria-label="唤醒星盘共鸣">
+        <svg class="res-ring" viewBox="0 0 120 120" fill="none" aria-hidden="true">
+          <circle cx="60" cy="60" r="56" stroke="currentColor" stroke-width=".7" stroke-dasharray="1 6" opacity=".7"/>
+          <circle cx="60" cy="60" r="49" stroke="currentColor" stroke-width=".6" opacity=".3"/>
+          <path d="M60 4v7M60 109v7M4 60h7M109 60h7" stroke="currentColor" stroke-width=".8" opacity=".65"/>
+        </svg>
+        <span class="res-inner">
+          <span class="res-cn">共鸣</span>
+          <span class="res-en">RESONATE</span>
+        </span>
+        <span class="res-pulse" aria-hidden="true"></span>
+      </button>
+
+      <footer class="footer-line">
+        <span>互动星象仪式 · 星潮</span>
+        <span class="footer-mid">拖动 · 点击 · 聆听</span>
+        <span>MMXXVI · VOL. I—IV</span>
+      </footer>
+
+      <!-- 星体档案 -->
+      <div id="planetCard" class="planet-card" role="dialog" aria-modal="false" aria-labelledby="card-name" aria-hidden="true">
+        <button id="cardClose" class="card-close" type="button" aria-label="关闭星体档案">
+          <span></span><span></span>
+        </button>
+        <p class="card-kicker">CELESTIAL RECORD <span id="cardIndex">01</span></p>
+        <div class="card-head">
+          <span class="card-glyph" id="cardCn">沧</span>
+          <div>
+            <h3 id="cardName">潮汐之星</h3>
+            <p id="cardEn">CANG · THE TIDE</p>
+          </div>
+        </div>
+        <p class="card-desc" id="cardDesc"></p>
+        <dl class="card-meta" id="cardMeta"></dl>
+        <button class="card-enter" id="cardEnter" type="button">
+          <span>循此星入梦</span>
+          <i></i>
+        </button>
+        <p class="card-foot">ARCHIVE OF THE NIGHT SEA</p>
+      </div>
+
+      <div id="planetTip" class="planet-tip" aria-hidden="true">
+        <b></b><span></span>
+      </div>
+
+      <div id="toast" class="toast" role="status"></div>
+
+      <div id="ritualCaption" class="ritual-caption" aria-hidden="true">
+        <span></span>
+      </div>
+
+      <div id="flashLayer" class="flash-layer" aria-hidden="true"></div>
+    </div>
+
+    <div id="cursor" class="cursor" aria-hidden="true"><i></i><span></span></div>
+
+    <noscript>
+      <div class="noscript">星潮需要启用 JavaScript 才能被唤醒。</div>
+    </noscript>
+  </div>
+
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>

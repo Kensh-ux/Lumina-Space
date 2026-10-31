@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>林间小屋 · A Cabin in the Woods</title>
+    <meta
+      name="description"
+      content="纯代码生成的 low-poly 林间小屋：晴天、落雨、下雪与黄昏四种天气，下雪时可以点击空地堆雪人。"
+    />
+    <link rel="stylesheet" href="./assets/style.css" />
+  </head>
+  <body data-weather="sunny">
+    <main class="app" id="app">
+      <canvas id="scene" class="scene-canvas" role="img" aria-label="林间的小木屋，屋前的石头上坐着读书的小人"></canvas>
+      <div class="scrim" aria-hidden="true"></div>
+
+      <header class="topbar ui-layer">
+        <div class="brand">
+          <p class="brand-eyebrow">A CABIN IN THE WOODS</p>
+          <h1 class="brand-title">林间小屋</h1>
+          <p class="brand-sub" id="weather-desc">风把松针吹得很轻。</p>
+        </div>
+
+        <nav class="weather-dock" id="weather-dock" aria-label="切换天气">
+          <button type="button" class="weather-btn is-active" data-weather="sunny" aria-pressed="true">
+            <span class="weather-swatch weather-swatch--sunny" aria-hidden="true"></span>
+            <span class="weather-name">晴天</span>
+            <span class="weather-key" aria-hidden="true">1</span>
+          </button>
+          <button type="button" class="weather-btn" data-weather="rain" aria-pressed="false">
+            <span class="weather-swatch weather-swatch--rain" aria-hidden="true"></span>
+            <span class="weather-name">落雨</span>
+            <span class="weather-key" aria-hidden="true">2</span>
+          </button>
+          <button type="button" class="weather-btn" data-weather="snow" aria-pressed="false">
+            <span class="weather-swatch weather-swatch--snow" aria-hidden="true"></span>
+            <span class="weather-name">下雪</span>
+            <span class="weather-key" aria-hidden="true">3</span>
+          </button>
+          <button type="button" class="weather-btn" data-weather="dusk" aria-pressed="false">
+            <span class="weather-swatch weather-swatch--dusk" aria-hidden="true"></span>
+            <span class="weather-name">黄昏</span>
+            <span class="weather-key" aria-hidden="true">4</span>
+          </button>
+          <span class="dock-sep" aria-hidden="true"></span>
+          <button
+            type="button"
+            class="sound-btn is-pending"
+            id="sound-toggle"
+            aria-pressed="true"
+            aria-label="环境声待启动，点击开启"
+            title="环境声待启动，点击开启"
+          >
+            <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M4.2 9.4v5.2h3.3L12 18.8V5.2L7.5 9.4H4.2z" fill="currentColor" stroke="none" opacity=".9"></path>
+              <path class="sound-wave" d="M15 9.1a4.4 4.4 0 0 1 0 5.8"></path>
+              <path class="sound-wave" d="M17.6 6.6a8 8 0 0 1 0 10.8"></path>
+              <path class="sound-slash" d="M15.2 8.4l5.6 7.2"></path>
+            </svg>
+          </button>
+        </nav>
+      </header>
+
+      <section class="bottom-left ui-layer" aria-label="操作提示">
+        <p class="hint-line">
+          <span class="hint-kicker" id="weather-label">晴天</span>
+          <span class="hint-divider" aria-hidden="true"></span>
+          <span>拖动环视 · 滚轮缩放 · 点一下小人</span>
+        </p>
+        <p class="hint-line hint-line--soft" id="snow-hint">下雪时，点一下空地，就能堆一个雪人。</p>
+      </section>
+
+      <aside class="snow-tools ui-layer" id="snow-tools" aria-live="polite">
+        <span class="snow-count"><strong id="snow-count">0</strong><span> / 12 个雪人</span></span>
+        <button type="button" class="ghost-btn" id="clear-snowmen">清空</button>
+      </aside>
+
+      <div class="toast" id="toast" role="status" aria-live="polite"></div>
+      <pre class="debug" id="debug" hidden></pre>
+
+      <div class="loader" id="loader">
+        <div class="loader-card">
+          <p class="loader-eyebrow">正在搭建</p>
+          <p class="loader-title">林间小屋</p>
+          <div class="loader-track" aria-hidden="true"><span></span></div>
+          <p class="loader-note">木头、松针，还有一点雾。</p>
+        </div>
+      </div>
+
+      <p class="error-note" id="error-note" hidden></p>
+      <noscript><p class="noscript">这个场景需要开启 JavaScript 才能显示。</p></noscript>
+    </main>
+
+    <script src="./vendor/three.min.js"></script>
+    <script>
+      /* 本地运行时没有外网，内置一份 three；缺失时才回退 CDN。 */
+      if (!window.THREE) {
+        document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"><\/script>');
+      }
+    </script>
+    <script src="./engine/cabinScene.js"></script>
+    <script src="./src/demo.js"></script>
+  </body>
+</html>

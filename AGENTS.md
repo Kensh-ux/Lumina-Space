@@ -16,7 +16,8 @@ Guidance for AI agents working on **Lumina-Space** — a mood-aware todo and foc
 - **v1.3.1 (2026-10-27)**: mood journal now supports editing (keeps `id` / `createdAt`), deletion with the shared `ConfirmDialog` (moved to `src/lib/`), a top date-pin control (notes from the selected local date move to the top, the rest keep their relative order; no-op when that date is empty) and keyword search across emotion + content; settings `v1.3.1`; README screenshots refreshed; 208 tests.
 - **v1.3.2 (2026-10-28)**: per-mood custom backgrounds in settings (upload / replace / restore, 1920×1080 recommendation, client-side JPEG compression stored as data URLs in `customBackgrounds`; the Stage swaps the canvas scene for the image), focus completion toast + two-tone chime, focus stats "total" instead of "this week" with a separate clear-focus-data action, and mood-journal `updatedAt` shown as "再次编辑于"; settings `v1.3.2`; README version table trimmed to current simple mode + planned v2.0; 231 tests.
 - **v1.3.3 (2026-10-28)**: the hero can be dismissed with a confirm (`returnFocusRef`, refresh restores) when a custom background is active; task cards no longer shrink vertically in the scrollable list; focus completion toast persists until acknowledged with a repeated chime schedule; mobile toast clears the bottom nav; settings `v1.3.3`; 232 tests.
-- **Next: v2.0 "3D mode"** — a code-generated stylized cottage (`three` + R3F). It is an *alternative* to simple mode, not a replacement. Do not start 3D before the v2.0 card.
+- **v2.0.0 (2026-11-01)**: dual-mode release. Settings → "转换模式" links to the same-origin `/room/` **windowlight 3D** app; the 3D settings link back to `/`. The full static 3D app (18 moods, 31 objects, workbench, worlds, 62 bundled tracks) lives in `public/room/`; Vite copies it to `dist/room/`. Both modes share `lumina:data`; the 3D app keeps its notes / layout / focus prefs / music metadata in its own keys. Music cabinet has a trilingual (zh/en/ja) disclaimer. **Do not merge the two runtimes** (no iframe/React-mounting Three) or modify the 3D scenes; 236 tests.
+- **Next:** only extend the 3D mode after a new task card; keep the same-origin `/room/` deployment and the two runtimes separate.
 
 > Soundscape note: the three looping mp3s are **not** in this repo; they live in GitHub Release `audio-v1.2`
 > and are referenced by URL in `src/lib/audio.ts`. See `docs/audio-sources.md`.
@@ -39,9 +40,10 @@ src/
   features/tasks/   task CRUD, editor, CompletedTasks
   features/journal/ mood journal (MoodNoteEditor, EmotionPicker, JournalView)
   features/focus/   focus timer + stats + completion toast
-  features/settings/SettingsPanel, BackgroundSettings
-  lib/              shared types, storage adapter, planner helpers, audio, ConfirmDialog, customBackground
+  features/settings/SettingsPanel, BackgroundSettings, ModeSwitch
+  lib/              shared types, storage adapter, planner helpers, audio, ConfirmDialog, customBackground, mode
   styles/           tokens.css, global.css
+public/room/       windowlight 3D static app (vanilla JS + Three.js; copied by Vite)
 tests/              mirror of src
 docs/
   screenshots/      README images
