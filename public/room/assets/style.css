@@ -1519,6 +1519,22 @@ kbd {
   transition: all 0.3s;
 }
 .music-row-del:hover { color: #c58d72; border-color: rgba(197, 141, 114, 0.28); }
+.music-row-dl {
+  flex: 0 0 auto;
+  height: 24px;
+  padding: 0 7px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  font-family: var(--mono);
+  font-size: 6.5px;
+  letter-spacing: 0.1em;
+  color: #655b4c;
+  text-decoration: none;
+  transition: all 0.3s;
+}
+.music-row-dl:hover { color: var(--gold); border-color: rgba(226, 178, 108, 0.3); }
 .music-row-del.is-confirm {
   color: #e0a080;
   border-color: rgba(224, 160, 128, 0.42);
@@ -1571,6 +1587,14 @@ kbd {
   background: rgba(255, 238, 210, 0.035);
 }
 .music-restore[disabled] { opacity: 0.32; cursor: default; }
+.music-pack-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin: -4px 0 18px;
+}
+.music-pack-row .colophon { flex: 1; margin: 0; }
+.music-pack { text-decoration: none; display: inline-flex; align-items: center; }
 
 /* ———————————————————— 载入 ———————————————————— */
 .loading {
