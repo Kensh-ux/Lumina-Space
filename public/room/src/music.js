@@ -112,6 +112,96 @@
     };
   }
 
+  /* 每张唱片都有一份单独压缩包，放在 assets/music/pack/ 下，按文件名对齐 */
+  function packHref(track) {
+    const file = track && typeof track.fileName === 'string' ? track.fileName : '';
+    if (!file) return '';
+    const stem = file.replace(/\.[^.]+$/, '');
+    return 'assets/music/pack/' + encodeURIComponent(stem).replace(/'/g, '%27') + '.zip';
+  }
+
+  function hasPack(track) {
+    return !!(track && (track.bundled || track.builtin));
+  }
+
+  /* 曲包是单曲 ZIP：从中央目录找到第一个 .mp3，解压成 Blob URL 直接播放 */
+  function findPackEntry(bytes, view) {
+    const min = Math.max(0, bytes.length - 22 - 65535);
+    let eocd = -1;
+    for (let i = bytes.length - 22; i >= min; i -= 1) {
+      if (view.getUint32(i, true) === 0x06054b50) {
+        eocd = i;
+        break;
+      }
+    }
+    if (eocd < 0) return null;
+    const count = view.getUint16(eocd + 10, true);
+    let offset = view.getUint32(eocd + 16, true);
+    for (let n = 0; n < count; n += 1) {
+      if (offset + 46 > bytes.length || view.getUint32(offset, true) !== 0x02014b50) return null;
+      const method = view.getUint16(offset + 10, true);
+      const compressedSize = view.getUint32(offset + 20, true);
+      const nameLength = view.getUint16(offset + 28, true);
+      const extraLength = view.getUint16(offset + 30, true);
+      const commentLength = view.getUint16(offset + 32, true);
+      const localOffset = view.getUint32(offset + 42, true);
+      const name = bytes.subarray(offset + 46, offset + 46 + nameLength);
+      const ext = name.length >= 4
+        ? String.fromCharCode(name[name.length - 4], name[name.length - 3], name[name.length - 2], name[name.length - 1]).toLowerCase()
+        : '';
+      if (ext === '.mp3') {
+        if (view.getUint32(localOffset, true) !== 0x04034b50) return null;
+        const localNameLength = view.getUint16(localOffset + 26, true);
+        const localExtraLength = view.getUint16(localOffset + 28, true);
+        return {
+          method,
+          size: compressedSize,
+          start: localOffset + 30 + localNameLength + localExtraLength
+        };
+      }
+      offset += 46 + nameLength + extraLength + commentLength;
+    }
+    return null;
+  }
+
+  function packBlobUrl(track) {
+    if (!hasPack(track)) return Promise.reject(new Error('no-pack'));
+    if (M.urls[track.id]) return Promise.resolve(M.urls[track.id]);
+    if (!M.packPromises) M.packPromises = {};
+    if (M.packPromises[track.id]) return M.packPromises[track.id];
+    const href = packHref(track);
+    if (!href) return Promise.reject(new Error('no-pack'));
+    const promise = fetch(href, { cache: 'force-cache' })
+      .then((response) => {
+        if (!response.ok) throw new Error('pack-' + response.status);
+        return response.arrayBuffer();
+      })
+      .then(async (buffer) => {
+        const bytes = new Uint8Array(buffer);
+        const view = new DataView(buffer);
+        const entry = findPackEntry(bytes, view);
+        if (!entry) throw new Error('pack-entry');
+        let data = bytes.slice(entry.start, entry.start + entry.size);
+        if (entry.method === 8) {
+          if (typeof DecompressionStream === 'undefined') throw new Error('no-inflate');
+          const stream = new Blob([data]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+          data = new Uint8Array(await new Response(stream).arrayBuffer());
+        } else if (entry.method !== 0) {
+          throw new Error('pack-method');
+        }
+        const blob = new Blob([data], { type: 'audio/mpeg' });
+        M.urls[track.id] = URL.createObjectURL(blob);
+        delete M.packPromises[track.id];
+        return M.urls[track.id];
+      })
+      .catch((error) => {
+        if (M.packPromises) delete M.packPromises[track.id];
+        throw error;
+      });
+    M.packPromises[track.id] = promise;
+    return promise;
+  }
+
   function mergeLibrary(entries) {
     const hidden = new Set(readHidden());
     const present = new Set(M.list.map((t) => t.fileName).filter(Boolean));
@@ -326,7 +416,9 @@
   }
 
   function trackSource(track) {
-    if (track.builtin || track.bundled) return Promise.resolve(track.src);
+    if (track.builtin || track.bundled) {
+      return packBlobUrl(track).catch(() => track.src);
+    }
     if (M.memory[track.id]) {
       if (!M.urls[track.id]) M.urls[track.id] = URL.createObjectURL(M.memory[track.id]);
       return Promise.resolve(M.urls[track.id]);
@@ -579,8 +671,20 @@
         askDelete(track, del);
       });
 
+      let dl = null;
+      if (hasPack(track)) {
+        dl = document.createElement('a');
+        dl.className = 'music-row-dl';
+        dl.href = packHref(track);
+        dl.setAttribute('download', '');
+        dl.textContent = '下载';
+        dl.setAttribute('aria-label', '下载 ' + track.title + ' 的单独曲包');
+        dl.addEventListener('click', (e) => e.stopPropagation());
+      }
+
       row.appendChild(no);
       row.appendChild(main);
+      if (dl) row.appendChild(dl);
       row.appendChild(play);
       row.appendChild(del);
 
@@ -916,7 +1020,9 @@
       file: $('musicFile'),
       empty: $('musicEmpty'),
       tip: $('musicTip'),
-      restore: $('musicRestore')
+      restore: $('musicRestore'),
+      packRow: $('musicPackRow'),
+      pack: $('musicPack')
     };
   }
 
@@ -931,6 +1037,16 @@
       });
     }
     if (M.els.restore) M.els.restore.addEventListener('click', restoreBuiltin);
+    if (M.els.pack && M.els.packRow) {
+      /* 整库包只在维护者填了地址后才出现；逐首下载已经能覆盖单个需求 */
+      const packUrl = (M.els.packRow.getAttribute('data-pack') || '').trim();
+      if (packUrl) {
+        M.els.pack.href = packUrl;
+        M.els.packRow.hidden = false;
+      } else {
+        M.els.packRow.hidden = true;
+      }
+    }
     const modal = M.els.modal;
     if (modal) {
       modal.querySelectorAll('[data-close="music"]').forEach((el) => {
@@ -986,19 +1102,21 @@
     /* 恢复上次选中的唱片（只选中，不自动播放） */
     const track = currentTrack();
     if (track && track.builtin) {
-      /* 内置唱片可以早早拿到时长，让柜门的说明更完整 */
-      const probe = new Audio();
-      probe.preload = 'metadata';
-      probe.addEventListener('loadedmetadata', () => {
-        if (isFinite(probe.duration) && probe.duration > 0) {
-          track.duration = probe.duration;
-          const row = M.rows[track.id];
-          if (row && row.sub) row.sub.textContent = rowSub(track, 0);
-          persist();
-        }
-        probe.removeAttribute('src');
-      });
-      try { probe.src = track.src; } catch (e) { /* ignore */ }
+      /* 内置曲目也走曲包：早一点拿到时长，避免去请求已被移走的 mp3 */
+      packBlobUrl(track).then((src) => {
+        const probe = new Audio();
+        probe.preload = 'metadata';
+        probe.addEventListener('loadedmetadata', () => {
+          if (isFinite(probe.duration) && probe.duration > 0) {
+            track.duration = probe.duration;
+            const row = M.rows[track.id];
+            if (row && row.sub) row.sub.textContent = rowSub(track, 0);
+            persist();
+          }
+          probe.removeAttribute('src');
+        });
+        try { probe.src = src; } catch (e) { /* ignore */ }
+      }).catch(() => { /* 曲包不可用时保留原时长 */ });
     }
   }
 
