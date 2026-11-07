@@ -36,6 +36,8 @@
     playing: false,
     loading: false,
     loadToken: 0,
+    loadedId: '',
+    intent: 'play',
     hook: null,
     els: {},
     rows: {},
@@ -409,6 +411,7 @@
 
   function releaseUrl(track) {
     const url = M.urls[track.id];
+    if (M.loadedId === track.id) M.loadedId = '';
     if (url) {
       try { URL.revokeObjectURL(url); } catch (e) { /* ignore */ }
       delete M.urls[track.id];
@@ -432,28 +435,44 @@
     }).catch(() => '');
   }
 
+  function sameSource(current, next) {
+    if (!current || !next) return false;
+    if (current === next) return true;
+    try {
+      /* audio.src 读到的是绝对地址，回退路径给的是相对地址，归一化后再比 */
+      return current === new URL(next, document.baseURI).href;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function loadAndPlay(track, autoplay) {
     const audio = ensureAudio();
     const token = ++M.loadToken;
     M.loading = true;
+    M.intent = autoplay ? 'play' : 'pause';
     updateNowPlaying();
     return trackSource(track).then((src) => {
       if (token !== M.loadToken) return false;
       if (!src) {
         track.missing = true;
         M.loading = false;
+        M.loadedId = '';
         renderList();
         updateNowPlaying();
         toast('这张唱片的文件不在这台设备上了', 3000);
         return false;
       }
-      if (audio.src !== src) {
+      if (!sameSource(audio.src, src)) {
         audio.src = src;
         audio.load();
       }
+      M.loadedId = track.id;
       M.loading = false;
       updateNowPlaying();
       if (!autoplay) return true;
+      /* 加载期间用户按过暂停，就不要让这次加载自己响起来 */
+      if (M.intent !== 'play') { setPlaying(false); return false; }
       return audio.play().then(() => true).catch((err) => {
         setPlaying(false);
         if (err && err.name === 'NotSupportedError') {
@@ -513,25 +532,42 @@
       openModal();
       return false;
     }
-    if (M.playing) {
-      M.audio.pause();
-      return false;
-    }
     const track = currentTrack();
     if (!track) {
       return playIndex(0, true).then(() => M.playing);
     }
-    if (M.audio.src && !M.audio.error) {
+    const loaded = M.loadedId === track.id;
+    if (M.loading && !loaded) {
+      /* 这张还没读出来就按了开关：取消这次加载，别让它晚一步落地再抢播 */
+      M.loadToken++;
+      M.loading = false;
+      M.intent = 'pause';
+      if (M.audio.src && M.playing) M.audio.pause();
+      setPlaying(false);
+      updateNowPlaying();
+      setTip('这张唱片还在读 · 已先停下，再按一次开关重试');
+      return false;
+    }
+    if (M.playing && loaded) {
+      M.intent = 'pause';
+      M.audio.pause();
+      return false;
+    }
+    M.intent = 'play';
+    if (loaded && M.audio.src && !M.audio.error) {
       M.audio.play().then(() => setPlaying(true)).catch(() => {
         loadAndPlay(track, true);
       });
       return true;
     }
+    /* 选中的唱片和元素里装的不是同一张，走完整加载，不能直接 play 旧音频 */
+    if (M.playing) M.audio.pause();
     loadAndPlay(track, true);
     return true;
   }
 
   function pause() {
+    M.intent = 'pause';
     if (M.audio && !M.audio.paused) M.audio.pause();
     setPlaying(false);
   }
@@ -579,7 +615,9 @@
     const tip = M.els.tip;
     if (tip && !M.tipBusy) {
       tip.classList.remove('is-error');
-      if (duration > 0) {
+      if (M.loading && track) {
+        tip.textContent = '正在读这张唱片 · ' + track.title + '，单曲包要先下载解包';
+      } else if (duration > 0 && M.loadedId === (track && track.id)) {
         tip.textContent = formatTime(audio.currentTime) + ' / ' + formatTime(duration) + ' · 点击进度条可以快进';
       } else if (track && track.missing) {
         tip.classList.add('is-error');
